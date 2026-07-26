@@ -399,3 +399,68 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+########################################################################
+# POS project specific — ye sab na git me chahiye, na server par
+########################################################################
+
+# Secrets / per-machine environment. Server par apna .env alag rehta hai.
+.env
+.env.*
+!.env.example
+
+# Local databases (asli data — kabhi commit nahi)
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.sqlite
+*.db
+*.db-journal
+
+# DB dumps / backups
+backups/
+*.sql.gz
+*.sql.zip
+*-backup-*.sql
+*.bak
+
+# Runtime logs & crash dumps (*.log pehle se ignore hai)
+logs/
+debug_log.txt
+pos_app_error.log
+run.log
+
+# Dev-time screenshots (shot.ps1 output)
+*_shot.png
+pos_shot.png
+wpf/*.png
+
+# Claude Code ki machine-local settings (launch.json shared rehta hai)
+.claude/settings.local.json
+.claude/*.local.json
+
+# Windows / editor junk
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Node build cache of the embedded mobile-menu app
+# (node_modules/ upar se hi ignore hai; dist/ server par jaata hai isliye tracked rehta hai)
+api/mobilemenu/node_modules/
+api/mobilemenu/.vite/
+*.tsbuildinfo
+
+# Runtime uploads — ye client ke server par bante hain, git se nahi aate
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Ek-baar ke debug/one-off scripts. Server par ye SECURITY HOLE hain
+# (users + PIN dump karte hain) aur inme purane folder ka absolute path hard-coded hai.
+public/dump_users.php
+public/fix_login.php
+public/update_user.php
+api/menu/test_backend.php
+
+# NOTE: vendor/ jaan-boojh kar TRACKED hai — usme sirf composer ka autoloader hai
+# aur shared hosting par composer install chalane ka koi tareeka nahi.
