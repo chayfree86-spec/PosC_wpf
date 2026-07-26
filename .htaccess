@@ -1,0 +1,29 @@
+<IfModule mod_rewrite.c>
+  DirectoryIndex index.php
+
+  RewriteEngine On
+
+  RewriteRule ^api/menu(/.*)?$ - [L]
+  RewriteRule ^api/mobilemenu(/.*)?$ - [L]
+
+  RewriteRule ^api/?$ index.php [QSA,L]
+  RewriteRule ^api/.*$ index.php [QSA,L]
+
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+<FilesMatch "\.(pem|key|pfx)$">
+  Require all denied
+</FilesMatch>
+
+# Allow Apache to serve .yml files for Electron updates
+AddType text/yaml .yml
+AddType text/yaml .yaml

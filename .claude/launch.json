@@ -1,0 +1,35 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "pos-api",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["-S", "127.0.0.1:8123", "dev-router.php"],
+      "port": 8123
+    },
+    {
+      "name": "daalroti-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/web-project/htdocs/daalroti-tracking", "run", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "umbrella-vite",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/web-project/htdocs/umbrella_newversion", "run", "dev", "--", "--port", "5188", "--strictPort"],
+      "port": 5188
+    },
+    {
+      "name": "staff-app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/web-project/htdocs/Staff-app", "run", "dev", "--", "--port", "5173", "--strictPort"],
+      "port": 5173
+    },
+    {
+      "name": "taskone-frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/web-project/htdocs/taskone/frontend", "run", "dev", "--", "--port", "5180", "--strictPort"],
+      "port": 5180
+    }
+  ]
+}

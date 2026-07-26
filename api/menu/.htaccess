@@ -1,0 +1,47 @@
+# ============================================================================
+# Menu Admin - load/performance for slow networks.
+# Safe: changes only transfer size + caching, no app behaviour.
+# Cache-busting is handled by ?v= query strings on menu-admin.js / menu-admin.css
+# (the JS uses filemtime), so an updated file gets a NEW url and re-downloads --
+# it is therefore safe to cache the assets aggressively.
+# ============================================================================
+
+# --- 1. Compression: shrink HTML/CSS/JS/JSON/SVG over the wire (~70-80% less).
+#        This is the single biggest win on slow connections. -------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
+  AddOutputFilterByType DEFLATE application/javascript application/x-javascript text/javascript
+  AddOutputFilterByType DEFLATE application/json
+  AddOutputFilterByType DEFLATE image/svg+xml
+  AddOutputFilterByType DEFLATE application/xml application/rss+xml
+  AddOutputFilterByType DEFLATE font/ttf font/otf font/woff font/woff2 application/font-woff
+</IfModule>
+<IfModule mod_gzip.c>
+  mod_gzip_on Yes
+  mod_gzip_item_include mime ^text/.*
+  mod_gzip_item_include mime ^application/(javascript|json|xml).*
+</IfModule>
+
+# --- 2. Caching: repeat page loads become instant (no re-download). -----------
+<IfModule mod_headers.c>
+  # Static assets -- safe to cache for a week; ?v= busts the cache on change.
+  <FilesMatch "\.(css|js|mjs|svg|woff2?|ttf|otf|eot|png|jpe?g|gif|webp|ico)$">
+    Header set Cache-Control "public, max-age=604800, immutable"
+  </FilesMatch>
+  # PHP / HTML pages stay dynamic (auth + live data) -- never cache them.
+  <FilesMatch "\.php$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+</IfModule>
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css "access plus 7 days"
+  ExpiresByType application/javascript "access plus 7 days"
+  ExpiresByType text/javascript "access plus 7 days"
+  ExpiresByType image/svg+xml "access plus 30 days"
+  ExpiresByType image/webp "access plus 30 days"
+  ExpiresByType image/png "access plus 30 days"
+  ExpiresByType image/jpeg "access plus 30 days"
+  ExpiresByType font/woff2 "access plus 30 days"
+  ExpiresByType text/html "access plus 0 seconds"
+</IfModule>

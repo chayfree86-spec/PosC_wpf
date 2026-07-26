@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pos.Core\Pos.Core.csproj" />
+    <ProjectReference Include="..\Pos.Contracts\Pos.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.2.1" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Fonts\*.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WPF's default is to render text selection through an adorner, which paints the
+         highlight *over* the text and ignores SelectionTextBrush — selected text vanishes
+         behind the highlight. The qty box selects its content on focus, so the quantity
+         was invisible exactly when the user was about to retype it. This switch has to be
+         in runtimeconfig: WPF reads it before any of our code runs. -->
+    <RuntimeHostConfigurationOption
+      Include="Switch.System.Windows.Controls.Text.UseAdornerForTextboxSelectionRendering"
+      Value="false" />
+  </ItemGroup>
+
+</Project>

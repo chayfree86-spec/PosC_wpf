@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@theme {
+  --font-nunito: "Nunito", sans-serif;
+  
+  /* Animations custom definitions */
+  --animate-shake: shake 0.5s ease-in-out;
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+}
+
+/* Global Reset Styles */
+body {
+  font-family: var(--font-nunito);
+  background-color: #FAF6F0; /* Cream background matching reference image */
+  color: #2E1513; /* Deep brown text */
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Base custom font mappings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-nunito);
+}
+
+/* Smooth custom scrollbars for overflowing containers */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FAF6F0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #E2D8CD;
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C27A3F;
+}
+
+/* Mobile-responsive frame viewport helper */
+.mobile-viewport {
+  max-width: 480px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background-color: #FAF6F0;
+  box-shadow: 0 0 40px rgba(46, 21, 19, 0.04);
+  position: relative;
+}
+
+/* Utility Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.menu-fit-image {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+
+.category-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.category-scroll > button {
+  scroll-snap-align: center;
+}
+
+.category-scroll::-webkit-scrollbar {
+  display: none;
+}

@@ -1,0 +1,78 @@
+<Window x:Class="Pos.App.Views.CatalogEditModal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Edit" Width="420" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner" WindowStyle="None" ResizeMode="NoResize"
+        Background="Transparent" AllowsTransparency="True">
+    <Border Background="{StaticResource PanelBg}" CornerRadius="14" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="22">
+        <StackPanel>
+            <TextBlock x:Name="TitleText" Text="Edit" Foreground="White" FontSize="17" FontWeight="Bold" Margin="0,0,0,16"/>
+
+            <StackPanel x:Name="NamePanel" Margin="0,0,0,12">
+                <TextBlock x:Name="NameLabel" Text="NAME *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
+                    <TextBox x:Name="NameBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                </Border>
+            </StackPanel>
+
+            <StackPanel x:Name="PricePanel" Margin="0,0,0,12">
+                <TextBlock Text="PRICE (₹) *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
+                    <TextBox x:Name="PriceBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                </Border>
+            </StackPanel>
+
+            <StackPanel x:Name="RatePanel" Margin="0,0,0,12">
+                <TextBlock Text="GST RATE (%) *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
+                    <TextBox x:Name="RateBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                </Border>
+            </StackPanel>
+
+            <StackPanel x:Name="AreaPanel" Margin="0,0,0,12">
+                <TextBlock Text="DINING AREA *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <ComboBox x:Name="AreaCombo" FontSize="14" Height="34" DisplayMemberPath="Name" SelectedValuePath="Id"/>
+            </StackPanel>
+
+            <StackPanel x:Name="ParentCatPanel" Margin="0,0,0,12">
+                <TextBlock Text="SELECT PARENT CATEGORY *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <ComboBox x:Name="ParentCatCombo" FontSize="14" Height="34" DisplayMemberPath="Name" SelectedValuePath="Id"/>
+            </StackPanel>
+
+            <StackPanel x:Name="SortOrderPanel" Margin="0,0,0,12">
+                <TextBlock Text="SORT ORDER" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
+                    <TextBox x:Name="SortOrderBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                </Border>
+            </StackPanel>
+
+            <StackPanel x:Name="CategoryPanel" Margin="0,0,0,12">
+                <TextBlock Text="CATEGORY *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <ComboBox x:Name="CategoryCombo" FontSize="14" Height="34" DisplayMemberPath="Name" SelectedValuePath="Id"/>
+            </StackPanel>
+
+            <StackPanel x:Name="TypePanel" Margin="0,0,0,12">
+                <TextBlock Text="TYPE" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <ComboBox x:Name="TypeCombo" FontSize="14" Height="34"/>
+            </StackPanel>
+
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="Cancel" Height="42" Click="Cancel_Click" Cursor="Hand"
+                        Background="{StaticResource CardBg}" Foreground="{StaticResource TextMuted}" FontWeight="SemiBold" BorderThickness="0">
+                    <Button.Resources>
+                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style>
+                    </Button.Resources>
+                </Button>
+                <Button Grid.Column="2" Content="Save" Height="42" Click="Save_Click" Cursor="Hand"
+                        Background="{StaticResource Accent}" Foreground="White" FontWeight="Bold" BorderThickness="0">
+                    <Button.Resources>
+                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style>
+                    </Button.Resources>
+                </Button>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>

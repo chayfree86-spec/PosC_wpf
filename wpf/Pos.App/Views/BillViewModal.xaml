@@ -1,0 +1,69 @@
+<Window x:Class="Pos.App.Views.BillViewModal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Bill" Width="420" SizeToContent="Height" MaxHeight="700"
+        WindowStartupLocation="CenterOwner" WindowStyle="None" ResizeMode="NoResize"
+        Background="Transparent" AllowsTransparency="True">
+    <Border Background="{StaticResource PanelBg}" CornerRadius="14" BorderBrush="{StaticResource Border}" BorderThickness="1">
+        <Grid Margin="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Margin="22,20,22,10">
+                <TextBlock x:Name="StoreName" Text="Chay Chaupal" Foreground="White" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock x:Name="BillNoText" Foreground="{StaticResource Accent}" FontSize="13" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                <Grid Margin="0,8,0,0">
+                    <TextBlock x:Name="DateText" Foreground="{StaticResource TextMuted}" FontSize="12" HorizontalAlignment="Left"/>
+                    <TextBlock x:Name="TableText" Foreground="{StaticResource TextMuted}" FontSize="12" HorizontalAlignment="Right"/>
+                </Grid>
+            </StackPanel>
+
+            <Border Grid.Row="1" Height="1" Background="{StaticResource Border}" Margin="22,0"/>
+
+            <!-- Items -->
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="22,10">
+                <ItemsControl x:Name="ItemsList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="80"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="{Binding ItemName}" Foreground="White" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Price, StringFormat='₹{0:0.##}'}" Foreground="{StaticResource TextFaint}" FontSize="11"/>
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text="{Binding Quantity, StringFormat='x{0}'}" Foreground="{StaticResource TextMuted}" FontSize="13" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <TextBlock Grid.Column="2" Text="{Binding Total, StringFormat='₹{0:0.##}'}" Foreground="White" FontSize="14" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- Totals -->
+            <StackPanel Grid.Row="3" Margin="22,6,22,14">
+                <Border Height="1" Background="{StaticResource Border}" Margin="0,0,0,10"/>
+                <Grid x:Name="DiscountRow" Margin="0,0,0,6" Visibility="Collapsed">
+                    <TextBlock Text="Discount" Foreground="{StaticResource TextMuted}" FontSize="13"/>
+                    <TextBlock x:Name="DiscountText" Foreground="#FFEF4444" FontSize="13" FontWeight="Bold" HorizontalAlignment="Right"/>
+                </Grid>
+                <Grid>
+                    <TextBlock Text="GRAND TOTAL" Foreground="White" FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="GrandTotalText" Foreground="{StaticResource Accent}" FontSize="22" FontWeight="Black" HorizontalAlignment="Right"/>
+                </Grid>
+            </StackPanel>
+
+            <Button Grid.Row="4" Content="Close" Height="44" Margin="22,0,22,20" Click="Close_Click" Cursor="Hand"
+                    Background="{StaticResource CardBg}" Foreground="{StaticResource TextPrimary}" FontWeight="SemiBold" BorderThickness="0"/>
+        </Grid>
+    </Border>
+</Window>

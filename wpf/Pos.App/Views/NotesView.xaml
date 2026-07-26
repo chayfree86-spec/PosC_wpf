@@ -1,0 +1,206 @@
+<UserControl x:Class="Pos.App.Views.NotesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Background="{StaticResource WindowBg}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                <TextBlock Text="Saved Order Notes" Foreground="White" FontSize="22" FontWeight="Bold"/>
+                <TextBlock Text="Manage saved quick order notes, edit items, or transfer to free tables" Foreground="{StaticResource TextMuted}" FontSize="12" Margin="0,2,0,0"/>
+            </StackPanel>
+
+            <!-- Empty State when no saved order notes exist -->
+            <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,60,0,0"
+                        Visibility="{Binding HasQuickNotes, Converter={StaticResource CountToVis}, ConverterParameter=invert}">
+                <materialDesign:PackIcon Kind="NotebookEditOutline" Width="56" Height="56" Foreground="{StaticResource TextFaint}" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                <TextBlock Text="No Saved Order Notes" Foreground="{StaticResource TextPrimary}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock Text="Save quick orders using the NOTE button in Quick Bill mode" Foreground="{StaticResource TextFaint}" FontSize="12" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Grid Wrap Cards List of Saved Quick Order Notes -->
+            <StackPanel Grid.Row="1" Visibility="{Binding HasQuickNotes, Converter={StaticResource BoolToVis}}">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                    <materialDesign:PackIcon Kind="NotebookEditOutline" Width="18" Height="18" Foreground="{StaticResource Accent}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Text="SAVED QUICK ORDER NOTES" Foreground="{StaticResource TextPrimary}" FontSize="13.5" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <Border Background="{StaticResource AccentGrad}" CornerRadius="10" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding QuickOrderNotes.Count}" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                    </Border>
+                </StackPanel>
+
+                <ItemsControl ItemsSource="{Binding QuickOrderNotes}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1.2" CornerRadius="12" Padding="14,12" Margin="0,0,16,16" Width="440" HorizontalAlignment="Left">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Row 0: Customer & Time -->
+                                    <Grid Grid.Row="0">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="AccountOutline" Width="15" Height="15" Foreground="{StaticResource Accent}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding CustomerName}" Foreground="{StaticResource TextPrimary}" FontSize="13.5" FontWeight="Bold" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding CustomerMobile, StringFormat=' ({0})'}" Foreground="{StaticResource TextMuted}" FontSize="11.5" VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="ClockOutline" Width="13" Height="13" Foreground="{StaticResource BlueLink}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding TargetTime, StringFormat='Serving: {0}'}" Foreground="{StaticResource BlueLink}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding SavedTime, StringFormat='Saved: {0}'}" Foreground="{StaticResource TextFaint}" FontSize="10.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Row 1: Item breakdown & Total -->
+                                    <Border Grid.Row="1" Background="{StaticResource CardBg2}" CornerRadius="8" Padding="10,8" Margin="0,8,0,10">
+                                        <StackPanel>
+                                            <ItemsControl ItemsSource="{Binding ItemsList}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="0,2">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="70"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                                                <TextBlock Text="{Binding Name}" Foreground="{StaticResource TextPrimary}" FontSize="12" FontWeight="SemiBold"/>
+                                                                <TextBlock Text=" (PARCEL)" Foreground="#EAB308" FontSize="9.5" FontWeight="Bold" Visibility="{Binding IsParcel, Converter={StaticResource BoolToVis}}" Margin="4,0,0,0"/>
+                                                            </StackPanel>
+                                                            <TextBlock Grid.Column="1" Text="{Binding Qty, StringFormat='{}{0} × '}" Foreground="{StaticResource TextMuted}" FontSize="11.5" Margin="0,0,2,0"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding Price, StringFormat='₹{0:0.##}'}" Foreground="{StaticResource TextMuted}" FontSize="11.5"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding LineTotal, StringFormat='₹{0:0.##}'}" Foreground="{StaticResource TextPrimary}" FontSize="11.5" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
+                                            <Border Height="1" Background="{StaticResource BorderSoft}" Margin="0,6"/>
+
+                                            <Grid>
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="TOTAL ITEMS: " Foreground="{StaticResource TextFaint}" FontSize="10" FontWeight="Bold"/>
+                                                    <TextBlock Text="{Binding TotalQty, StringFormat='{}{0}'}" Foreground="{StaticResource TextPrimary}" FontSize="11.5" FontWeight="Bold"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                    <TextBlock Text="GRAND TOTAL: " Foreground="{StaticResource TextFaint}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding GrandTotal, StringFormat='₹{0:0.##}'}" Foreground="{StaticResource Accent}" FontSize="14" FontWeight="Bold"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Row 2: Action Buttons (EDIT, TRANSFER TO TABLE, DELETE) -->
+                                    <Grid Grid.Row="2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="6"/>
+                                            <ColumnDefinition Width="1.3*"/>
+                                            <ColumnDefinition Width="6"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- EDIT BUTTON -->
+                                        <Button Grid.Column="0" Click="BtnEdit_Click" Tag="{Binding}" Height="32">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Cursor" Value="Hand"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border x:Name="b" CornerRadius="8" Background="{StaticResource CardBg2}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1">
+                                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                                        <materialDesign:PackIcon Kind="Pencil" Width="13" Height="13" Foreground="{StaticResource TextPrimary}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                                        <TextBlock Text="EDIT" Foreground="{StaticResource TextPrimary}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                                                        <Setter TargetName="b" Property="Background" Value="{StaticResource AccentFaint}"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <!-- TRANSFER TO TABLE BUTTON -->
+                                        <Button Grid.Column="2" Click="BtnTransfer_Click" Tag="{Binding}" Height="32">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Cursor" Value="Hand"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border x:Name="b" CornerRadius="8" Background="{StaticResource CardBg2}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1">
+                                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                                        <materialDesign:PackIcon Kind="SwapHorizontal" Width="13" Height="13" Foreground="{StaticResource BlueLink}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                                        <TextBlock Text="TRANSFER TO TABLE" Foreground="{StaticResource BlueLink}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource BlueLink}"/>
+                                                                        <Setter TargetName="b" Property="Background" Value="{StaticResource CardBg}"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <!-- DELETE BUTTON -->
+                                        <Button Grid.Column="4" Click="BtnDelete_Click" Tag="{Binding}" Height="32">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Cursor" Value="Hand"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border x:Name="b" CornerRadius="8" Background="{StaticResource CardBg2}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1">
+                                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                                        <materialDesign:PackIcon Kind="DeleteOutline" Width="13" Height="13" Foreground="#EF4444" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                                        <TextBlock Text="DELETE" Foreground="#EF4444" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="b" Property="BorderBrush" Value="#EF4444"/>
+                                                                        <Setter TargetName="b" Property="Background" Value="#1AEF4444"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

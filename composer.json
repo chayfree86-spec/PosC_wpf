@@ -1,0 +1,17 @@
+{
+  "name": "pos/qr-system-api",
+  "description": "PHP API for POS QR system",
+  "type": "project",
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/"
+    },
+    "files": [
+      "app/helpers/response.php",
+      "app/helpers/validator.php"
+    ]
+  },
+  "require": {
+    "php": ">=8.0"
+  }
+}
