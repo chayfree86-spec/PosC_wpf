@@ -245,6 +245,9 @@ public partial class MainViewModel : ObservableObject
             }
         };
 
+        // Opens the print queue and warms WPF's XPS path now, while nobody is at the counter.
+        _printer.Warmup(Settings.BuildPrintConfig());
+
         _sync.StatusChanged += OnSyncStatusChanged;
         ShowSync(_sync.Status);
     }
@@ -611,6 +614,12 @@ public partial class MainViewModel : ObservableObject
         if (BillMode == "Table" && SelectedTable != null)
         {
             var res = _orders.SaveTableOrder(BuildPayload("ordered"));
+
+            // Paper starts the moment the order is safely in SQLite — reloading the tables and
+            // redrawing the cart below is the counter catching up, and the kitchen should not
+            // be waiting behind it.
+            _printer.Enqueue("KOT", cfg, ticket);
+
             LoadTables();
             HasExistingOrder = true;
             foreach (var l in Cart)
@@ -627,26 +636,29 @@ public partial class MainViewModel : ObservableObject
             // A quick bill has no table to hold a running order, so printing its KOT is the
             // whole sale: it is recorded as settled and the counter cleared. Otherwise the
             // kitchen would have a ticket the day's takings knew nothing about.
-            var res = FinishQuickBill();
+            var res = RecordQuickBill();
+            _printer.Enqueue("KOT", cfg, ticket);
+            ClearCounter();
+
             StatusMessage($"KOT — Quick Bill #{res.BillNumber}, Total: ₹{res.TotalAmount:0.##}");
         }
-
-        _printer.Enqueue("KOT", cfg, ticket);
     }
 
     /// <summary>
-    /// Closes a quick bill: records it as settled and clears the counter for the next
-    /// customer. Every quick-bill button ends here, so a sale can only ever be written once
-    /// however the operator finishes it.
+    /// Writes a quick bill as settled. Every quick-bill button records the sale through here,
+    /// so it can only ever be written once however the operator finishes it. Clearing the
+    /// counter is <see cref="ClearCounter"/>'s job — printing goes in between the two, so
+    /// paper is on its way before the screen redraws.
     /// </summary>
-    private SaveOrderResult FinishQuickBill()
+    private SaveOrderResult RecordQuickBill() => _orders.SaveFinalOrder(BuildPayload("completed"));
+
+    /// <summary>Empties the counter for the next customer.</summary>
+    private void ClearCounter()
     {
-        var result = _orders.SaveFinalOrder(BuildPayload("completed"));
         Cart.Clear();
         ClearDiscount();
         ClearEditingNoteState();
         RaiseTotals();
-        return result;
     }
 
     private static void ShowPrintError(string what, string error) =>
@@ -691,6 +703,10 @@ public partial class MainViewModel : ObservableObject
             var bill = builder.BuildBill(lines, res.BillNumber?.ToString() ?? "", SelectedTable.TableNumber,
                                          discount, total, DateTime.Now);
 
+            // Queued the instant the bill has its number: everything below is the counter
+            // redrawing itself, and the customer should not be watching paper wait for it.
+            _printer.Enqueue("Bill", cfg, bill, withQr: true);
+
             LoadTables();
             foreach (var l in Cart)
             {
@@ -700,20 +716,49 @@ public partial class MainViewModel : ObservableObject
             SelectedCartTab = "Old";
             RaiseTotals();
             StatusMessage($"Bill — Table {SelectedTable.TableNumber}, Bill #{res.BillNumber}");
-            _printer.Enqueue("Bill", cfg, bill, withQr: true);
         }
         else
         {
             // Quick bill: the kitchen ticket goes out alongside the customer's bill, because
             // nothing was sent earlier — there is no running table order behind it.
             var ticket = builder.BuildKot(KotLines(), "Quick", null);
-            var res = FinishQuickBill();
+            var res = RecordQuickBill();
             var bill = builder.BuildBill(lines, res.BillNumber?.ToString() ?? "", "", discount, total, DateTime.Now);
 
-            StatusMessage($"KOT + Bill — Quick Bill #{res.BillNumber}");
             _printer.Enqueue("KOT", cfg, ticket);
             _printer.Enqueue("Bill", cfg, bill, withQr: true);
+
+            ClearCounter();
+            StatusMessage($"KOT + Bill — Quick Bill #{res.BillNumber}");
         }
+    }
+
+    /// <summary>
+    /// Reprints a settled bill from the Reports log — the duplicate copy a customer asks for
+    /// after the paper is gone.
+    ///
+    /// It goes through the same builder, config and spooler as the original print, so the
+    /// duplicate reads identically instead of being a second, differently-formatted document.
+    /// Nothing is written back: a reprint must not touch the day's takings or the bill number.
+    /// </summary>
+    public void ReprintBill(Order order, IReadOnlyList<OrderItem> items)
+    {
+        if (items.Count == 0) return;
+
+        var cfg = Settings.BuildPrintConfig();
+        var lines = items
+            .Select(i => new Pos.Core.Printing.PrintLine(
+                i.ItemName ?? "", Math.Max(1, i.Quantity), i.Price, i.IsParcel != 0))
+            .ToList();
+
+        // The bill carries the time it was originally billed, not the time of the reprint.
+        var billedAt = DateTime.TryParse(order.BilledAt ?? order.CreatedAt, out var d) ? d : DateTime.Now;
+
+        var bill = new Pos.Core.Printing.ReceiptBuilder(cfg).BuildBill(
+            lines, order.BillNumber?.ToString() ?? "", order.TableNumber ?? "",
+            order.DiscountAmount, order.TotalAmount, billedAt);
+
+        _printer.Enqueue("Bill", cfg, bill, withQr: true);
     }
 
     [RelayCommand]

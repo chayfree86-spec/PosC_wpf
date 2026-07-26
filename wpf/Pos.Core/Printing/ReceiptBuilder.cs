@@ -146,19 +146,48 @@ public sealed class ReceiptBuilder
     private string KotRow(PrintLine i, bool showHash) =>
         ItemNameCell(i, KotNameWidth, showHash) + RightFit(Math.Max(1, i.Qty).ToString(), KotQtyWidth);
 
+    // ── Bill header (shop branding) ──────────────────────────────────────────
+
+    /// <summary>
+    /// The shop's name for the top of the bill, or null when its "print" switch is off.
+    /// Kept apart from <see cref="HeaderDetailLines"/> because the on-screen preview shows
+    /// the name as its heading and the rest as small print.
+    /// </summary>
+    public string? StoreHeading =>
+        _cfg.ShowName && !string.IsNullOrWhiteSpace(_cfg.StoreName) ? _cfg.StoreName : null;
+
+    /// <summary>
+    /// Everything under the name — website, phone, email, GST, food licence, address — in
+    /// paper order, and only the ones switched on in Settings → Profile.
+    ///
+    /// The bill preview renders these same lines, so a detail toggled on or off changes both
+    /// the screen and the paper from one place instead of two lists drifting apart.
+    /// </summary>
+    public IReadOnlyList<string> HeaderDetailLines()
+    {
+        var lines = new List<string>();
+        void Add(bool show, string value, string prefix = "")
+        {
+            if (show && !string.IsNullOrWhiteSpace(value)) lines.Add(prefix + value.Trim());
+        }
+
+        Add(_cfg.ShowWebsite, _cfg.Website);
+        Add(_cfg.ShowPhone, _cfg.Phone, "Mob: ");
+        Add(_cfg.ShowEmail, _cfg.Email);
+        Add(_cfg.ShowGst, _cfg.GstNo, "Gst No. ");
+        Add(_cfg.ShowFoodLicense, _cfg.FoodLicenseNo, "Foodlicense No. ");
+        Add(_cfg.ShowAddress, _cfg.Address);
+        return lines;
+    }
+
     // ── Customer bill ────────────────────────────────────────────────────────
     public string BuildBill(IReadOnlyList<PrintLine> items, string billNumber, string tableNumber,
         double discount, double grandTotal, DateTime billedAt)
     {
         var sb = new StringBuilder();
         if (!string.IsNullOrWhiteSpace(billNumber)) sb.AppendLine($"Bill: {billNumber}");
-        if (_cfg.ShowName && !string.IsNullOrWhiteSpace(_cfg.StoreName)) sb.AppendLine(_cfg.StoreName);
-        if (_cfg.ShowWebsite && !string.IsNullOrWhiteSpace(_cfg.Website)) sb.AppendLine(_cfg.Website);
-        if (_cfg.ShowPhone && !string.IsNullOrWhiteSpace(_cfg.Phone)) sb.AppendLine($"Mob: {_cfg.Phone}");
-        if (_cfg.ShowEmail && !string.IsNullOrWhiteSpace(_cfg.Email)) sb.AppendLine(_cfg.Email);
-        if (_cfg.ShowGst && !string.IsNullOrWhiteSpace(_cfg.GstNo)) sb.AppendLine($"Gst No. {_cfg.GstNo}");
-        if (_cfg.ShowFoodLicense && !string.IsNullOrWhiteSpace(_cfg.FoodLicenseNo)) sb.AppendLine($"Foodlicense No. {_cfg.FoodLicenseNo}");
-        if (_cfg.ShowAddress && !string.IsNullOrWhiteSpace(_cfg.Address)) sb.AppendLine(_cfg.Address);
+        if (StoreHeading is { } heading) sb.AppendLine(heading);
+        foreach (var line in HeaderDetailLines()) sb.AppendLine(line);
 
         // InvariantCulture: "/" in a format string means "culture's date separator",
         // which renders as "-" on some machines. The receipt must always read dd/MM/yy.

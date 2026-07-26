@@ -44,13 +44,30 @@ public sealed class PrintSpooler : IDisposable
         }
     }
 
+    /// <summary>
+    /// Primes the printer while the app is still starting, so the first bill of the day does
+    /// not pay for it. Queued like any other job: it runs on the printer thread, behind
+    /// nothing, and cannot hold up the UI.
+    /// </summary>
+    public void Warmup(PrintConfig config) => _jobs.Add(new Job("", config, "", false, IsWarmup: true));
+
     private void Run()
     {
+        // One printer for the life of the thread: it holds the resolved print queue open
+        // instead of reopening it — about 100ms — for every receipt.
+        using var printer = new ReceiptPrinter();
+
         foreach (var job in _jobs.GetConsumingEnumerable())
         {
             try
             {
-                var error = new ReceiptPrinter(job.Config).Print(job.Text, job.WithQr);
+                if (job.IsWarmup)
+                {
+                    printer.Warmup(job.Config);
+                    continue;
+                }
+
+                var error = printer.Print(job.Config, job.Text, job.WithQr);
                 if (error is not null)
                 {
                     Failed?.Invoke(job.What, error);
@@ -65,5 +82,5 @@ public sealed class PrintSpooler : IDisposable
 
     public void Dispose() => _jobs.CompleteAdding();
 
-    private sealed record Job(string What, PrintConfig Config, string Text, bool WithQr);
+    private sealed record Job(string What, PrintConfig Config, string Text, bool WithQr, bool IsWarmup = false);
 }

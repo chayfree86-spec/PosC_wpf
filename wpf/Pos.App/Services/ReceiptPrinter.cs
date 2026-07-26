@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Xps.Packaging;
 using Pos.Core.Printing;
 
 namespace Pos.App.Services;
@@ -15,37 +16,38 @@ namespace Pos.App.Services;
 /// Output goes through a WPF FlowDocument on the selected queue (the same "universal
 /// driver" path Test Print already uses), so any thermal printer with a Windows driver
 /// works — no vendor-specific ESC/POS byte streams required.
+///
+/// One instance lives for the whole session on the spooler thread and holds the resolved
+/// print queue open. Opening a LocalPrintServer and looking the queue up again costs about
+/// 100ms, and it was being paid on every single bill.
 /// </summary>
-public sealed class ReceiptPrinter
+public sealed class ReceiptPrinter : IDisposable
 {
-    private readonly PrintConfig _cfg;
-
-    public ReceiptPrinter(PrintConfig cfg) => _cfg = cfg;
+    private LocalPrintServer? _server;
+    private PrintQueue? _queue;
+    private string _queueName = "";
 
     /// <summary>
     /// Prints <paramref name="text"/> once per configured copy.
     /// Returns null on success, or an error message the caller can surface.
     /// </summary>
-    public string? Print(string text, bool withQr = false)
+    public string? Print(PrintConfig cfg, string text, bool withQr = false)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(_cfg.PrinterName)
-                || _cfg.PrinterName.StartsWith("Default Thermal", StringComparison.OrdinalIgnoreCase))
+            var queue = Resolve(cfg);
+            if (queue is null)
             {
                 return "Koi printer select nahi hai — Settings → Printer Settings me printer chunein.";
             }
 
-            using var server = new LocalPrintServer();
-            var queue = server.GetPrintQueue(_cfg.PrinterName);
-
-            var copies = Math.Max(1, Math.Min(10, _cfg.Copies));
+            var copies = Math.Max(1, Math.Min(10, cfg.Copies));
             for (var c = 0; c < copies; c++)
             {
                 // A fresh document per copy keeps each spool job small — large recycled
                 // FlowDocuments are what previously fragmented the LOH and stalled the spooler.
                 var dlg = new PrintDialog { PrintQueue = queue };
-                var doc = BuildDocument(text, withQr);
+                var doc = BuildDocument(cfg, text, withQr);
                 var paginator = ((IDocumentPaginatorSource)doc).DocumentPaginator;
                 paginator.PageSize = new Size(doc.PageWidth, doc.PageHeight);
                 dlg.PrintDocument(paginator, "POS Receipt");
@@ -54,13 +56,75 @@ public sealed class ReceiptPrinter
         }
         catch (Exception ex)
         {
+            // A queue can go stale (printer unplugged, driver reinstalled). Drop it so the
+            // next bill looks it up fresh instead of failing for the rest of the session.
+            Release();
             return ex.Message;
         }
     }
 
-    private FlowDocument BuildDocument(string text, bool withQr)
+    /// <summary>
+    /// Pays the print stack's one-off startup cost before any customer is waiting.
+    ///
+    /// The first receipt of a session took ~600ms longer than every later one: WPF loads and
+    /// JITs its XPS serialisation path on first use. Doing that here — at app start, against
+    /// a throwaway file, with no printer involved — means the first real bill is as quick as
+    /// the hundredth. Best-effort by design: a failure here must never surface to the till.
+    /// </summary>
+    public void Warmup(PrintConfig cfg)
     {
-        double width = _cfg.Is58mm ? 200 : 280;
+        var scratch = Path.Combine(Path.GetTempPath(), $"pos_warmup_{Guid.NewGuid():N}.xps");
+        try
+        {
+            Resolve(cfg);
+
+            var doc = BuildDocument(cfg, "warmup", withQr: false);
+            var paginator = ((IDocumentPaginatorSource)doc).DocumentPaginator;
+            paginator.PageSize = new Size(doc.PageWidth, doc.PageHeight);
+
+            var xps = new XpsDocument(scratch, FileAccess.Write);
+            XpsDocument.CreateXpsDocumentWriter(xps).Write(paginator);
+            xps.Close();
+        }
+        catch { /* a cold first bill is better than a crash on startup */ }
+        finally
+        {
+            try { File.Delete(scratch); } catch { /* temp file, nothing depends on it */ }
+        }
+    }
+
+    /// <summary>Returns the cached queue, reopening it only when the chosen printer changes.</summary>
+    private PrintQueue? Resolve(PrintConfig cfg)
+    {
+        if (string.IsNullOrWhiteSpace(cfg.PrinterName)
+            || cfg.PrinterName.StartsWith("Default Thermal", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        if (_queue is not null && _queueName == cfg.PrinterName) return _queue;
+
+        Release();
+        _server = new LocalPrintServer();
+        _queue = _server.GetPrintQueue(cfg.PrinterName);
+        _queueName = cfg.PrinterName;
+        return _queue;
+    }
+
+    private void Release()
+    {
+        _queue?.Dispose();
+        _server?.Dispose();
+        _queue = null;
+        _server = null;
+        _queueName = "";
+    }
+
+    public void Dispose() => Release();
+
+    private static FlowDocument BuildDocument(PrintConfig cfg, string text, bool withQr)
+    {
+        double width = cfg.Is58mm ? 200 : 280;
         var doc = new FlowDocument
         {
             PageWidth = width,
@@ -81,14 +145,14 @@ public sealed class ReceiptPrinter
             });
         }
 
-        if (withQr && _cfg.PrintQrOnBill && !string.IsNullOrWhiteSpace(_cfg.QrImagePath) && File.Exists(_cfg.QrImagePath))
+        if (withQr && cfg.PrintQrOnBill && !string.IsNullOrWhiteSpace(cfg.QrImagePath) && File.Exists(cfg.QrImagePath))
         {
             try
             {
                 var bmp = new BitmapImage();
                 bmp.BeginInit();
                 bmp.CacheOption = BitmapCacheOption.OnLoad;
-                bmp.UriSource = new Uri(_cfg.QrImagePath);
+                bmp.UriSource = new Uri(cfg.QrImagePath);
                 bmp.EndInit();
                 bmp.Freeze();
 

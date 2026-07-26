@@ -17,7 +17,15 @@
             <!-- Header -->
             <StackPanel Grid.Row="0" Margin="22,20,22,10">
                 <TextBlock x:Name="StoreName" Text="Chay Chaupal" Foreground="White" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
-                <TextBlock x:Name="BillNoText" Foreground="{StaticResource Accent}" FontSize="13" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                <ItemsControl x:Name="StoreDetails" HorizontalAlignment="Center" Margin="0,3,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" Foreground="{StaticResource TextMuted}" FontSize="11"
+                                       HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock x:Name="BillNoText" Foreground="{StaticResource Accent}" FontSize="13" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,6,0,0"/>
                 <Grid Margin="0,8,0,0">
                     <TextBlock x:Name="DateText" Foreground="{StaticResource TextMuted}" FontSize="12" HorizontalAlignment="Left"/>
                     <TextBlock x:Name="TableText" Foreground="{StaticResource TextMuted}" FontSize="12" HorizontalAlignment="Right"/>
@@ -62,8 +70,22 @@
                 </Grid>
             </StackPanel>
 
-            <Button Grid.Row="4" Content="Close" Height="44" Margin="22,0,22,20" Click="Close_Click" Cursor="Hand"
-                    Background="{StaticResource CardBg}" Foreground="{StaticResource TextPrimary}" FontWeight="SemiBold" BorderThickness="0"/>
+            <Grid Grid.Row="4" Margin="22,0,22,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="Close" Height="44" Click="Close_Click" Cursor="Hand"
+                        Background="{StaticResource CardBg}" Foreground="{StaticResource TextPrimary}" FontWeight="SemiBold" BorderThickness="0"/>
+                <Button x:Name="PrintButton" Grid.Column="2" Height="44" Click="Print_Click" Cursor="Hand"
+                        Background="{StaticResource AccentGrad}" Foreground="White" FontWeight="Bold" BorderThickness="0">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="&#xE749;" FontFamily="Segoe MDL2 Assets" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Print Bill" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
         </Grid>
     </Border>
 </Window>

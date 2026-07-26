@@ -14,6 +14,13 @@ public partial class ReportsView : UserControl
         if ((sender as FrameworkElement)?.DataContext is not ReportRow row) return;
 
         var items = vm.LoadItems(row.Order.Id);
-        new BillViewModal(row, items) { Owner = Window.GetWindow(this) }.ShowDialog();
+        var owner = Window.GetWindow(this);
+
+        // Reprinting goes through the main view model so the duplicate uses the one print
+        // spooler — a second spooler would put two jobs on a thermal printer at once.
+        var main = owner?.DataContext as MainViewModel;
+        var reprint = main is null ? (Action?)null : () => main.ReprintBill(row.Order, items);
+
+        new BillViewModal(row, items, reprint, main?.Settings.BuildPrintConfig()) { Owner = owner }.ShowDialog();
     }
 }
