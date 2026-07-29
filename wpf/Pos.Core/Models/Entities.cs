@@ -65,6 +65,12 @@ public sealed class TableView : INotifyPropertyChanged
     public long? AreaId { get; set; }
     public string? AreaName { get; set; }
 
+    // Same reason as Category above: the Split Table modal's target dropdown is bound with
+    // DisplayMemberPath="TableNumber", and its closed selection box fell back to the type
+    // name — so the operator picked which table to split onto from a list reading
+    // "Pos.Core.Models.TableView".
+    public override string ToString() => TableNumber;
+
     public string Status
     {
         get => _status;
@@ -146,6 +152,10 @@ public sealed class Order
     public long IsParcelMode { get; set; }
     public string? TableNumber { get; set; }
     public string? CreatedAt { get; set; }
+    /// <summary>The operator who billed it — null on anything written before sign-in existed.</summary>
+    public long? CreatedBy { get; set; }
+    /// <summary>Joined from users for the reports table; not stored on the order itself.</summary>
+    public string? CreatedByName { get; set; }
 
     public List<OrderItem> Items { get; set; } = new();
 }

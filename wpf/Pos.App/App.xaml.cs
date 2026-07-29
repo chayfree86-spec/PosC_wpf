@@ -3,6 +3,7 @@ using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Pos.App.Services;
 using Pos.App.ViewModels;
+using Pos.App.Views;
 using Pos.Core.Data;
 using Pos.Core.Repositories;
 using Pos.Core.Sync;
@@ -30,7 +31,7 @@ public partial class App : Application
             File.AppendAllText(ErrorLog,
                 $"{DateTime.UtcNow.AddMinutes(330):yyyy-MM-dd HH:mm:ss} Dispatcher: {args.Exception}"
                 + Environment.NewLine + Environment.NewLine);
-            MessageBox.Show(args.Exception.Message, "POS error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Alert(args.Exception.Message, "POS error");
             args.Handled = true;
         };
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
@@ -43,8 +44,46 @@ public partial class App : Application
         catch (Exception ex)
         {
             File.WriteAllText(ErrorLog, "Startup: " + ex);
-            MessageBox.Show(ex.ToString(), "POS startup error");
+            Alert(ex.ToString(), "POS startup error");
             Shutdown();
+        }
+    }
+
+    /// <summary>
+    /// Points the whole app at the business the signed-in operator belongs to.
+    ///
+    /// Called after every sign-in, including the one after a logout: the counter is shared, so
+    /// the brand can change without the app restarting. A till whose staff list has never
+    /// synced signs nobody in and simply keeps the client it already had.
+    /// </summary>
+    public static void ApplySignedInClient()
+    {
+        if (Session.User is not { } user)
+        {
+            return;
+        }
+
+        Services.GetRequiredService<ClientContext>()
+            .Use(user.ClientId, user.ClientSlug, user.ClientName);
+    }
+
+    /// <summary>
+    /// The crash handlers' way of speaking to the operator.
+    ///
+    /// Themed like every other dialog in the app, but with the native box behind it: these two
+    /// handlers are the last thing standing between a fault and a blank screen, and a startup
+    /// that failed early enough to take the app resources with it would otherwise swallow the
+    /// one message explaining why nothing opened.
+    /// </summary>
+    private static void Alert(string message, string title)
+    {
+        try
+        {
+            ThemeMessageBox.Show(message, title, "error");
+        }
+        catch
+        {
+            MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -57,6 +96,10 @@ public partial class App : Application
         // The canonical local database: Documents\ChayChaupalPOS\sqlite\pos.sqlite3.
         // Billing runs entirely against this file — nothing on screen needs the network.
         sc.AddSingleton(new DatabaseService(DatabaseService.DefaultDbPath()));
+
+        // Which business the counter is billing for. Set from the sign-in below and read by
+        // every repository, so a Chay Chaupal shift can't file its takings under Daal Roti.
+        sc.AddSingleton<ClientContext>();
         sc.AddSingleton<MenuRepository>();
         sc.AddSingleton<TableRepository>();
         sc.AddSingleton<OrderRepository>();
@@ -90,6 +133,23 @@ public partial class App : Application
         // A saved setting goes out at once instead of waiting for the next scheduled pass —
         // the operator has just pressed Save and expects it to be shared, not queued.
         Services.GetRequiredService<AppSettingsRepository>().SettingQueued += sync.NudgePush;
+
+        // Nobody bills until the till knows who is standing at it.
+        //
+        // Skipped on a machine whose staff list has never come down: there is nothing to check
+        // a PIN against before the first sync, and locking a fresh install out of its own app
+        // would strand the counter on the one day it can least afford it.
+        if (Services.GetRequiredService<AuthRepository>().HasUsers() && !LoginWindow.Authenticate())
+        {
+            Shutdown();
+            return;
+        }
+
+        // Every bill from here on records who took it, so Reports can be read per operator.
+        // Read through a delegate rather than captured once: the operator changes at logout,
+        // and a captured id would keep crediting whoever opened the app this morning.
+        Services.GetRequiredService<OrderRepository>().CurrentUserId = () => Session.User?.Id;
+        ApplySignedInClient();
 
         var window = new MainWindow { DataContext = Services.GetRequiredService<MainViewModel>() };
         MainWindow = window;

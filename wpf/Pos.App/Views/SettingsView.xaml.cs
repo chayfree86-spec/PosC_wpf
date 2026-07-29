@@ -31,7 +31,7 @@ public partial class SettingsView : UserControl
         try { save(); }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, "Save Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemeMessageBox.Show(ex.Message, "Save Failed", "error");
         }
     }
     private static T? Item<T>(object sender) where T : class => (sender as FrameworkElement)?.DataContext as T;
@@ -60,7 +60,7 @@ public partial class SettingsView : UserControl
         var parents = Vm.Categories.Where(c => !c.ParentId.HasValue || c.ParentId == 0).ToList();
         if (parents.Count == 0)
         {
-            MessageBox.Show("Pehle ek Parent Category banayein.", "No Parent Category", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemeMessageBox.Show(Window.GetWindow(this), "Pehle ek Parent Category banayein.", "No Parent Category", "warning");
             return;
         }
         var dlg = new CatalogEditModal("subcategory", "Add Subcategory", parentCategories: parents) { Owner = Window.GetWindow(this) };
@@ -75,7 +75,8 @@ public partial class SettingsView : UserControl
         var msg = row.IsParent
             ? $"Kya aap sach me category \"{c.Name}\" ko delete karna chahte hain? Isse is category ke sabhi main/sub items unassigned ho sakte hain."
             : $"Kya aap sach me subcategory \"{c.Name}\" ko delete karna chahte hain? Iske andar ke sabhi items auto-transfer hokar iski main category me chale jayenge.";
-        if (MessageBox.Show(msg, row.IsParent ? "Delete Category" : "Delete Subcategory", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+        if (ThemeMessageBox.Confirm(Window.GetWindow(this), msg,
+                row.IsParent ? "Delete Category" : "Delete Subcategory", "danger"))
             Vm.DeleteCategoryWithTransfer(c);
     }
 

@@ -16,17 +16,39 @@ public sealed class OrderRepository
 {
     private readonly DatabaseService _db;
 
-    public OrderRepository(DatabaseService db)
+
+    /// <summary>Which business the till is billing for; every client-scoped read and write
+    /// below defaults to it so no call site has to remember to pass one.</summary>
+    private readonly ClientContext _client;
+
+    public OrderRepository(DatabaseService db, ClientContext client)
     {
         _db = db;
+        _client = client;
         DapperConfig.Init();
     }
+
+    /// <summary>
+    /// Who is at the till, so every bill records who took it.
+    ///
+    /// Wired once at startup rather than passed down through each payload: an order is written
+    /// from eight different places — KOT, final bill, merge, split, transfer, clear — and a
+    /// parameter would eventually be forgotten at one of them. That one is then the operator
+    /// whose sales quietly go missing from their own report.
+    /// </summary>
+    public Func<long?>? CurrentUserId { get; set; }
+
+    /// <summary>Stamps the operator onto the payload before anything is written, so the row and
+    /// the sync body that follows it can't disagree about who billed.</summary>
+    private void StampOperator(TableOrderPayload payload) =>
+        payload.CreatedBy ??= CurrentUserId?.Invoke();
 
     // ── Reads ────────────────────────────────────────────────────────────────
 
     /// <summary>Latest non-settled order (with items) backing a table, or null.</summary>
-    public Order? GetActiveOrderForTable(long tableId, long clientId = 1)
+    public Order? GetActiveOrderForTable(long tableId, long? clientId = null)
     {
+        clientId ??= _client.ClientId;
         using var conn = _db.OpenConnection();
         var order = conn.QueryFirstOrDefault<Order>(
             @"SELECT o.*, rt.table_number
@@ -45,10 +67,11 @@ public sealed class OrderRepository
         return order;
     }
 
-    public NextBillNumberResult NextBillNumber(long clientId = 1)
+    public NextBillNumberResult NextBillNumber(long? clientId = null)
     {
+        clientId ??= _client.ClientId;
         using var conn = _db.OpenConnection();
-        return NextBillNumberInternal(conn, null, clientId);
+        return NextBillNumberInternal(conn, null, clientId.Value);
     }
 
     // ── KOT / Bill / Clear ───────────────────────────────────────────────────
@@ -59,16 +82,19 @@ public sealed class OrderRepository
     /// touches table state — putting quick bills through <see cref="SaveTableOrder"/>
     /// instead is what used to park them on the first table.
     /// </summary>
-    public SaveOrderResult SaveFinalOrder(TableOrderPayload payload, long clientId = 1, string orderStatus = "settled")
+    public SaveOrderResult SaveFinalOrder(TableOrderPayload payload, long? clientId = null, string orderStatus = "settled")
     {
+        clientId ??= _client.ClientId;
+        StampOperator(payload);
+
         using var conn = _db.OpenConnection();
         using var tx = conn.BeginTransaction();
 
         var items = payload.Items ?? new List<OrderItemInput>();
         var total = payload.TotalAmount ?? ItemsTotal(items);
         // A new row every time, so the number has to be one nobody else holds.
-        var billNumber = ResolveUniqueBillNumber(conn, tx, clientId,
-            payload.BillNumber ?? NextBillNumberInternal(conn, tx, clientId).BillNumber, null);
+        var billNumber = ResolveUniqueBillNumber(conn, tx, clientId.Value,
+            payload.BillNumber ?? NextBillNumberInternal(conn, tx, clientId.Value).BillNumber, null);
 
         conn.Execute(
             @"INSERT INTO orders
@@ -76,7 +102,7 @@ public sealed class OrderRepository
                 discount_amount, discount_type, discount_value, discount_label,
                 customer_name, customer_mobile, bill_note, is_kot_only, report_visible,
                 billed_at, bill_number, live_sync_status, is_parcel_mode, created_at, updated_at)
-              VALUES (@clientId, @tableId, NULL, NULL, @orderStatus, @total,
+              VALUES (@clientId, @tableId, NULL, @createdBy, @orderStatus, @total,
                 @discountAmount, @discountType, @discountValue, @discountLabel,
                 @customerName, @customerMobile, @billNote, 0, 1,
                 COALESCE(@billedAt, datetime('now', '+330 minutes')), @billNumber, 'pending',
@@ -85,6 +111,7 @@ public sealed class OrderRepository
             {
                 clientId,
                 tableId = payload.TableId,          // null for a quick bill
+                createdBy = payload.CreatedBy,
                 orderStatus, total,
                 discountAmount = payload.DiscountAmount, discountType = TextOrNull(payload.DiscountType),
                 discountValue = payload.DiscountValue, discountLabel = TextOrNull(payload.DiscountLabel),
@@ -101,7 +128,7 @@ public sealed class OrderRepository
         ReplaceItems(conn, tx, orderId, items);
         LogStatus(conn, tx, orderId, orderStatus);
         Enqueue(conn, tx, "order", orderId.ToString(), "upsert",
-            SyncBody(orderId, OrderUuid(conn, tx, orderId), payload.TableId, billNumber, total, null,
+            SyncBody(clientId.Value, orderId, OrderUuid(conn, tx, orderId), payload.TableId, billNumber, total, null,
                      orderStatus, payload, items));
 
         tx.Commit();
@@ -112,8 +139,11 @@ public sealed class OrderRepository
         };
     }
 
-    public SaveOrderResult SaveTableOrder(TableOrderPayload payload, long clientId = 1)
+    public SaveOrderResult SaveTableOrder(TableOrderPayload payload, long? clientId = null)
     {
+        clientId ??= _client.ClientId;
+        StampOperator(payload);
+
         using var conn = _db.OpenConnection();
         using var tx = conn.BeginTransaction();
 
@@ -142,7 +172,7 @@ public sealed class OrderRepository
                 LogStatus(conn, tx, existingClear.Value, "settled");
             }
 
-            UpdateTableState(conn, tx, tableId, clientId, "available", 0, null);
+            UpdateTableState(conn, tx, tableId, clientId.Value, "available", 0, null);
             // items must be present (even empty) — that empty list is exactly how the
             // server is told "this table is done, settle its running order".
             Enqueue(conn, tx, "table_state", tableId.ToString(), "upsert",
@@ -165,8 +195,8 @@ public sealed class OrderRepository
 
         var isFinalBill = (tableStatus is "available" or "complete" or "completed") && items.Count > 0;
         long? billNumber = isFinalBill
-            ? ResolveUniqueBillNumber(conn, tx, clientId,
-                existing?.BillNumber ?? payload.BillNumber ?? NextBillNumberInternal(conn, tx, clientId).BillNumber,
+            ? ResolveUniqueBillNumber(conn, tx, clientId.Value,
+                existing?.BillNumber ?? payload.BillNumber ?? NextBillNumberInternal(conn, tx, clientId.Value).BillNumber,
                 hasExisting ? existing!.Id : null)
             : null;
 
@@ -208,13 +238,14 @@ public sealed class OrderRepository
                     discount_type, discount_value, discount_label, customer_name, customer_mobile,
                     bill_note, is_kot_only, report_visible, billed_at, bill_number, live_sync_status,
                     is_parcel_mode, created_at, updated_at)
-                  VALUES (@clientId, @tableId, NULL, @orderStatus, @total, @discountAmount,
+                  VALUES (@clientId, @tableId, @createdBy, @orderStatus, @total, @discountAmount,
                     @discountType, @discountValue, @discountLabel, @customerName, @customerMobile,
                     @billNote, @isKotOnly, @reportVisible, @billedAt, @billNumber, @liveSyncStatus,
                     @isParcelMode, datetime('now', '+330 minutes'), datetime('now', '+330 minutes'));",
                 new
                 {
                     clientId, tableId, orderStatus, total,
+                    createdBy = payload.CreatedBy,
                     discountAmount = payload.DiscountAmount, discountType = TextOrNull(payload.DiscountType),
                     discountValue = payload.DiscountValue, discountLabel = TextOrNull(payload.DiscountLabel),
                     customerName = TextOrNull(payload.CustomerName), customerMobile = TextOrNull(payload.CustomerMobile),
@@ -267,7 +298,7 @@ public sealed class OrderRepository
             "SELECT order_timestamp FROM table_client_states WHERE table_id = @tableId AND client_id = @clientId",
             new { tableId, clientId }, tx);
         var isAvailable = tableStatus == "available";
-        UpdateTableState(conn, tx, tableId, clientId, tableStatus,
+        UpdateTableState(conn, tx, tableId, clientId.Value, tableStatus,
             isAvailable ? 0 : finalTotal,
             isAvailable ? null : (existingTs ?? payload.OrderTimestamp ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()));
 
@@ -276,7 +307,7 @@ public sealed class OrderRepository
             "SELECT * FROM order_items WHERE order_id = @orderId ORDER BY id", new { orderId }, tx)
             .Select(ToInput).ToList();
         Enqueue(conn, tx, "table_order", orderId.ToString(), "upsert",
-            SyncBody(orderId, OrderUuid(conn, tx, orderId), tableId, billNumber, finalTotal, tableStatus,
+            SyncBody(clientId.Value, orderId, OrderUuid(conn, tx, orderId), tableId, billNumber, finalTotal, tableStatus,
                      orderStatus, payload, syncItems));
 
         tx.Commit();
@@ -456,6 +487,7 @@ public sealed class OrderRepository
     /// — so nothing could ever have synced. Field names are snake_case to match the API.
     /// </summary>
     private static Dictionary<string, object?> SyncBody(
+        long clientId,
         long orderId, string sqliteUuid, long? tableId, long? billNumber, double total, string? tableStatus,
         string orderStatus, TableOrderPayload payload, IEnumerable<OrderItemInput> items) =>
         new()
@@ -466,7 +498,13 @@ public sealed class OrderRepository
             ["sqlite_uuid"] = sqliteUuid,
             ["created_at"] = IstNow(),
             ["updated_at"] = IstNow(),
-            ["client_id"] = 1,
+            // Whose bill this is. Hard-coded to 1 while the till served one brand; with Daal
+            // Roti and Chay Chaupal sharing the counter that would file every Chay Chaupal bill
+            // under Daal Roti the moment it reached the server.
+            ["client_id"] = clientId,
+            // Order::syncFromLocal on the server already persists this; without it the
+            // dashboard's reports would credit nobody while the till's credit the operator.
+            ["created_by"] = payload.CreatedBy,
             ["table_id"] = tableId,
             ["table_status"] = tableStatus,
             ["order_status"] = orderStatus,

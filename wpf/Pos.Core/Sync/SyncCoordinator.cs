@@ -33,11 +33,13 @@ public sealed class SyncCoordinator : IDisposable
 
     private readonly DatabaseService _db;
     private readonly AppSettingsRepository _settings;
+    private readonly ClientContext _client;
     private CancellationTokenSource? _cts;
     private DateTime _lastPullIst = DateTime.MinValue;
 
-    public SyncCoordinator(DatabaseService db, AppSettingsRepository settings)
+    public SyncCoordinator(DatabaseService db, AppSettingsRepository settings, ClientContext client)
     {
+        _client = client;
         _db = db;
         _settings = settings;
     }
@@ -136,7 +138,10 @@ public sealed class SyncCoordinator : IDisposable
         string? pullError = null;
         if (force || Ist.Now - _lastPullIst >= PullInterval)
         {
-            var pull = await new BootstrapSyncService(_db, api).PullAsync(1, ct);
+            // The signed-in business, not a literal: the staff list, the settings and the
+            // orders that come down all belong to one client, and pulling client 1's while
+            // Chay Chaupal is billing would quietly hand this counter the other brand's data.
+            var pull = await new BootstrapSyncService(_db, api).PullAsync(_client.ClientId, ct);
             if (pull.Ok)
             {
                 _lastPullIst = Ist.Now;

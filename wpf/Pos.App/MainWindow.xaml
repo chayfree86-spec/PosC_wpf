@@ -128,6 +128,18 @@
                         </StackPanel>
                     </Button>
                     <Border Height="1" Background="{StaticResource BorderSoft}" Margin="0,14"/>
+
+                    <!-- Who is on the till. The counter changes hands mid-shift, and the
+                         logout button below says nothing about whom it is logging out. -->
+                    <StackPanel x:Name="SidebarUserRow" Orientation="Horizontal" Margin="4,0,0,12"
+                                Visibility="Collapsed">
+                        <materialDesign:PackIcon Kind="AccountCircleOutline" Width="18" Height="18"
+                                                 Foreground="{StaticResource TextFaint}" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="SidebarUserText" Tag="NavText" Margin="12,0,0,0"
+                                   FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMuted}"
+                                   TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                    </StackPanel>
+
                     <Grid x:Name="SidebarFooterGrid">
                         <Button x:Name="BtnLogout" Click="Logout_Click" ToolTip="Logout"
                                 Height="40" Cursor="Hand" BorderThickness="1"

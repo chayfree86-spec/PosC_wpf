@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Pos.Core.Data;
 using Pos.Core.Models;
 using Pos.Core.Repositories;
 
@@ -128,10 +129,30 @@ public partial class SettingsViewModel : ObservableObject
 
     partial void OnMenuFilterSubcategoryIdChanged(long value) => MenuItemRowsView.Refresh();
 
-    public SettingsViewModel(AppSettingsRepository settings, CatalogRepository catalog)
+    public SettingsViewModel(AppSettingsRepository settings, CatalogRepository catalog, ClientContext client)
     {
         _settings = settings;
         _catalog = catalog;
+
+        // The counter changes brand at a shift change, and this view model outlives it. Without
+        // this the till would keep printing — and showing in the sidebar — the previous
+        // business's name, GST number and UPI id after someone else signed in.
+        client.Changed += () =>
+        {
+            // Wipe the branding first. Load() keeps the CURRENT value as its last fallback,
+            // which is right when re-reading the same business's partial profile and wrong
+            // across a shift change: a brand whose profile hasn't reached this counter yet
+            // would otherwise inherit the previous brand's name, GST number and address —
+            // and print them on its bills.
+            ClearBranding();
+            // Same leak as the branding: these are singleton fields that outlive the shift, so
+            // a "Saved ✓ 07:13 PM" from the previous business would greet the next one on a
+            // form it has not touched.
+            SavedMessage = "";
+            PinMessage = "";
+            Load();
+            LoadShortcuts();
+        };
         ShortcutsView = System.Windows.Data.CollectionViewSource.GetDefaultView(Shortcuts);
         ShortcutsView.Filter = o => o is not ShortcutItem s || string.IsNullOrWhiteSpace(ShortcutsSearch)
             || s.Action.Contains(ShortcutsSearch, StringComparison.OrdinalIgnoreCase)
@@ -317,11 +338,24 @@ public partial class SettingsViewModel : ObservableObject
         ReloadCatalog();
     }
 
+    /// <summary>Drops the printed identity so nothing carries over between businesses.</summary>
+    private void ClearBranding()
+    {
+        StoreName = "";
+        StoreWebsite = "";
+        StorePhone = "";
+        StoreEmail = "";
+        StoreGstNo = "";
+        StoreFoodLicenseNo = "";
+        StoreAddress = "";
+        StoreLogoUrl = "";
+    }
+
     private void Load()
     {
-        var s = _settings.GetJson<SettingsSnapshot>(SettingsKey);
-        var profile = _settings.GetJson<ProfileSnapshot>(ProfileKey);
-        var upi = _settings.GetJson<UpiSnapshot>(UpiKey);
+        var s = _settings.GetJsonForClient<SettingsSnapshot>(SettingsKey);
+        var profile = _settings.GetJsonForClient<ProfileSnapshot>(ProfileKey);
+        var upi = _settings.GetJsonForClient<UpiSnapshot>(UpiKey);
         // Printer settings used to live in the same blob. Reading the old one as a fallback
         // means an existing install keeps its printer instead of silently losing it.
         var device = _settings.GetJson<DeviceSnapshot>(DeviceSettingsKey);
@@ -350,7 +384,7 @@ public partial class SettingsViewModel : ObservableObject
         UpiName = Pick(upi?.UpiName, s.UpiName, UpiName);
         UpiPhone = Pick(upi?.UpiPhone, s.UpiPhone, UpiPhone);
         PrintQrCodeOnBill = upi?.PrintQrCode ?? s.PrintQrCodeOnBill;
-        DailyResetBillCounter = _settings.GetJson<bool?>(DailyResetKey) ?? s.DailyResetBillCounter;
+        DailyResetBillCounter = _settings.GetJsonForClient<bool?>(DailyResetKey) ?? s.DailyResetBillCounter;
 
         var printer = device?.SelectedPrinter ?? s.SelectedPrinter;
         PaperSize = device?.PaperSize ?? s.PaperSize ?? PaperSize;
@@ -380,7 +414,7 @@ public partial class SettingsViewModel : ObservableObject
 
     private void LoadShortcuts()
     {
-        var saved = _settings.GetJson<List<ShortcutItem>>(ShortcutsKey);
+        var saved = _settings.GetJsonForClient<List<ShortcutItem>>(ShortcutsKey);
         Shortcuts.Clear();
         foreach (var s in saved ?? DefaultShortcuts()) Shortcuts.Add(s);
     }

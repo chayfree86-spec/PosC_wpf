@@ -2,7 +2,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Pos.App.Services;
 using Pos.App.ViewModels;
+using Pos.App.Views;
 using Pos.Core.Models;
 using FoodItem = Pos.Core.Models.MenuItem;
 using TableView = Pos.Core.Models.TableView;
@@ -96,6 +98,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
+        RefreshSessionUser();
         RefocusSearchInput();
         Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
         {
@@ -447,20 +450,67 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Closes the till.
+    /// Hands the till to the next operator: back to the sign-in screen, not out of the app.
     ///
-    /// There is no sign-in screen yet, so this is the only thing "logout" can honestly do —
-    /// leaving the app open on an unlocked screen would be worse than closing it. When the
-    /// login screen lands, this returns there instead.
+    /// The window is hidden rather than closed so the shift change keeps whatever is on the
+    /// counter — a part-typed order does not belong in the bin because the person billing it
+    /// changed. On a machine whose staff list has never synced there is nobody to sign in as,
+    /// so closing is still the only honest thing logout can do there.
     /// </summary>
     private void Logout_Click(object sender, RoutedEventArgs e)
     {
-        var answer = MessageBox.Show(
-            "App band karein?", "Logout", MessageBoxButton.YesNo, MessageBoxImage.Question);
-        if (answer == MessageBoxResult.Yes)
+        var auth = App.Services.GetRequiredService<AuthRepository>();
+        var canSignIn = auth.HasUsers();
+
+        var confirmed = ThemeMessageBox.Confirm(
+            this,
+            canSignIn ? $"{Session.DisplayName} ko logout karein?" : "App band karein?",
+            "Logout");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        if (!canSignIn)
+        {
+            Application.Current.Shutdown();
+            return;
+        }
+
+        Session.SignOut();
+        Hide();
+
+        if (LoginWindow.Authenticate())
+        {
+            // The counter can change brand at a shift change, not just at startup — point the
+            // repositories at the business that just signed in before anything is billed.
+            App.ApplySignedInClient();
+            RefreshSessionUser();
+            Show();
+            Activate();
+            Focus();
+        }
+        else
         {
             Application.Current.Shutdown();
         }
+    }
+
+    /// <summary>Names the operator above the logout button — the button means little if it
+    /// doesn't say who is being logged out.</summary>
+    private void RefreshSessionUser()
+    {
+        SidebarUserRow.Visibility = Session.IsSignedIn ? Visibility.Visible : Visibility.Collapsed;
+        SidebarUserText.Text = Session.DisplayName;
+        BtnLogout.ToolTip = Session.IsSignedIn ? $"Logout — {Session.DisplayName}" : "Logout";
+
+        // Reports is a singleton that outlives a shift, so the staff filter has to be pointed
+        // at whoever just signed in — otherwise the new operator opens it on the last one's sales.
+        try
+        {
+            App.Services.GetRequiredService<ReportsViewModel>().SyncToSession();
+        }
+        catch { }
     }
 
     private static void ToggleNavTextVisibility(DependencyObject parent, Visibility visibility)
@@ -808,7 +858,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (Views.ThemeMessageBox.Show(this, $"WARNING: Are you sure you want to CANCEL & DELETE the bill for Table {table.TableNumber}?\nThis action cannot be undone.", "Confirm Delete Bill", "yesno") == true)
+        if (Views.ThemeMessageBox.Confirm(this, $"WARNING: Are you sure you want to CANCEL & DELETE the bill for Table {table.TableNumber}?\nThis action cannot be undone.", "Confirm Delete Bill", "danger"))
         {
             vm.DeleteTableOrder(table.Id);
             RefocusSearchInput();
@@ -899,7 +949,7 @@ public partial class MainWindow : Window
     {
         if (DataContext is not MainViewModel vm) return;
         var displayName = string.IsNullOrWhiteSpace(note.CustomerName) ? $"Quick Note #{note.Id}" : note.CustomerName;
-        if (Views.ThemeMessageBox.Show(this, $"Are you sure you want to DELETE note for '{displayName}'?", "Confirm Delete Note", "yesno") == true)
+        if (Views.ThemeMessageBox.Confirm(this, $"Are you sure you want to DELETE note for '{displayName}'?", "Confirm Delete Note", "danger"))
         {
             var notesRepo = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<QuickNotesRepository>(App.Services);
             notesRepo.DeleteNote(note.Id);

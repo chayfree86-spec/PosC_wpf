@@ -82,12 +82,12 @@ public partial class CatalogEditModal : Window
     {
         if (string.IsNullOrWhiteSpace(NameBox.Text))
         {
-            MessageBox.Show("Name is required.", "Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemeMessageBox.Show(this, "Name is required.", "Required", "warning");
             return;
         }
         if (_kind == "subcategory" && ParentCategoryId is null)
         {
-            MessageBox.Show("Parent Category select karein.", "Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemeMessageBox.Show(this, "Parent Category select karein.", "Required", "warning");
             return;
         }
         DialogResult = true;

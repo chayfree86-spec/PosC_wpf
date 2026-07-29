@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Pos.App.Services;
 using Pos.Core.Models;
 using Pos.Core.Repositories;
 
@@ -12,12 +13,18 @@ namespace Pos.App.ViewModels;
 public partial class ReportsViewModel : ObservableObject
 {
     private const int PageSize = 12;
+    private static readonly ReportStaff AllStaff = new() { Id = null, Name = "Sabhi Staff" };
+
     private readonly ReportsRepository _repo;
     private readonly List<ReportRow> _all = new();       // full result for the range
     private List<ReportRow> _filtered = new();           // after search
     private string _prefix = "DR";
+    private bool _suspendReload;                         // while the staff list is rebuilt
 
     public ObservableCollection<ReportRow> Orders { get; } = new();   // current page
+
+    /// <summary>"All staff" plus each active operator, for the staff filter.</summary>
+    public ObservableCollection<ReportStaff> Staff { get; } = new();
 
     [ObservableProperty] private string _rangeType = "today";
     [ObservableProperty] private string _startDate = "";
@@ -31,6 +38,7 @@ public partial class ReportsViewModel : ObservableObject
     [ObservableProperty] private DateTime _customStart = DateTime.Today;
     [ObservableProperty] private DateTime _customEnd = DateTime.Today;
     [ObservableProperty] private int _currentPage;
+    [ObservableProperty] private ReportStaff? _selectedStaff;
 
     public string PeriodDisplay => $"{Fmt(StartDate)}   to   {Fmt(EndDate)}";
     public int OrderCount => _filtered.Count;
@@ -40,7 +48,49 @@ public partial class ReportsViewModel : ObservableObject
     public ReportsViewModel(ReportsRepository repo)
     {
         _repo = repo;
+        _suspendReload = true;
+        LoadStaff();
+        _suspendReload = false;
         SetRange("today");
+    }
+
+    /// <summary>
+    /// Rebuilds the staff list and points the filter back at whoever is signed in.
+    ///
+    /// Needed because this view model is a singleton that outlives a shift: without it, the
+    /// operator who takes over after a logout would open Reports to the previous person's
+    /// sales, which reads as the shop having taken their money.
+    /// </summary>
+    public void SyncToSession()
+    {
+        _suspendReload = true;
+        LoadStaff();
+        _suspendReload = false;
+        Load();
+    }
+
+    private void LoadStaff()
+    {
+        var current = Session.User?.Id;
+
+        Staff.Clear();
+        Staff.Add(AllStaff);
+        foreach (var s in _repo.GetStaff())
+        {
+            Staff.Add(s);
+        }
+
+        // Default to the operator's own bills — "what did I take today" is the question this
+        // page gets opened to answer. The whole shop is one dropdown away.
+        SelectedStaff = Staff.FirstOrDefault(s => s.Id == current) ?? Staff[0];
+    }
+
+    partial void OnSelectedStaffChanged(ReportStaff? value)
+    {
+        if (!_suspendReload)
+        {
+            Load();
+        }
     }
 
     private static string IstToday(int offsetDays = 0)
@@ -78,16 +128,21 @@ public partial class ReportsViewModel : ObservableObject
 
     public IReadOnlyList<OrderItem> LoadItems(long orderId) => _repo.GetItems(orderId);
 
+    /// <summary>Re-reads the current range and staff selection from the database.</summary>
+    public void Reload() => Load();
+
     private void Load()
     {
+        var userId = SelectedStaff?.Id;
+
         _prefix = _repo.BillPrefix();
-        var s = _repo.GetSummary(StartDate, EndDate);
+        var s = _repo.GetSummary(StartDate, EndDate, userId: userId);
         TotalRevenue = "₹" + s.TotalSales.ToString("N0", CultureInfo.InvariantCulture);
         TotalBills = s.TotalOrders.ToString();
         TotalDiscounts = "₹" + s.TotalDiscounts.ToString("N0", CultureInfo.InvariantCulture);
 
         _all.Clear();
-        foreach (var o in _repo.GetSettledOrders(StartDate, EndDate))
+        foreach (var o in _repo.GetSettledOrders(StartDate, EndDate, userId: userId))
         {
             _all.Add(new ReportRow(o, _prefix));
         }
@@ -104,6 +159,7 @@ public partial class ReportsViewModel : ObservableObject
             || r.BillNoText.ToLowerInvariant().Contains(q)
             || r.TableText.ToLowerInvariant().Contains(q)
             || r.TotalText.Contains(q)
+            || r.StaffText.ToLowerInvariant().Contains(q)
             || (r.Order.CustomerName ?? "").ToLowerInvariant().Contains(q)).ToList();
         CurrentPage = 0;
         RenderPage();
@@ -127,14 +183,18 @@ public partial class ReportsViewModel : ObservableObject
         try
         {
             var docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            var path = Path.Combine(docs, $"sales_report_{StartDate}_to_{EndDate}.csv");
+            // The staff goes in the filename too, so two operators exporting the same day
+            // don't overwrite each other's file.
+            var who = SelectedStaff?.Id is null ? "all" : Slug(SelectedStaff.Name);
+            var path = Path.Combine(docs, $"sales_report_{who}_{StartDate}_to_{EndDate}.csv");
             var sb = new StringBuilder();
-            sb.AppendLine("Bill Number,Date,Customer,Mobile,Table,Discount,Total,Note");
+            sb.AppendLine("Bill Number,Date,Staff,Customer,Mobile,Table,Discount,Total,Note");
             foreach (var r in _filtered)
             {
                 var o = r.Order;
                 sb.AppendLine(string.Join(",",
-                    Csv(r.BillNoText), Csv(r.DateText), Csv(o.CustomerName ?? ""), Csv(o.CustomerMobile ?? ""),
+                    Csv(r.BillNoText), Csv(r.DateText), Csv(r.StaffText),
+                    Csv(o.CustomerName ?? ""), Csv(o.CustomerMobile ?? ""),
                     Csv(r.TableText), o.DiscountAmount.ToString("0.##"), o.TotalAmount.ToString("0.##"), Csv(o.BillNote ?? "")));
             }
             File.WriteAllText(path, sb.ToString(), Encoding.UTF8);
@@ -148,6 +208,13 @@ public partial class ReportsViewModel : ObservableObject
 
     private static string Csv(string v) => v.Contains(',') ? $"\"{v.Replace("\"", "\"\"")}\"" : v;
 
+    /// <summary>Staff name reduced to something safe to put in a filename.</summary>
+    private static string Slug(string name)
+    {
+        var cleaned = new string(name.Select(c => char.IsLetterOrDigit(c) ? char.ToLowerInvariant(c) : '_').ToArray());
+        return cleaned.Trim('_') is { Length: > 0 } s ? s : "staff";
+    }
+
     private static string Fmt(string ymd)
         => DateTime.TryParse(ymd, out var d) ? d.ToString("dd MMM yyyy") : ymd;
 }
@@ -160,10 +227,14 @@ public sealed class ReportRow
     public string DateText { get; }
     public string TableText { get; }
     public string TotalText { get; }
+    public string StaffText { get; }
 
     public ReportRow(Order o, string prefix)
     {
         Order = o;
+        // Bills written before sign-in existed carry no operator; they are still real sales,
+        // so they show a dash rather than being hidden or blamed on someone.
+        StaffText = string.IsNullOrWhiteSpace(o.CreatedByName) ? "—" : o.CreatedByName!;
         BillNoText = o.BillNumber.HasValue
             ? $"#{prefix}-{o.BillNumber.Value.ToString().PadLeft(4, '0')}"
             : $"#{o.Id}";

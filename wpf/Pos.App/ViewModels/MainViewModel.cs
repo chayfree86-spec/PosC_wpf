@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pos.App.Helpers;
+using Pos.Core.Data;
 using Pos.Core.Models;
 using Pos.Core.Repositories;
 using Pos.Core.Sync;
@@ -15,6 +16,10 @@ public partial class MainViewModel : ObservableObject
     private readonly OrderRepository _orders;
     private readonly QuickNotesRepository _quickNotes;
     private readonly SyncCoordinator _sync;
+
+    /// <summary>The business this shift belongs to — used as the sidebar's fallback name when
+    /// its profile has not reached this counter yet.</summary>
+    private readonly ClientContext _client;
 
     /// <summary>Receipts go out through here, never on the UI thread — see PrintSpooler.</summary>
     private readonly Services.PrintSpooler _printer = new();
@@ -141,10 +146,28 @@ public partial class MainViewModel : ObservableObject
     /// The shop's name in the sidebar, from the saved profile — not a constant. Renaming the
     /// shop in Settings used to change the bill but leave the sidebar reading the old name.
     /// </summary>
-    public string ClientName => Settings.StoreName is { Length: > 0 } name ? name : "POS";
+    /// <remarks>
+    /// Falls back to the signed-in business rather than a constant. A brand whose profile has
+    /// not synced to this counter yet has no StoreName of its own, and without this the sidebar
+    /// and the draft label would keep showing the PREVIOUS brand's name — a Chay Chaupal shift
+    /// reading "Daal Roti" all day.
+    /// </remarks>
+    public string ClientName =>
+        Settings.StoreName is { Length: > 0 } name ? name
+        : _client.Name is { Length: > 0 } fromClient ? fromClient
+        : "POS";
 
     /// <summary>The two letters on the round logo, taken from the same name.</summary>
-    public string ClientInitials => Settings.StoreInitials;
+    public string ClientInitials =>
+        Settings.StoreName is { Length: > 0 } ? Settings.StoreInitials : Initials(ClientName);
+
+    private static string Initials(string name)
+    {
+        var words = (name ?? "").Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return words.Length >= 2
+            ? string.Concat(words[0][0], words[1][0]).ToUpperInvariant()
+            : (name ?? "").PadRight(2).Substring(0, 2).Trim().ToUpperInvariant();
+    }
 
     /// <summary>The shop's phone under the sidebar footer — same source as the bill's.</summary>
     public string StorePhone => Settings.StorePhone;
@@ -196,13 +219,14 @@ public partial class MainViewModel : ObservableObject
     public NotesViewModel Notes { get; }
     public QrOrderViewModel Qr { get; }
 
-    public MainViewModel(MenuRepository menu, TableRepository tables, OrderRepository orders, QuickNotesRepository quickNotes, SyncCoordinator sync, LedgerViewModel ledger, SettingsViewModel settings, ReportsViewModel reports, NotesViewModel notes, QrOrderViewModel qr)
+    public MainViewModel(MenuRepository menu, TableRepository tables, OrderRepository orders, QuickNotesRepository quickNotes, SyncCoordinator sync, LedgerViewModel ledger, SettingsViewModel settings, ReportsViewModel reports, NotesViewModel notes, QrOrderViewModel qr, ClientContext client)
     {
         _menu = menu;
         _tables = tables;
         _orders = orders;
         _quickNotes = quickNotes;
         _sync = sync;
+        _client = client;
         Ledger = ledger;
         Settings = settings;
         Reports = reports;
@@ -304,6 +328,19 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand] private void NavTo(string screen) => ActiveScreen = screen;
+
+    /// <summary>
+    /// Reports reads from the database once and then sits on that result, so opening it after
+    /// billing showed the figures from whenever it was last looked at — a bill just taken was
+    /// simply missing. Refresh on the way in.
+    /// </summary>
+    partial void OnActiveScreenChanged(string value)
+    {
+        if (value == "Reports")
+        {
+            Reports.Reload();
+        }
+    }
 
     private void LoadCatalog()
     {
@@ -662,8 +699,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     private static void ShowPrintError(string what, string error) =>
-        System.Windows.MessageBox.Show($"{what} print nahi ho paya:\n\n{error}", "Print Error",
-            System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+        Views.ThemeMessageBox.Show($"{what} print nahi ho paya:\n\n{error}", "Print Error", "error");
 
     [RelayCommand]
     public void SaveKot()

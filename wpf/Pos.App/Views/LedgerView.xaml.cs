@@ -40,8 +40,8 @@ public partial class LedgerView : UserControl
     private void DeleteCustomer_Click(object sender, RoutedEventArgs e)
     {
         if (Vm?.SelectedCustomer is not { } c) return;
-        if (MessageBox.Show($"Delete customer '{c.Name}' and all their transactions?", "Delete Customer",
-                MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+        if (ThemeMessageBox.Confirm(Window.GetWindow(this),
+                $"Delete customer '{c.Name}' and all their transactions?", "Delete Customer", "danger"))
         {
             Vm.DeleteSelectedCustomer();
         }
@@ -69,8 +69,8 @@ public partial class LedgerView : UserControl
     {
         if (Vm is null) return;
         if ((sender as FrameworkElement)?.DataContext is not LedgerEntry entry) return;
-        if (MessageBox.Show("Delete this transaction?", "Delete Transaction",
-                MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+        if (ThemeMessageBox.Confirm(Window.GetWindow(this),
+                "Delete this transaction?", "Delete Transaction", "danger"))
         {
             Vm.DeleteEntry(entry);
         }
@@ -93,7 +93,7 @@ public partial class LedgerView : UserControl
         }
         catch (Exception ex)
         {
-            MessageBox.Show("Could not open WhatsApp: " + ex.Message, "Share", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemeMessageBox.Show(Window.GetWindow(this), "Could not open WhatsApp: " + ex.Message, "Share", "warning");
         }
     }
 

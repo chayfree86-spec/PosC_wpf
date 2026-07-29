@@ -14,14 +14,21 @@ public sealed class TableRepository
 {
     private readonly DatabaseService _db;
 
-    public TableRepository(DatabaseService db)
+
+    /// <summary>Which business the till is billing for; every client-scoped read and write
+    /// below defaults to it so no call site has to remember to pass one.</summary>
+    private readonly ClientContext _client;
+
+    public TableRepository(DatabaseService db, ClientContext client)
     {
         _db = db;
+        _client = client;
         DapperConfig.Init();
     }
 
-    public IReadOnlyList<TableView> All(long clientId = 1)
+    public IReadOnlyList<TableView> All(long? clientId = null)
     {
+        clientId ??= _client.ClientId;
         using var conn = _db.OpenConnection();
         return conn.Query<TableView>(
             @"SELECT rt.id, rt.client_id, rt.table_number, rt.area_id,
@@ -38,16 +45,22 @@ public sealed class TableRepository
                      CAST(CASE WHEN COALESCE(ts.table_status, 'available') = 'available' THEN 0 ELSE COALESCE(ts.current_amount, 0) END AS REAL) AS amount,
                      CASE WHEN COALESCE(ts.table_status, 'available') = 'available' THEN NULL ELSE ts.order_timestamp END AS order_timestamp,
                      da.name AS area_name
+              -- The tables themselves belong to the counter, so every business sees all of
+              -- them. What each business sees them DOING is its own: the state join stays
+              -- scoped, which is how T-1 can be occupied for Daal Roti and free for Chay
+              -- Chaupal at the same moment. Filtering the tables here as well is what left
+              -- the second brand staring at an empty floor plan.
               FROM restaurant_tables rt
               LEFT JOIN table_client_states ts ON ts.table_id = rt.id AND ts.client_id = @clientId
               LEFT JOIN dining_areas da ON da.id = rt.area_id
-              WHERE rt.client_id = @clientId OR rt.client_id IS NULL
+              WHERE rt.is_active = 1
               ORDER BY rt.id",
             new { clientId }).AsList();
     }
 
-    public void UpdateState(long tableId, string status, double amount = 0, long? timestamp = null, long clientId = 1)
+    public void UpdateState(long tableId, string status, double amount = 0, long? timestamp = null, long? clientId = null)
     {
+        clientId ??= _client.ClientId;
         using var conn = _db.OpenConnection();
         using var tx = conn.BeginTransaction();
 

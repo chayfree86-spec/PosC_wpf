@@ -10,14 +10,21 @@ public sealed class QuickNotesRepository
 {
     private readonly DatabaseService _db;
 
-    public QuickNotesRepository(DatabaseService db)
+
+    /// <summary>Which business the till is billing for; every client-scoped read and write
+    /// below defaults to it so no call site has to remember to pass one.</summary>
+    private readonly ClientContext _client;
+
+    public QuickNotesRepository(DatabaseService db, ClientContext client)
     {
         _db = db;
+        _client = client;
         DapperConfig.Init();
     }
 
-    public List<QuickNote> GetNotes(long clientId = 1)
+    public List<QuickNote> GetNotes(long? clientId = null)
     {
+        clientId ??= _client.ClientId;
         using var conn = _db.OpenConnection();
         try
         {
@@ -85,8 +92,9 @@ public sealed class QuickNotesRepository
         }
     }
 
-    public bool DeleteNote(long id, long clientId = 1)
+    public bool DeleteNote(long id, long? clientId = null)
     {
+        clientId ??= _client.ClientId;
         using var conn = _db.OpenConnection();
         const string sql = "DELETE FROM quick_notes WHERE id = @id AND client_id = @clientId;";
         return conn.Execute(sql, new { id, clientId }) > 0;

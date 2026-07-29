@@ -417,6 +417,42 @@ public sealed class SqliteMigrationRunner
         {
             m.AddColumnIfMissing("users", "pin", "TEXT");
         });
+
+        // Settings that belong to a BUSINESS rather than to this machine.
+        //
+        // app_settings is keyed by name alone, which was fine while the till served one client.
+        // With two brands sharing the counter it is not: the printed header, GST number, FSSAI
+        // licence and UPI id are different for each, and one shared row would print Daal Roti's
+        // GST number on a Chay Chaupal bill. The server has always kept these per client
+        // (app_settings.client_id there); this is the local side catching up.
+        //
+        // Machine settings — printer, paper size, window layout, server address, last signed-in
+        // number — deliberately stay in app_settings. They describe this counter, not a brand,
+        // and must not change when a different business signs in.
+        Apply(conn, 18, "sqlite_pos_client_settings", m =>
+        {
+            m.Exec(@"CREATE TABLE IF NOT EXISTS client_settings (
+                client_id INTEGER NOT NULL,
+                key TEXT NOT NULL,
+                value_json TEXT NOT NULL,
+                updated_at TEXT NOT NULL DEFAULT (datetime('now', '+330 minutes')),
+                PRIMARY KEY (client_id, key)
+            );");
+
+            // Everything already on this till was billed as client 1, so that is whose profile
+            // the existing values are. Copied rather than moved: an older build still reading
+            // app_settings keeps working until it is replaced.
+            m.Exec(@"INSERT OR IGNORE INTO client_settings (client_id, key, value_json, updated_at)
+                     SELECT 1, key, value_json, updated_at
+                     FROM app_settings
+                     -- Exactly BootstrapSyncService.SyncedSettingKeys: the set the server
+                     -- already treats as belonging to the business. Keeping the two lists the
+                     -- same is what stops a machine setting from being pulled across counters.
+                     WHERE key IN (
+                        'restaurant_profile', 'upi_settings', 'daily_reset_bill_counter',
+                        'login_pin', 'pos_wpf_settings', 'pos_wpf_shortcuts'
+                     );");
+        });
     }
 
     private static void Apply(SqliteConnection conn, int version, string name, Action<Ctx> work)

@@ -33,6 +33,10 @@ public sealed class TableOrderPayload
     public string? CustomerMobile { get; set; }
     public string? BillNote { get; set; }
     public long? BillNumber { get; set; }
+    /// <summary>Who billed it. Left null by almost every caller — the repository fills it in
+    /// from the signed-in operator. Set it only to credit someone other than whoever is at
+    /// the till.</summary>
+    public long? CreatedBy { get; set; }
     public bool IsParcelMode { get; set; }
     public bool MergeItems { get; set; }
     public long? OrderTimestamp { get; set; }

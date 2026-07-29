@@ -17,14 +17,21 @@ public sealed class CustomerLedgerRepository
     private readonly DatabaseService _db;
     private readonly SyncCoordinator _sync;
 
-    public CustomerLedgerRepository(DatabaseService db, SyncCoordinator sync)
+
+    /// <summary>Which business the till is billing for; every client-scoped read and write
+    /// below defaults to it so no call site has to remember to pass one.</summary>
+    private readonly ClientContext _client;
+
+    public CustomerLedgerRepository(DatabaseService db, SyncCoordinator sync, ClientContext client)
     {
         _db = db;
         _sync = sync;
+        _client = client;
     }
 
-    public IEnumerable<Customer> GetCustomers(long clientId = 1)
+    public IEnumerable<Customer> GetCustomers(long? clientId = null)
     {
+        clientId ??= _client.ClientId;
         using var conn = _db.OpenConnection();
         // Balance is COMPUTED live from the ledger entries (money you GAVE ='gave'/'debit'
         // increases udhaar +; money you GOT ='got'/'credit'/'payment' reduces it -), so it

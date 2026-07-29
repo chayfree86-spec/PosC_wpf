@@ -195,17 +195,17 @@ public partial class MenuItemModal : Window
     {
         if (string.IsNullOrWhiteSpace(NameBox.Text))
         {
-            MessageBox.Show("Item Name is required.", "Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemeMessageBox.Show(this, "Item Name is required.", "Required", "warning");
             return;
         }
         if (CategoryCombo.SelectedValue is null)
         {
-            MessageBox.Show("Category select karein.", "Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemeMessageBox.Show(this, "Category select karein.", "Required", "warning");
             return;
         }
         if (PriceValue <= 0)
         {
-            MessageBox.Show("Ek valid price bharein.", "Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemeMessageBox.Show(this, "Ek valid price bharein.", "Required", "warning");
             return;
         }
 
@@ -232,7 +232,7 @@ public partial class MenuItemModal : Window
             // server synchronously — offline or a server error means the item was never
             // saved anywhere, not even locally, so the dialog must stay open and say so
             // rather than clearing the form as if it worked.
-            MessageBox.Show(ex.Message, "Save Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemeMessageBox.Show(this, ex.Message, "Save Failed", "error");
             return;
         }
 

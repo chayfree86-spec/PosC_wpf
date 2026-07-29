@@ -27,6 +27,16 @@ public sealed class CatalogRepository
     private readonly DatabaseService _db;
     private readonly SyncCoordinator _sync;
 
+    /// <summary>
+    /// The catalog belongs to the counter, not to one of the businesses on it — Daal Roti and
+    /// Chay Chaupal sell from the same menu and seat guests at the same tables, which is how
+    /// the server stores it too (no client_id on menu_items, categories, tables or areas).
+    ///
+    /// The local copies still carry the column from when this till served a single brand. It
+    /// is NOT NULL, so new rows keep writing the original value; nothing reads it back.
+    /// </summary>
+    private const long SharedCatalogClientId = 1;
+
     public CatalogRepository(DatabaseService db, SyncCoordinator sync)
     {
         _db = db;
@@ -35,15 +45,14 @@ public sealed class CatalogRepository
     }
 
     // ── Dining Areas ─────────────────────────────────────────────────────────
-    public IReadOnlyList<DiningArea> GetAreas(long clientId = 1)
+    public IReadOnlyList<DiningArea> GetAreas()
     {
         using var conn = _db.OpenConnection();
         return conn.Query<DiningArea>(
-            "SELECT id, client_id, name, sort_order, is_active FROM dining_areas WHERE client_id = @clientId AND is_active = 1 ORDER BY sort_order, name",
-            new { clientId }).AsList();
+            "SELECT id, client_id, name, sort_order, is_active FROM dining_areas WHERE is_active = 1 ORDER BY sort_order, name").AsList();
     }
 
-    public long SaveArea(DiningArea a, long clientId = 1)
+    public long SaveArea(DiningArea a)
     {
         using var conn = _db.OpenConnection();
         if (a.Id > 0)
@@ -57,7 +66,7 @@ public sealed class CatalogRepository
         var id = CreateOnServer("/dining-areas", new { name = a.Name, sort_order = a.SortOrder });
         conn.Execute(
             "INSERT INTO dining_areas (id, client_id, name, sort_order) VALUES (@id, @clientId, @Name, @SortOrder)",
-            new { id, clientId, a.Name, a.SortOrder });
+            new { id, clientId = SharedCatalogClientId, a.Name, a.SortOrder });
         return id;
     }
 
@@ -70,19 +79,18 @@ public sealed class CatalogRepository
     }
 
     // ── Tables ───────────────────────────────────────────────────────────────
-    public IReadOnlyList<TableEdit> GetTables(long clientId = 1)
+    public IReadOnlyList<TableEdit> GetTables()
     {
         using var conn = _db.OpenConnection();
         return conn.Query<TableEdit>(
             @"SELECT rt.id, rt.client_id, rt.table_number, rt.area_id, da.name AS area_name
               FROM restaurant_tables rt
               LEFT JOIN dining_areas da ON da.id = rt.area_id
-              WHERE rt.client_id = @clientId AND rt.is_active = 1
-              ORDER BY rt.id",
-            new { clientId }).AsList();
+              WHERE rt.is_active = 1
+              ORDER BY rt.id").AsList();
     }
 
-    public long SaveTable(TableEdit t, long clientId = 1)
+    public long SaveTable(TableEdit t)
     {
         using var conn = _db.OpenConnection();
         if (t.Id > 0)
@@ -97,7 +105,7 @@ public sealed class CatalogRepository
         conn.Execute(
             @"INSERT INTO restaurant_tables (id, client_id, table_number, area_id, table_status)
               VALUES (@id, @clientId, @TableNumber, @AreaId, 'available')",
-            new { id, clientId, t.TableNumber, t.AreaId });
+            new { id, clientId = SharedCatalogClientId, t.TableNumber, t.AreaId });
         return id;
     }
 
@@ -110,15 +118,14 @@ public sealed class CatalogRepository
     }
 
     // ── Categories ───────────────────────────────────────────────────────────
-    public IReadOnlyList<Category> GetCategories(long clientId = 1)
+    public IReadOnlyList<Category> GetCategories()
     {
         using var conn = _db.OpenConnection();
         return conn.Query<Category>(
-            "SELECT * FROM categories WHERE client_id=@clientId AND is_active=1 ORDER BY sort_order, name",
-            new { clientId }).AsList();
+            "SELECT * FROM categories WHERE is_active=1 ORDER BY sort_order, name").AsList();
     }
 
-    public long SaveCategory(Category c, long clientId = 1)
+    public long SaveCategory(Category c)
     {
         using var conn = _db.OpenConnection();
         if (c.Id > 0)
@@ -132,7 +139,7 @@ public sealed class CatalogRepository
         var id = CreateOnServer("/categories", new { name = c.Name, parent_id = c.ParentId, sort_order = c.SortOrder });
         conn.Execute(
             "INSERT INTO categories (id, client_id, name, parent_id, sort_order) VALUES (@id, @clientId, @Name, @ParentId, @SortOrder)",
-            new { id, clientId, c.Name, c.ParentId, c.SortOrder });
+            new { id, clientId = SharedCatalogClientId, c.Name, c.ParentId, c.SortOrder });
         return id;
     }
 
@@ -145,15 +152,14 @@ public sealed class CatalogRepository
     }
 
     // ── GST Rates ────────────────────────────────────────────────────────────
-    public IReadOnlyList<GstRate> GetGstRates(long clientId = 1)
+    public IReadOnlyList<GstRate> GetGstRates()
     {
         using var conn = _db.OpenConnection();
         return conn.Query<GstRate>(
-            "SELECT id, client_id, name, rate, is_active FROM gst_rates WHERE client_id=@clientId AND is_active=1 ORDER BY id",
-            new { clientId }).AsList();
+            "SELECT id, client_id, name, rate, is_active FROM gst_rates WHERE is_active=1 ORDER BY id").AsList();
     }
 
-    public long SaveGstRate(GstRate g, long clientId = 1)
+    public long SaveGstRate(GstRate g)
     {
         using var conn = _db.OpenConnection();
         if (g.Id > 0)
@@ -167,7 +173,7 @@ public sealed class CatalogRepository
         var id = CreateOnServer("/gst-rates", new { name = g.Name, rate_percent = g.Rate });
         conn.Execute(
             "INSERT INTO gst_rates (id, client_id, name, rate) VALUES (@id, @clientId, @Name, @Rate)",
-            new { id, clientId, g.Name, g.Rate });
+            new { id, clientId = SharedCatalogClientId, g.Name, g.Rate });
         return id;
     }
 
@@ -180,15 +186,14 @@ public sealed class CatalogRepository
     }
 
     // ── Menu Items ───────────────────────────────────────────────────────────
-    public IReadOnlyList<MenuItem> GetMenuItems(long clientId = 1)
+    public IReadOnlyList<MenuItem> GetMenuItems()
     {
         using var conn = _db.OpenConnection();
         return conn.Query<MenuItem>(
-            "SELECT * FROM menu_items WHERE client_id=@clientId ORDER BY sort_order, name",
-            new { clientId }).AsList();
+            "SELECT * FROM menu_items ORDER BY sort_order, name").AsList();
     }
 
-    public long SaveMenuItem(MenuItem m, long clientId = 1)
+    public long SaveMenuItem(MenuItem m)
     {
         using var conn = _db.OpenConnection();
         // The server has no veg/non-veg toggle of its own — its menu_items.is_veg column is
@@ -219,7 +224,7 @@ public sealed class CatalogRepository
         conn.Execute(
             @"INSERT INTO menu_items (id, client_id, category_id, sub_category_id, name, code, price, type, is_available, is_parcel)
               VALUES (@id, @clientId, @CategoryId, @SubCategoryId, @Name, @Code, @Price, @Type, @IsAvailable, @IsParcel)",
-            new { id, clientId, m.CategoryId, m.SubCategoryId, m.Name, m.Code, m.Price, m.Type, m.IsAvailable, m.IsParcel });
+            new { id, clientId = SharedCatalogClientId, m.CategoryId, m.SubCategoryId, m.Name, m.Code, m.Price, m.Type, m.IsAvailable, m.IsParcel });
         return id;
     }
 

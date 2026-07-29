@@ -83,6 +83,23 @@
                         </Button>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <!-- Staff filter. Opens on the signed-in operator's own bills; "Sabhi
+                             Staff" widens it back to the whole counter. Drives the summary
+                             cards as well as the log below, so both always answer the same
+                             question. -->
+                        <TextBlock Text="Staff:" Foreground="{StaticResource TextMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <!-- ItemTemplate rather than DisplayMemberPath: the app's dark ComboBox
+                             template shows the closed box through SelectionBoxItemTemplate, which
+                             follows ItemTemplate. With only DisplayMemberPath set it stays null
+                             and the box falls back to ToString() — the class name. -->
+                        <ComboBox ItemsSource="{Binding Staff}" SelectedItem="{Binding SelectedStaff, Mode=TwoWay}"
+                                  Width="180" Height="34" FontSize="13" Margin="0,0,20,0">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                         <TextBlock Text="Period:" Foreground="{StaticResource TextMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBlock Text="{Binding PeriodDisplay}" Foreground="{StaticResource Accent}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
@@ -171,15 +188,17 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="150"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="160"/>
+                        <ColumnDefinition Width="100"/>
                         <ColumnDefinition Width="120"/>
                         <ColumnDefinition Width="90"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="BILL #" Style="{StaticResource ColHead}"/>
                     <TextBlock Grid.Column="1" Text="DATE" Style="{StaticResource ColHead}"/>
-                    <TextBlock Grid.Column="2" Text="TABLE" Style="{StaticResource ColHead}"/>
-                    <TextBlock Grid.Column="3" Text="TOTAL" Style="{StaticResource ColHead}" HorizontalAlignment="Right"/>
-                    <TextBlock Grid.Column="4" Text="ACTION" Style="{StaticResource ColHead}" HorizontalAlignment="Right"/>
+                    <TextBlock Grid.Column="2" Text="STAFF" Style="{StaticResource ColHead}"/>
+                    <TextBlock Grid.Column="3" Text="TABLE" Style="{StaticResource ColHead}"/>
+                    <TextBlock Grid.Column="4" Text="TOTAL" Style="{StaticResource ColHead}" HorizontalAlignment="Right"/>
+                    <TextBlock Grid.Column="5" Text="ACTION" Style="{StaticResource ColHead}" HorizontalAlignment="Right"/>
                 </Grid>
 
                 <!-- rows -->
@@ -192,15 +211,17 @@
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="150"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="160"/>
+                                            <ColumnDefinition Width="100"/>
                                             <ColumnDefinition Width="120"/>
                                             <ColumnDefinition Width="90"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="{Binding BillNoText}" Foreground="White" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
                                         <TextBlock Grid.Column="1" Text="{Binding DateText}" Foreground="{StaticResource TextMuted}" FontSize="13" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="2" Text="{Binding TableText}" Foreground="{StaticResource TextMuted}" FontSize="13" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="3" Text="{Binding TotalText}" Foreground="{StaticResource Accent}" FontSize="15" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                                        <Button Grid.Column="4" Content="View" Click="ViewBill_Click" Cursor="Hand" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        <TextBlock Grid.Column="2" Text="{Binding StaffText}" Foreground="{StaticResource TextMuted}" FontSize="13" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding TableText}" Foreground="{StaticResource TextMuted}" FontSize="13" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="4" Text="{Binding TotalText}" Foreground="{StaticResource Accent}" FontSize="15" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                        <Button Grid.Column="5" Content="View" Click="ViewBill_Click" Cursor="Hand" HorizontalAlignment="Right" VerticalAlignment="Center"
                                                 Height="30" Padding="14,0" Background="{StaticResource CardBg2}" Foreground="{StaticResource Accent}" FontWeight="Bold" FontSize="12" BorderThickness="1" BorderBrush="{StaticResource Border}"/>
                                     </Grid>
                                 </Border>

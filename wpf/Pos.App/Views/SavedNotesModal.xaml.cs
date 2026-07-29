@@ -76,7 +76,7 @@ public partial class SavedNotesModal : Window
         if (sender is FrameworkElement { Tag: QuickNote note })
         {
             var displayName = string.IsNullOrWhiteSpace(note.CustomerName) ? $"Quick Note #{note.Id}" : note.CustomerName;
-            if (ThemeMessageBox.Show(this, $"Are you sure you want to DELETE note for '{displayName}'?", "Confirm Delete Note", "yesno") == true)
+            if (ThemeMessageBox.Confirm(this, $"Are you sure you want to DELETE note for '{displayName}'?", "Confirm Delete Note", "danger"))
             {
                 _notesRepo.DeleteNote(note.Id);
                 RefreshNotes();

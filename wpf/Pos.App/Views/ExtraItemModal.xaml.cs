@@ -31,7 +31,7 @@ public partial class ExtraItemModal : Window
         }
         else
         {
-            MessageBox.Show("Please enter a valid amount greater than 0.", "Invalid Amount", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemeMessageBox.Show(this, "Please enter a valid amount greater than 0.", "Invalid Amount", "warning");
         }
     }
 

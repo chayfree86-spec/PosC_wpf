@@ -1,0 +1,136 @@
+<Window x:Class="Pos.App.Views.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Sign In" Height="560" Width="420"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="True"
+        FontFamily="{StaticResource AppFont}"
+        TextElement.Foreground="{StaticResource TextPrimary}"
+        TextOptions.TextFormattingMode="Ideal"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        KeyDown="Window_KeyDown">
+
+    <Border CornerRadius="18" Background="{StaticResource PanelBg}"
+            BorderBrush="{StaticResource Border}" BorderThickness="1.5">
+        <Grid Margin="32,24,32,28">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Close: there is no title bar to close from, and a till that can't be shut
+                 without signing in would be worse than one that can. -->
+            <Button Grid.Row="0" Click="Close_Click" Style="{StaticResource Stepper}" Content="✕"
+                    Width="30" Height="30" HorizontalAlignment="Right" VerticalAlignment="Top"
+                    ToolTip="Band karein (Esc)"/>
+
+            <!-- Branding -->
+            <StackPanel Grid.Row="1" HorizontalAlignment="Center" Margin="0,10,0,26">
+                <Border Background="{StaticResource AccentGrad}" CornerRadius="16" Width="60" Height="60">
+                    <TextBlock x:Name="TxtInitials" Text="POS" Foreground="White" FontWeight="Bold" FontSize="20"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock x:Name="TxtStoreName" Text="POS" Foreground="{StaticResource TextPrimary}"
+                           FontSize="19" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,14,0,0"/>
+                <TextBlock Text="SIGN IN TO CONTINUE" Foreground="{StaticResource TextFaint}"
+                           FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+            </StackPanel>
+
+            <!-- Credentials -->
+            <StackPanel Grid.Row="2" VerticalAlignment="Top">
+                <TextBlock Text="MOBILE NUMBER:" Foreground="{StaticResource TextMuted}"
+                           FontSize="11" FontWeight="Bold" Margin="0,0,0,5"/>
+                <Border Background="{StaticResource WindowBg}" CornerRadius="10"
+                        BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="12,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <materialDesign:PackIcon Grid.Column="0" Kind="CellphoneBasic" Width="18" Height="18"
+                                                 Foreground="{StaticResource TextFaint}"
+                                                 VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBox Grid.Column="1" x:Name="TxtMobile" Foreground="White" FontSize="16"
+                                 Background="Transparent" BorderThickness="0" MaxLength="15"
+                                 CaretBrush="{StaticResource Accent}"
+                                 VerticalContentAlignment="Center"
+                                 PreviewTextInput="Digits_PreviewTextInput"
+                                 TextChanged="Mobile_Changed"/>
+                    </Grid>
+                </Border>
+
+                <!-- Names the account as soon as the number matches, so a mistyped digit is
+                     caught before a PIN is keyed in rather than after it is rejected. -->
+                <StackPanel x:Name="StaffRow" Orientation="Horizontal" Margin="2,7,0,0" Visibility="Collapsed">
+                    <materialDesign:PackIcon Kind="AccountCheckOutline" Width="15" Height="15"
+                                             Foreground="{StaticResource AccentText}" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TxtStaffName" Margin="7,0,0,0" FontSize="13" FontWeight="SemiBold"
+                               Foreground="{StaticResource AccentText}" TextTrimming="CharacterEllipsis"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <TextBlock Text="PIN:" Foreground="{StaticResource TextMuted}"
+                           FontSize="11" FontWeight="Bold" Margin="0,14,0,5"/>
+                <Border Background="{StaticResource WindowBg}" CornerRadius="10"
+                        BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="12,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <materialDesign:PackIcon Grid.Column="0" Kind="LockOutline" Width="18" Height="18"
+                                                 Foreground="{StaticResource TextFaint}"
+                                                 VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+                        <!-- Masked and plain live in the same cell; the eye swaps which one is
+                             shown. A four-digit PIN mistyped behind dots is the single most
+                             likely reason someone gets stuck on this screen. -->
+                        <PasswordBox Grid.Column="1" x:Name="TxtPin" Foreground="White" FontSize="16"
+                                     Background="Transparent" BorderThickness="0" MaxLength="12"
+                                     CaretBrush="{StaticResource Accent}"
+                                     VerticalContentAlignment="Center"
+                                     PreviewTextInput="Digits_PreviewTextInput"
+                                     PasswordChanged="Field_Changed"/>
+                        <TextBox Grid.Column="1" x:Name="TxtPinPlain" Foreground="White" FontSize="16"
+                                 Background="Transparent" BorderThickness="0" MaxLength="12"
+                                 CaretBrush="{StaticResource Accent}"
+                                 VerticalContentAlignment="Center" Visibility="Collapsed"
+                                 PreviewTextInput="Digits_PreviewTextInput"
+                                 TextChanged="Field_Changed"/>
+
+                        <Button Grid.Column="2" x:Name="BtnTogglePin" Click="TogglePin_Click"
+                                Style="{StaticResource LinkBtn}" ToolTip="PIN dikhayein / chhupayein">
+                            <materialDesign:PackIcon x:Name="IconPinEye" Kind="EyeOutline" Width="18" Height="18"
+                                                     Foreground="{StaticResource TextFaint}" VerticalAlignment="Center"/>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Kept out of the layout until there is something to say, so the button
+                     doesn't jump down the screen the first time a PIN is wrong. -->
+                <TextBlock x:Name="TxtError" Foreground="{StaticResource ErrorRed}" FontSize="12"
+                           FontWeight="SemiBold" TextWrapping="Wrap" Margin="2,12,0,0"
+                           Visibility="Collapsed"/>
+            </StackPanel>
+
+            <!-- Actions -->
+            <StackPanel Grid.Row="3">
+                <Button x:Name="BtnLogin" Content="LOGIN" Click="Login_Click" Height="48"
+                        Background="{StaticResource AccentGrad}" Foreground="White"
+                        FontWeight="Bold" FontSize="14" Cursor="Hand">
+                    <Button.Resources>
+                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="12"/></Style>
+                    </Button.Resources>
+                </Button>
+                <TextBlock Text="PIN admin dashboard se set hota hai. Naya staff add kiya ho to pehle sync karein."
+                           Foreground="{StaticResource TextFaint}" FontSize="10" TextWrapping="Wrap"
+                           TextAlignment="Center" Margin="0,14,0,0"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

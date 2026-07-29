@@ -31,7 +31,7 @@ public partial class AddCustomerModal : Window
     {
         if (string.IsNullOrWhiteSpace(TxtName.Text))
         {
-            MessageBox.Show("Please enter customer name.", "Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemeMessageBox.Show(this, "Please enter customer name.", "Required", "warning");
             return;
         }
 

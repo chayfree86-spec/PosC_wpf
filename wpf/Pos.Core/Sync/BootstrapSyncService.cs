@@ -54,7 +54,7 @@ public sealed class BootstrapSyncService
             UpsertMenuItems(conn, tx, menuItems, clientId);
             UpsertTables(conn, tx, tables, clientId);
             UpsertGstRates(conn, tx, gst, clientId);
-            UpsertSettings(conn, tx, Array(data, "settings"));
+            UpsertSettings(conn, tx, Array(data, "settings"), clientId);
             UpsertUsers(conn, tx, Array(data, "users"), clientId);
             UpsertClient(conn, tx, data);
 
@@ -306,7 +306,7 @@ public sealed class BootstrapSyncService
     /// by the server's older copy before it ever got the chance to be sent.
     /// </summary>
     private static void UpsertSettings(Microsoft.Data.Sqlite.SqliteConnection conn, System.Data.IDbTransaction tx,
-        List<JsonElement> rows)
+        List<JsonElement> rows, long clientId)
     {
         foreach (var r in rows)
         {
@@ -324,14 +324,18 @@ public sealed class BootstrapSyncService
                 continue;
             }
 
+            // client_settings, not app_settings: everything in SyncedSettingKeys describes a
+            // BUSINESS — printed header, GST number, UPI id — and two brands share this till.
+            // Landing them in the machine-wide table would give whichever synced last the
+            // final say over what the other one's bills print.
             conn.Execute(
-                @"INSERT INTO app_settings (key, value_json, updated_at)
-                  VALUES (@key, @value, COALESCE(@updatedAt, datetime('now', '+330 minutes')))
-                  ON CONFLICT(key) DO UPDATE SET
+                @"INSERT INTO client_settings (client_id, key, value_json, updated_at)
+                  VALUES (@clientId, @key, @value, COALESCE(@updatedAt, datetime('now', '+330 minutes')))
+                  ON CONFLICT(client_id, key) DO UPDATE SET
                     value_json = excluded.value_json,
                     updated_at = excluded.updated_at
-                  WHERE COALESCE(excluded.updated_at, '') > COALESCE(app_settings.updated_at, '')",
-                new { key, value, updatedAt = Ist.Normalize(Str(r, "updated_at")) }, tx);
+                  WHERE COALESCE(excluded.updated_at, '') > COALESCE(client_settings.updated_at, '')",
+                new { clientId, key, value, updatedAt = Ist.Normalize(Str(r, "updated_at")) }, tx);
         }
     }
 
