@@ -185,20 +185,40 @@ public sealed class SyncQueueService
     /// Pushes one shared setting. The server stores settings as JSON under a key, so the
     /// local value_json is sent through as-is and comes back the same on any other till.
     /// </summary>
-    private async Task PushSettingAsync(QueueRow row, CancellationToken ct)
+    private Task PushSettingAsync(QueueRow row, CancellationToken ct)
     {
         var payload = JsonNode.Parse(row.PayloadJson ?? "{}") as JsonObject ?? new JsonObject();
         var key = payload["key"]?.GetValue<string>() ?? row.EntityId;
         var raw = payload["value_json"]?.GetValue<string>() ?? "";
 
+        // Whose setting this is was recorded when it was saved, and that is what gets sent —
+        // not whoever happens to be signed in now. A profile saved just before a shift change
+        // can still be sitting in the queue when the next business signs in, and pushing it as
+        // them would rename their shop to this one's.
+        var clientId = payload["client_id"]?.GetValue<long>();
+
+        return PushSettingAsync(_api, key ?? "", raw, clientId, ct);
+    }
+
+    /// <summary>
+    /// Sends one setting to the server.
+    /// </summary>
+    /// <remarks>
+    /// Shared with the Settings screen, which writes straight through rather than waiting for
+    /// this queue — the queue is what catches a save made while the server is unreachable, not
+    /// the normal route. Both go through here so the two can't disagree about the request shape.
+    /// </remarks>
+    public static Task PushSettingAsync(PosApiClient api, string key, string valueJson, long? clientId,
+        CancellationToken ct = default)
+    {
         // The value is stored locally as a JSON string; the server wants the parsed value
         // under "value" so it lands in a JSON column rather than as a quoted blob.
         JsonNode? value;
-        try { value = JsonNode.Parse(raw); }
-        catch (JsonException) { value = JsonValue.Create(raw); }
+        try { value = JsonNode.Parse(valueJson); }
+        catch (JsonException) { value = JsonValue.Create(valueJson); }
 
         var body = new JsonObject { ["value"] = value }.ToJsonString();
-        await _api.PutJsonAsync($"/settings/{Uri.EscapeDataString(key ?? "")}", body, ct);
+        return api.PutJsonAsync($"/settings/{Uri.EscapeDataString(key)}", body, ct, clientId);
     }
 
     /// <summary>

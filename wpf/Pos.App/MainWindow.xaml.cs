@@ -496,12 +496,14 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>Names the operator above the logout button — the button means little if it
-    /// doesn't say who is being logged out.</summary>
+    /// <summary>Names the counter above the logout button, so the sidebar says which business
+    /// this shift is billing for — the one thing that decides whose takings the day's sales
+    /// land under. Falls back to the operator's name on a till whose profile hasn't synced a
+    /// business name yet, so the row is never blank while someone is signed in.</summary>
     private void RefreshSessionUser()
     {
         SidebarUserRow.Visibility = Session.IsSignedIn ? Visibility.Visible : Visibility.Collapsed;
-        SidebarUserText.Text = Session.DisplayName;
+        SidebarUserText.Text = Session.BusinessName is { Length: > 0 } counter ? counter : Session.DisplayName;
         BtnLogout.ToolTip = Session.IsSignedIn ? $"Logout — {Session.DisplayName}" : "Logout";
 
         // Reports is a singleton that outlives a shift, so the staff filter has to be pointed

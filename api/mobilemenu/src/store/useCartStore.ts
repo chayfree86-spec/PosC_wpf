@@ -41,7 +41,7 @@ interface CartState {
   customer: { name?: string, mobile: string } | null;
   isAuthModalOpen: boolean;
   selectedClient: { slug: string; name: string } | null;
-  autoSelectClient: { slug: string; name: string } | null;
+  autoSelectClient: { slug: string } | null;
   businessInfo: { name: string; logoUrl: string | null; downloadImages: { url: string; filename?: string }[] };
   checkoutPending: boolean;
   isOrderingLoading: boolean;
@@ -66,7 +66,7 @@ interface CartState {
   setIsAuthModalOpen: (open: boolean) => void;
   setBusinessInfo: (info: { name: string; logoUrl: string | null; downloadImages?: { url: string; filename?: string }[] }) => void;
   setSelectedClient: (client: { slug: string; name: string } | null) => void;
-  setAutoSelectClient: (client: { slug: string; name: string } | null) => void;
+  setAutoSelectClient: (client: { slug: string } | null) => void;
   setCheckoutPending: (pending: boolean) => void;
   setIsOrderingLoading: (loading: boolean) => void;
   submitCurrentOrder: () => Promise<void>;
@@ -196,17 +196,15 @@ const getInitialSelectedClient = (): { slug: string; name: string } | null => {
   return null;
 };
 
-const getInitialAutoSelectClient = (): { slug: string; name: string } | null => {
+// Only the slug is read from the URL. The display name comes from /auth/clients when the
+// list loads -- guessing it from the slug here meant a restaurant renamed on the server kept
+// showing its old name on the landing screen.
+const getInitialAutoSelectClient = (): { slug: string } | null => {
   try {
     const params = new URLSearchParams(window.location.search);
     const clientParam = params.get('client') || params.get('pos_client');
     if (clientParam) {
-      const slug = clientParam.toLowerCase().replace(/[^a-z0-9_-]/g, '');
-      let name = '';
-      if (slug === 'daalroti') name = 'Dal Roti';
-      else if (slug === 'chaychaupal') name = 'Chay Chaupal';
-      else name = slug.charAt(0).toUpperCase() + slug.slice(1);
-      return { slug, name };
+      return { slug: clientParam.toLowerCase().replace(/[^a-z0-9_-]/g, '') };
     }
   } catch (e) {}
   return null;
@@ -222,7 +220,9 @@ export const useCartStore = create<CartState>((set, get) => ({
   cart: getInitialCart(),
   tableNumber: getInitialTableNumber(),
   tableId: getInitialTableId(),
-  activeCategory: 'Breakfast',
+  // No category is active until the menu arrives and the first one is picked from it --
+  // a hardcoded 'Breakfast' highlighted a category most clients don't even have.
+  activeCategory: '',
   selectedSubcategory: 'All',
   searchQuery: '',
   activeTab: 'menu',
@@ -235,7 +235,9 @@ export const useCartStore = create<CartState>((set, get) => ({
   isAuthModalOpen: false,
   selectedClient: getInitialSelectedClient(),
   autoSelectClient: getInitialAutoSelectClient(),
-  businessInfo: { name: 'Chay Chaupal', logoUrl: null, downloadImages: [] },
+  // Blank until /settings answers. Seeding a brand name here showed it on every client's
+  // header for the first paint, including the ones it doesn't belong to.
+  businessInfo: { name: '', logoUrl: null, downloadImages: [] },
   checkoutPending: false,
   isOrderingLoading: false,
 

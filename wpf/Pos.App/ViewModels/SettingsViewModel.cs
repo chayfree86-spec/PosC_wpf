@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Pos.App.Services;
 using Pos.Core.Data;
 using Pos.Core.Models;
 using Pos.Core.Repositories;
@@ -31,16 +33,18 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private string _activeTab = "profile";        // profile|printer|shortcut|defaults|menu
     [ObservableProperty] private string _activeSubTab = "category";    // category|table|gst
 
-    // Profile
+    // Profile. Every field starts empty on purpose: these print on the bill, and a built-in
+    // default is one brand's real details shown under another brand's name — a till that has
+    // never synced would print Chay Chaupal's GST number for whoever is billing on it.
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StoreInitials))]
-    private string _storeName = "Chay Chaupal";
+    private string _storeName = "";
     [ObservableProperty] private string _storeWebsite = "";
-    [ObservableProperty] private string _storePhone = "9628717175";
-    [ObservableProperty] private string _storeEmail = "chaychaupal@gmail.com";
-    [ObservableProperty] private string _storeGstNo = "09AAAAA0000A1Z1";
+    [ObservableProperty] private string _storePhone = "";
+    [ObservableProperty] private string _storeEmail = "";
+    [ObservableProperty] private string _storeGstNo = "";
     [ObservableProperty] private string _storeFoodLicenseNo = "";
-    [ObservableProperty] private string _storeAddress = "Varanasi, Uttar Pradesh, India";
+    [ObservableProperty] private string _storeAddress = "";
     [ObservableProperty] private string _storeLogoUrl = "";
     [ObservableProperty] private bool _showNameOnBill = true;
     [ObservableProperty] private bool _showWebsiteOnBill = false;
@@ -49,6 +53,17 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private bool _showGstOnBill = true;
     [ObservableProperty] private bool _showFoodLicenseOnBill = false;
     [ObservableProperty] private bool _showAddressOnBill = true;
+
+    // The app's highlight colour, per business. Applied live and saved the instant a swatch is
+    // picked — it isn't part of the branding form, so it doesn't wait on Save Branding.
+    [ObservableProperty] private string _accentColor = ThemeService.Default;
+
+    /// <summary>What the custom-colour box currently holds — bound so the preview swatch beside
+    /// it tracks the typing, and seeded with the active colour when the screen loads.</summary>
+    [ObservableProperty] private string _customColorInput = ThemeService.Default;
+
+    /// <summary>The accent swatches shown on the profile page.</summary>
+    public ObservableCollection<ThemeSwatch> ThemeColors { get; } = new();
 
     public string StoreInitials
     {
@@ -70,9 +85,11 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private string _selectedPrinter = "";
     [ObservableProperty] private string _paperSize = "80mm";
     [ObservableProperty] private int _printCopies = 1;
-    [ObservableProperty] private string _upiId = "9628717175@upi";
-    [ObservableProperty] private string _upiName = "Chay Chaupal";
-    [ObservableProperty] private string _upiPhone = "9628717175";
+    // Empty for the same reason as the profile above: a default UPI id is a real account,
+    // and a bill QR pointing at the wrong business takes the customer's money with it.
+    [ObservableProperty] private string _upiId = "";
+    [ObservableProperty] private string _upiName = "";
+    [ObservableProperty] private string _upiPhone = "";
     [ObservableProperty] private string _qrImagePath = "";
     [ObservableProperty] private bool _printQrCodeOnBill = true;
     [ObservableProperty] private bool _dailyResetBillCounter = false;
@@ -134,6 +151,11 @@ public partial class SettingsViewModel : ObservableObject
         _settings = settings;
         _catalog = catalog;
 
+        foreach (var p in ThemeService.Presets)
+        {
+            ThemeColors.Add(new ThemeSwatch(p.Name, p.Hex));
+        }
+
         // The counter changes brand at a shift change, and this view model outlives it. Without
         // this the till would keep printing — and showing in the sidebar — the previous
         // business's name, GST number and UPI id after someone else signed in.
@@ -150,7 +172,9 @@ public partial class SettingsViewModel : ObservableObject
             // form it has not touched.
             SavedMessage = "";
             PinMessage = "";
-            Load();
+            // From the server: the business has just changed, and this counter may never have
+            // held the incoming one's profile at all.
+            Load(fromServer: true);
             LoadShortcuts();
         };
         ShortcutsView = System.Windows.Data.CollectionViewSource.GetDefaultView(Shortcuts);
@@ -239,10 +263,9 @@ public partial class SettingsViewModel : ObservableObject
             }
         }
         catch { }
-        if (AvailablePrinters.Count == 0)
-        {
-            AvailablePrinters.Add("Default Thermal Printer (80mm)");
-        }
+        // A machine with no printers installed gets an empty list, not an invented
+        // "Default Thermal Printer" entry — that name matched no real queue, so picking it
+        // only looked like a printer was configured while every print silently rerouted.
     }
 
     public void ReloadCatalog()
@@ -351,8 +374,39 @@ public partial class SettingsViewModel : ObservableObject
         StoreLogoUrl = "";
     }
 
-    private void Load()
+    /// <summary>
+    /// Re-reads the settings from the database and refills the form.
+    ///
+    /// Called on the way in to the Settings screen, the way Reports reloads on the way in:
+    /// saves go straight to the server now, so the form has to be filled from there too.
+    /// Editing a stale local copy and pressing Save would push it back over a newer row.
+    /// </summary>
+    public void ReloadFromServer() => Load(fromServer: true);
+
+    /// <param name="fromServer">
+    /// False during construction. This runs on the UI thread while the app is still starting,
+    /// and a server that is merely slow to refuse the connection would hold the window shut for
+    /// as long as the timeout. The local mirror is what the till boots on; the screen re-reads
+    /// from the database when it is actually opened, and after a sign-in changes the business.
+    /// </param>
+    private void Load(bool fromServer = false)
     {
+        // Best-effort: offline this does nothing and the local mirror answers instead, which is
+        // the whole reason the mirror is kept.
+        if (fromServer)
+        {
+            _settings.RefreshFromServer();
+        }
+
+        // The highlight colour is this business's own, on its own key — read before the early
+        // return below, so a client with no branding snapshot yet still shows its accent (or the
+        // default green) selected. Re-applied here so opening Settings (which has just pulled the
+        // latest from the server) repaints the app to whatever another till may have set.
+        AccentColor = ThemeService.Normalize(
+            _settings.GetJsonForClient<string>(ThemeService.SettingKey) ?? ThemeService.Default);
+        ThemeService.Apply(AccentColor);
+        SyncThemeSelection();
+
         var s = _settings.GetJsonForClient<SettingsSnapshot>(SettingsKey);
         var profile = _settings.GetJsonForClient<ProfileSnapshot>(ProfileKey);
         var upi = _settings.GetJsonForClient<UpiSnapshot>(UpiKey);
@@ -489,6 +543,52 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand] private void SelectTab(string tab) => ActiveTab = tab;
     [RelayCommand] private void SelectSubTab(string tab) => ActiveSubTab = tab;
 
+    /// <summary>Swatch click. The picker's custom-colour button calls
+    /// <see cref="SetThemeColor"/> directly with the hex it produced.</summary>
+    [RelayCommand]
+    private void SelectThemeColor(string hex) => SetThemeColor(hex);
+
+    /// <summary>
+    /// Sets the app's highlight colour for the signed-in business.
+    ///
+    /// Takes effect at once — the whole app repaints on the click — and is saved on the same
+    /// click. Saved per business and pushed to the server like the rest of the profile, so the
+    /// brand keeps its colour on any till it signs in to, not just this one. Nothing else on the
+    /// form is touched, so it doesn't wait on Save Branding.
+    /// </summary>
+    public void SetThemeColor(string hex)
+    {
+        AccentColor = ThemeService.Normalize(hex);
+        ThemeService.Apply(AccentColor);
+        _settings.SetJsonSynced(ThemeService.SettingKey, AccentColor);
+        SyncThemeSelection();
+    }
+
+    /// <summary>
+    /// Applies a colour typed into the custom box. Any WPF-parseable colour is allowed — a hex
+    /// like <c>#3FA9F5</c>, or a name like <c>DodgerBlue</c>. A value that doesn't parse is left
+    /// alone, so a half-typed entry can't blank the app out.
+    /// </summary>
+    [RelayCommand]
+    private void ApplyCustomColor()
+    {
+        if (ThemeService.TryParse(CustomColorInput, out var hex))
+        {
+            SetThemeColor(hex);
+        }
+    }
+
+    /// <summary>Lights the ring on whichever swatch matches the current colour, and keeps the
+    /// custom box showing it so a re-open starts from the colour in use.</summary>
+    private void SyncThemeSelection()
+    {
+        foreach (var swatch in ThemeColors)
+        {
+            swatch.IsSelected = string.Equals(swatch.Hex, AccentColor, StringComparison.OrdinalIgnoreCase);
+        }
+        CustomColorInput = AccentColor;
+    }
+
     [RelayCommand]
     private void SaveSettings()
     {
@@ -496,7 +596,7 @@ public partial class SettingsViewModel : ObservableObject
         // menu and the Electron app all read. Keeping it in a WPF-only key meant renaming the
         // shop here changed nothing anywhere else, which is exactly what it looked like.
         // The field names are theirs; address and foodLicenseNo are extra keys they ignore.
-        _settings.SetJsonSynced(ProfileKey, new ProfileSnapshot
+        var onServer = _settings.SetJsonSynced(ProfileKey, new ProfileSnapshot
         {
             Name = StoreName, Website = StoreWebsite, Email = StoreEmail,
             GstNumber = StoreGstNo, ContactNumber = StorePhone, Logo = StoreLogoUrl,
@@ -531,7 +631,12 @@ public partial class SettingsViewModel : ObservableObject
             PrintCopies = PrintCopies, QrImagePath = QrImagePath
         });
 
-        SavedMessage = $"Saved ✓  {DateTime.Now:hh:mm tt}";
+        // The two outcomes are genuinely different and the operator has to be able to tell them
+        // apart. "Saved ✓" on a save that only reached SQLite is what sent someone looking in
+        // MySQL for a change that was never sent.
+        SavedMessage = onServer
+            ? $"Saved ✓  {DateTime.Now:hh:mm tt}"
+            : $"Locally saved — server offline, baad me sync hoga  {DateTime.Now:hh:mm tt}";
     }
 
     private const string PinKey = "login_pin";
@@ -718,5 +823,23 @@ public sealed class MenuItemRow
         Item = item;
         CategoryName = categoryName;
         SubcategoryName = subcategoryName;
+    }
+}
+
+/// <summary>One accent choice on the profile page: the colour to paint the swatch, the hex the
+/// pick command carries, and whether it is the one currently in use (which lights its ring).</summary>
+public sealed partial class ThemeSwatch : ObservableObject
+{
+    public string Name { get; }
+    public string Hex { get; }
+    public Brush Swatch { get; }
+
+    [ObservableProperty] private bool _isSelected;
+
+    public ThemeSwatch(string name, string hex)
+    {
+        Name = name;
+        Hex = ThemeService.Normalize(hex);
+        Swatch = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Hex));
     }
 }

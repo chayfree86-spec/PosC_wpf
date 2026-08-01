@@ -25,59 +25,55 @@ public sealed class ReportsRepository
         DapperConfig.Init();
     }
 
-    /// <param name="userId">
-    /// Restricts the figures to one operator's bills. Null means the whole shop — the two are
-    /// different questions ("what did I take today" vs "what did the counter take"), so the
-    /// caller has to say which one it is asking.
+    /// <param name="clientId">
+    /// Which business to add up. Null totals every business on the till — "what did this counter
+    /// take today" across both brands — so the caller has to say which one it means; there is no
+    /// implicit default to whoever is signed in, because the page lets the manager look at the
+    /// other brand's day too.
     /// </param>
-    public ReportSummary GetSummary(string startDate, string endDate, long? clientId = null, long? userId = null)
+    public ReportSummary GetSummary(string startDate, string endDate, long? clientId = null)
     {
-        clientId ??= _client.ClientId;
         using var conn = _db.OpenConnection();
         return conn.QueryFirst<ReportSummary>(
             @"SELECT COALESCE(SUM(total_amount), 0)     AS total_sales,
                      COUNT(*)                            AS total_orders,
                      COALESCE(SUM(discount_amount), 0)   AS total_discounts
               FROM orders
-              WHERE client_id = @clientId
-                AND report_visible = 1
+              WHERE report_visible = 1
                 AND order_status IN ('settled', 'completed')
                 AND date(billed_at) >= @startDate
                 AND date(billed_at) <= @endDate
-                AND (@userId IS NULL OR created_by = @userId)",
-            new { clientId, startDate, endDate, userId });
+                AND (@clientId IS NULL OR client_id = @clientId)",
+            new { clientId, startDate, endDate });
     }
 
-    public IReadOnlyList<Order> GetSettledOrders(string startDate, string endDate, long? clientId = null, long? userId = null)
+    public IReadOnlyList<Order> GetSettledOrders(string startDate, string endDate, long? clientId = null)
     {
-        clientId ??= _client.ClientId;
         using var conn = _db.OpenConnection();
         return conn.Query<Order>(
             @"SELECT o.*, rt.table_number, u.name AS created_by_name
               FROM orders o
               LEFT JOIN restaurant_tables rt ON rt.id = o.table_id
               LEFT JOIN users u ON u.id = o.created_by
-              WHERE o.client_id = @clientId
-                AND o.report_visible = 1
+              WHERE o.report_visible = 1
                 AND o.order_status IN ('settled', 'completed')
                 AND date(o.billed_at) >= @startDate
                 AND date(o.billed_at) <= @endDate
-                AND (@userId IS NULL OR o.created_by = @userId)
+                AND (@clientId IS NULL OR o.client_id = @clientId)
               ORDER BY o.billed_at DESC, o.id DESC",
-            new { clientId, startDate, endDate, userId }).AsList();
+            new { clientId, startDate, endDate }).AsList();
     }
 
-    /// <summary>The staff the filter can pick from — the shop's active operators.</summary>
-    public IReadOnlyList<ReportStaff> GetStaff(long? clientId = null)
+    /// <summary>
+    /// The businesses the filter can pick from — every client the till knows about, so a manager
+    /// can read either brand's day. Ordered by id, which keeps the two founding brands stable at
+    /// the top of the list as others are added.
+    /// </summary>
+    public IReadOnlyList<ReportCounter> GetCounters()
     {
-        clientId ??= _client.ClientId;
         using var conn = _db.OpenConnection();
-        return conn.Query<ReportStaff>(
-            @"SELECT id, name
-              FROM users
-              WHERE client_id = @clientId AND is_active = 1
-              ORDER BY name",
-            new { clientId }).AsList();
+        return conn.Query<ReportCounter>(
+            "SELECT id, name FROM clients ORDER BY id").AsList();
     }
 
     /// <summary>Line items for a single order (for the bill view).</summary>
@@ -88,14 +84,19 @@ public sealed class ReportsRepository
             "SELECT * FROM order_items WHERE order_id = @orderId ORDER BY id", new { orderId }).AsList();
     }
 
-    /// <summary>Client bill-number prefix (CC / DR / derived), matching NextBillNumber.</summary>
+    /// <summary>
+    /// The letters in front of every bill number on this page — abbreviated from the business
+    /// name, the same value <c>OrderRepository.NextBillNumber</c> stamps on the bill itself.
+    ///
+    /// Both used to work the prefix out separately and disagreed: the till derived initials for
+    /// an unrecognised business while this returned "DR", so a third shop's sales were listed
+    /// under Daal Roti's prefix even though its bills printed its own. One column answers both
+    /// now — qualified because this method shares its name with the helper.
+    /// </summary>
     public string BillPrefix(long? clientId = null)
     {
         clientId ??= _client.ClientId;
         using var conn = _db.OpenConnection();
-        var slug = (conn.QueryFirstOrDefault<string>(
-            "SELECT slug FROM clients WHERE id = @clientId", new { clientId }) ?? "").ToLowerInvariant();
-        if (slug.Contains("chaychaupal") || slug.Contains("chay") || slug.Contains("cc")) return "CC";
-        return "DR";
+        return Data.BillPrefix.Resolve(conn, null, clientId.Value);
     }
 }

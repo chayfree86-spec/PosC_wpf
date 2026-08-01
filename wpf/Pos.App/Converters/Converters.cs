@@ -199,3 +199,22 @@ public sealed class StatusToTimeBrushConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }
+
+/// <summary>
+/// A hex colour string → a brush for the custom-colour preview swatch. Anything that doesn't
+/// parse (a half-typed "#2fa…") shows transparent rather than throwing, so the preview simply
+/// stays blank until the value is a real colour.
+/// </summary>
+public sealed class HexToBrushConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var hex = (value as string ?? "").Trim();
+        if (hex.Length > 0 && !hex.StartsWith('#')) hex = "#" + hex;
+        try { return new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex)); }
+        catch { return Brushes.Transparent; }
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}

@@ -19,8 +19,8 @@
             <!-- Header -->
             <Grid Grid.Row="0" Margin="0,0,0,16">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Width="36" Height="36" CornerRadius="10" Background="{StaticResource AccentFaint}" Margin="0,0,12,0">
-                        <materialDesign:PackIcon Kind="NotebookEditOutline" Width="20" Height="20" Foreground="{StaticResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border Width="36" Height="36" CornerRadius="10" Background="{DynamicResource AccentFaint}" Margin="0,0,12,0">
+                        <materialDesign:PackIcon Kind="NotebookEditOutline" Width="20" Height="20" Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock x:Name="TxtHeaderTitle" Text="Save Order to Note" Foreground="{StaticResource TextPrimary}" FontSize="18" FontWeight="Bold"/>
@@ -99,7 +99,7 @@
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="Button">
-                                        <Border x:Name="b" CornerRadius="10" Background="{StaticResource AccentGrad}" RenderTransformOrigin="0.5,0.5">
+                                        <Border x:Name="b" CornerRadius="10" Background="{DynamicResource AccentGrad}" RenderTransformOrigin="0.5,0.5">
                                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <ControlTemplate.Triggers>

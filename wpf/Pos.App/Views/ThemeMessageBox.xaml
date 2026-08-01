@@ -21,7 +21,7 @@
             <!-- Header -->
             <Grid Grid.Row="0" Margin="0,0,0,12">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock x:Name="TxtIcon" Text="ℹ" FontSize="18" Margin="0,0,8,0" Foreground="{StaticResource BlueLink}"/>
+                    <TextBlock x:Name="TxtIcon" Text="ℹ" FontSize="18" Margin="0,0,8,0" Foreground="{DynamicResource BlueLink}"/>
                     <TextBlock x:Name="TxtTitle" Text="NOTIFICATION" Foreground="{StaticResource TextPrimary}" FontSize="13" FontWeight="Bold"/>
                 </StackPanel>
                 <Button Click="Close_Click" Style="{StaticResource Stepper}" Content="✕" Width="26" Height="26"
@@ -49,7 +49,7 @@
                 </Button>
 
                 <Button x:Name="BtnConfirm" Content="OK" Click="Confirm_Click" Height="38" MinWidth="104"
-                        Background="{StaticResource AccentGrad}" Foreground="White"
+                        Background="{DynamicResource AccentGrad}" Foreground="White"
                         FontWeight="Bold" FontSize="12" Cursor="Hand">
                     <Button.Resources>
                         <Style TargetType="Border"><Setter Property="CornerRadius" Value="9"/></Style>

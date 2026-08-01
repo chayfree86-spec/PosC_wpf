@@ -153,11 +153,6 @@ export const App: React.FC = () => {
         
         if (clientParam) {
           const slug = clientParam.toLowerCase().replace(/[^a-z0-9_-]/g, '');
-          let name = '';
-          if (slug === 'daalroti') name = 'Dal Roti';
-          else if (slug === 'chaychaupal') name = 'Chay Chaupal';
-          else name = slug.charAt(0).toUpperCase() + slug.slice(1);
-          
           const store = useCartStore.getState();
           
           // Case A: Customer is already on the menu page of the matching restaurant
@@ -208,8 +203,10 @@ export const App: React.FC = () => {
             store.setSelectedClient(null);
           }
 
-          // Trigger the beautiful auto-highlight & redirect flow on ClientSelection screen
-          store.setAutoSelectClient({ slug, name });
+          // Trigger the beautiful auto-highlight & redirect flow on ClientSelection screen.
+          // ClientSelection matches this slug against the list it loaded from the backend,
+          // so the name it shows is the server's, not one guessed from the URL.
+          store.setAutoSelectClient({ slug });
           return;
         }
       }
@@ -308,7 +305,7 @@ export const App: React.FC = () => {
           <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-3 font-nunito">
             <div className="w-10 h-10 border-4 border-[#C27A3F] border-t-transparent rounded-full animate-spin" />
             <p className="text-[13px] font-bold text-[#8E8075]">
-              Setting up {businessInfo.name} menu...
+              Setting up {selectedClient?.name || businessInfo.name} menu...
             </p>
           </div>
         ) : menuLoadError ? (

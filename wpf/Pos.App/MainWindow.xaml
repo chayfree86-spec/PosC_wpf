@@ -8,7 +8,7 @@
         xmlns:views="clr-namespace:Pos.App.Views"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Chay Chaupal POS" Height="800" Width="1366"
+        Title="{Binding ClientName, StringFormat={}{0} POS}" Height="800" Width="1366"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
         Background="{StaticResource WindowBg}"
@@ -42,7 +42,7 @@
             <Separator/>
             <MenuItem Header="Settle Bill" Click="TableContext_SettleBill_Click">
                 <MenuItem.Icon>
-                    <materialDesign:PackIcon Kind="CreditCardOutline" Width="16" Height="16" Foreground="{StaticResource AccentText}"/>
+                    <materialDesign:PackIcon Kind="CreditCardOutline" Width="16" Height="16" Foreground="{DynamicResource AccentText}"/>
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Delete Bill" Click="TableContext_DeleteBill_Click" Foreground="{StaticResource ErrorRed}" Tag="danger">
@@ -73,7 +73,7 @@
                     </Grid.RowDefinitions>
 
                     <StackPanel x:Name="SidebarLogoContainer" Orientation="Horizontal" HorizontalAlignment="Left" Grid.Row="0">
-                        <Border Background="{StaticResource AccentGrad}" CornerRadius="10" Width="40" Height="40">
+                        <Border Background="{DynamicResource AccentGrad}" CornerRadius="10" Width="40" Height="40">
                             <TextBlock Text="{Binding ClientInitials}" Foreground="White" FontWeight="Bold" FontSize="15"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
@@ -100,7 +100,7 @@
                             <Style TargetType="Button" BasedOn="{StaticResource NavItem}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding ActiveScreen}" Value="Ledger">
-                                        <Setter Property="Background" Value="{StaticResource AccentGrad}"/>
+                                        <Setter Property="Background" Value="{DynamicResource AccentGrad}"/>
                                         <Setter Property="Foreground" Value="White"/>
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -116,7 +116,7 @@
                             <Style TargetType="Button" BasedOn="{StaticResource NavItem}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding ActiveScreen}" Value="Settings">
-                                        <Setter Property="Background" Value="{StaticResource AccentGrad}"/>
+                                        <Setter Property="Background" Value="{DynamicResource AccentGrad}"/>
                                         <Setter Property="Foreground" Value="White"/>
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -133,10 +133,8 @@
                          logout button below says nothing about whom it is logging out. -->
                     <StackPanel x:Name="SidebarUserRow" Orientation="Horizontal" Margin="4,0,0,12"
                                 Visibility="Collapsed">
-                        <materialDesign:PackIcon Kind="AccountCircleOutline" Width="18" Height="18"
-                                                 Foreground="{StaticResource TextFaint}" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="SidebarUserText" Tag="NavText" Margin="12,0,0,0"
-                                   FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMuted}"
+                        <TextBlock x:Name="SidebarUserText" Tag="NavText" Margin="0"
+                                   FontSize="12" FontWeight="Bold" Foreground="{DynamicResource Accent}"
                                    TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
                     </StackPanel>
 
@@ -179,7 +177,7 @@
                             <Style TargetType="Button" BasedOn="{StaticResource NavItem}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding ActiveScreen}" Value="Orders">
-                                        <Setter Property="Background" Value="{StaticResource AccentGrad}"/>
+                                        <Setter Property="Background" Value="{DynamicResource AccentGrad}"/>
                                         <Setter Property="Foreground" Value="White"/>
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -195,7 +193,7 @@
                             <Style TargetType="Button" BasedOn="{StaticResource NavItem}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding ActiveScreen}" Value="QR">
-                                        <Setter Property="Background" Value="{StaticResource AccentGrad}"/>
+                                        <Setter Property="Background" Value="{DynamicResource AccentGrad}"/>
                                         <Setter Property="Foreground" Value="White"/>
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -211,7 +209,7 @@
                             <Style TargetType="Button" BasedOn="{StaticResource NavItem}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding ActiveScreen}" Value="Reports">
-                                        <Setter Property="Background" Value="{StaticResource AccentGrad}"/>
+                                        <Setter Property="Background" Value="{DynamicResource AccentGrad}"/>
                                         <Setter Property="Foreground" Value="White"/>
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -227,7 +225,7 @@
                             <Style TargetType="Button" BasedOn="{StaticResource NavItem}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding ActiveScreen}" Value="Notes">
-                                        <Setter Property="Background" Value="{StaticResource AccentGrad}"/>
+                                        <Setter Property="Background" Value="{DynamicResource AccentGrad}"/>
                                         <Setter Property="Foreground" Value="White"/>
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -248,7 +246,7 @@
                                             <Setter Property="Foreground" Value="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding HasSavedNotes}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource AccentText}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentText}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -297,13 +295,13 @@
                                             <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding CenterMode}" Value="Table">
-                                                    <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource Accent}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
                                     </TextBlock.Style>
                                 </TextBlock>
-                                <Border Height="2.5" Background="{StaticResource AccentGrad}" Margin="0,4,0,0"
+                                <Border Height="2.5" Background="{DynamicResource AccentGrad}" Margin="0,4,0,0"
                                         Visibility="{Binding CenterMode, Converter={StaticResource ModeToVis}, ConverterParameter=Table}"/>
                             </StackPanel>
                         </Button>
@@ -315,13 +313,13 @@
                                             <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding CenterMode}" Value="Menu">
-                                                    <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource Accent}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
                                     </TextBlock.Style>
                                 </TextBlock>
-                                <Border Height="2.5" Background="{StaticResource AccentGrad}" Margin="0,4,0,0"
+                                <Border Height="2.5" Background="{DynamicResource AccentGrad}" Margin="0,4,0,0"
                                         Visibility="{Binding CenterMode, Converter={StaticResource ModeToVis}, ConverterParameter=Menu}"/>
                             </StackPanel>
                         </Button>
@@ -419,12 +417,12 @@
                                                     </Border>
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsSelected" Value="True">
-                                                            <Setter TargetName="b" Property="Background" Value="{StaticResource AccentGrad}"/>
+                                                            <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentGrad}"/>
                                                             <Setter TargetName="b" Property="BorderBrush" Value="Transparent"/>
                                                             <Setter TargetName="t" Property="Foreground" Value="White"/>
                                                         </Trigger>
                                                         <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                                            <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
                                                 </ControlTemplate>
@@ -572,7 +570,7 @@
                                                                     </Border>
                                                                     <ControlTemplate.Triggers>
                                                                         <Trigger Property="IsMouseOver" Value="True">
-                                                                            <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                                                            <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                                                             <Setter TargetName="b" Property="Background" Value="#1A00704A"/>
                                                                         </Trigger>
                                                                     </ControlTemplate.Triggers>
@@ -598,9 +596,9 @@
                             </Grid.RowDefinitions>
 
                             <Grid Grid.Row="0" Margin="0,0,0,12">
-                                <TextBlock Text="MOST SELLING ITEMS" Foreground="{StaticResource Accent}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
-                                <Border HorizontalAlignment="Right" Background="#26EA580C" BorderBrush="{StaticResource Accent}" BorderThickness="1" CornerRadius="6" Padding="6,1.5">
-                                    <TextBlock Text="popular" Foreground="{StaticResource Accent}" FontSize="9.5" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <TextBlock Text="MOST SELLING ITEMS" Foreground="{DynamicResource Accent}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <Border HorizontalAlignment="Right" Background="#26EA580C" BorderBrush="{DynamicResource Accent}" BorderThickness="1" CornerRadius="6" Padding="6,1.5">
+                                    <TextBlock Text="popular" Foreground="{DynamicResource Accent}" FontSize="9.5" FontWeight="Bold" VerticalAlignment="Center"/>
                                 </Border>
                             </Grid>
 
@@ -622,7 +620,7 @@
                         <Border Background="{StaticResource CardBg}" CornerRadius="6" Padding="8,3">
                             <TextBlock Text="v2.4.8" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold"/>
                         </Border>
-                        <Ellipse Width="7" Height="7" Fill="{StaticResource Green}" Margin="12,0,6,0"/>
+                        <Ellipse Width="7" Height="7" Fill="{DynamicResource Green}" Margin="12,0,6,0"/>
                         <TextBlock Text="APP UP TO DATE" Foreground="{StaticResource TextMuted}" FontSize="11" VerticalAlignment="Center"/>
 
                         <Border Width="1" Height="14" Background="{StaticResource BorderSoft}" Margin="12,0" VerticalAlignment="Center"/>
@@ -638,7 +636,7 @@
                                             <Setter Property="Fill" Value="{StaticResource TextFaint}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding SyncState}" Value="ok">
-                                                    <Setter Property="Fill" Value="{StaticResource AccentText}"/>
+                                                    <Setter Property="Fill" Value="{DynamicResource AccentText}"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding SyncState}" Value="pending">
                                                     <Setter Property="Fill" Value="#FFF59E0B"/>
@@ -672,7 +670,7 @@
                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-12,0,0"
                         Visibility="{Binding IsSearchPopupOpen, Converter={StaticResource BoolToVis}}">
                     <Border Width="{Binding ActualWidth, ElementName=SearchInput}" MaxHeight="320"
-                            Background="{StaticResource CardBg}" BorderBrush="{StaticResource Accent}" BorderThickness="1.5"
+                            Background="{StaticResource CardBg}" BorderBrush="{DynamicResource Accent}" BorderThickness="1.5"
                             CornerRadius="12" Padding="4">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="16" ShadowDepth="4" Opacity="0.5" Color="Black"/>
@@ -702,7 +700,7 @@
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsSelected" Value="True">
-                                                        <Setter TargetName="b" Property="Background" Value="{StaticResource AccentDim}"/>
+                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentDim}"/>
                                                     </Trigger>
                                                     <Trigger Property="IsMouseOver" Value="True">
                                                         <Setter TargetName="b" Property="Background" Value="{StaticResource CardBg2}"/>
@@ -723,8 +721,8 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{StaticResource TextPrimary}"
                                                    FontSize="13.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                        <Border Grid.Column="1" Background="{StaticResource AccentFaint}" CornerRadius="5" Padding="6,2" Margin="8,0" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Code}" Foreground="{StaticResource Accent}" FontSize="11" FontWeight="Bold"/>
+                                        <Border Grid.Column="1" Background="{DynamicResource AccentFaint}" CornerRadius="5" Padding="6,2" Margin="8,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Code}" Foreground="{DynamicResource Accent}" FontSize="11" FontWeight="Bold"/>
                                         </Border>
                                         <TextBlock Grid.Column="2" Text="{Binding Price, StringFormat='₹{0:0.##}'}"
                                                    Foreground="{StaticResource TextPrimary}" FontSize="13.5" FontWeight="Bold" VerticalAlignment="Center"/>
@@ -759,8 +757,8 @@
                 <!-- header -->
                 <Grid Grid.Row="0" Margin="0,0,0,10">
                     <TextBlock Text="{Binding BillTitle}" Foreground="{StaticResource TextPrimary}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <Border Background="{StaticResource AccentFaint}" CornerRadius="8" Padding="8,2" HorizontalAlignment="Right">
-                        <TextBlock Text="{Binding DraftLabel}" Foreground="{StaticResource Accent}" FontSize="11" FontWeight="Bold"/>
+                    <Border Background="{DynamicResource AccentFaint}" CornerRadius="8" Padding="8,2" HorizontalAlignment="Right">
+                        <TextBlock Text="{Binding DraftLabel}" Foreground="{DynamicResource Accent}" FontSize="11" FontWeight="Bold"/>
                     </Border>
                 </Grid>
 
@@ -780,14 +778,14 @@
                                 <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding BillMode}" Value="Quick">
-                                        <Setter Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                         <!-- GreenBg, not black: pure black punched a hole in the
                                              panel instead of reading as a selected surface. -->
-                                        <Setter Property="Background" Value="{StaticResource GreenBg}"/>
+                                        <Setter Property="Background" Value="{DynamicResource GreenBg}"/>
                                         <!-- AccentText, not Accent: the accent green is too dark to
                                              read as a small label/icon on the black selected tab, even
                                              though it looks right as the 1.5px outline. -->
-                                        <Setter Property="Foreground" Value="{StaticResource AccentText}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource AccentText}"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -804,14 +802,14 @@
                                 <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding BillMode}" Value="Table">
-                                        <Setter Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                         <!-- GreenBg, not black: pure black punched a hole in the
                                              panel instead of reading as a selected surface. -->
-                                        <Setter Property="Background" Value="{StaticResource GreenBg}"/>
+                                        <Setter Property="Background" Value="{DynamicResource GreenBg}"/>
                                         <!-- AccentText, not Accent: the accent green is too dark to
                                              read as a small label/icon on the black selected tab, even
                                              though it looks right as the 1.5px outline. -->
-                                        <Setter Property="Foreground" Value="{StaticResource AccentText}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource AccentText}"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -828,14 +826,14 @@
                                 <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding BillMode}" Value="QR">
-                                        <Setter Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                         <!-- GreenBg, not black: pure black punched a hole in the
                                              panel instead of reading as a selected surface. -->
-                                        <Setter Property="Background" Value="{StaticResource GreenBg}"/>
+                                        <Setter Property="Background" Value="{DynamicResource GreenBg}"/>
                                         <!-- AccentText, not Accent: the accent green is too dark to
                                              read as a small label/icon on the black selected tab, even
                                              though it looks right as the 1.5px outline. -->
-                                        <Setter Property="Foreground" Value="{StaticResource AccentText}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource AccentText}"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -880,10 +878,10 @@
                                                         </Border>
                                                         <ControlTemplate.Triggers>
                                                             <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter TargetName="txt" Property="Foreground" Value="{StaticResource Accent}"/>
+                                                                <Setter TargetName="txt" Property="Foreground" Value="{DynamicResource Accent}"/>
                                                             </Trigger>
                                                             <DataTrigger Binding="{Binding DataContext.SelectedCartTab, RelativeSource={RelativeSource AncestorType=Window}}" Value="Old">
-                                                                <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                                                <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                                                 <Setter TargetName="txt" Property="Foreground" Value="White"/>
                                                             </DataTrigger>
                                                         </ControlTemplate.Triggers>
@@ -907,10 +905,10 @@
                                                         </Border>
                                                         <ControlTemplate.Triggers>
                                                             <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter TargetName="txt" Property="Foreground" Value="{StaticResource Accent}"/>
+                                                                <Setter TargetName="txt" Property="Foreground" Value="{DynamicResource Accent}"/>
                                                             </Trigger>
                                                             <DataTrigger Binding="{Binding DataContext.SelectedCartTab, RelativeSource={RelativeSource AncestorType=Window}}" Value="New">
-                                                                <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                                                <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                                                 <Setter TargetName="txt" Property="Foreground" Value="White"/>
                                                             </DataTrigger>
                                                         </ControlTemplate.Triggers>
@@ -956,11 +954,11 @@
                         </Grid>
 
                         <!-- Inline Extra Form -->
-                        <Border Grid.Row="1" Background="{StaticResource CardBg2}" BorderBrush="{StaticResource Accent}" BorderThickness="1.5"
+                        <Border Grid.Row="1" Background="{StaticResource CardBg2}" BorderBrush="{DynamicResource Accent}" BorderThickness="1.5"
                                 CornerRadius="12" Padding="14,10" Margin="0,0,0,12"
                                 Visibility="{Binding IsAddingExtra, Converter={StaticResource CountToVis}}">
                             <StackPanel>
-                                <TextBlock Text="ADD EXTRA CHARGE" Foreground="{StaticResource Accent}" FontSize="11" FontWeight="Bold" Margin="0,0,0,8"/>
+                                <TextBlock Text="ADD EXTRA CHARGE" Foreground="{DynamicResource Accent}" FontSize="11" FontWeight="Bold" Margin="0,0,0,8"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="80"/>
@@ -971,7 +969,7 @@
                                     <Border Grid.Column="0" Background="{StaticResource WindowBg}" CornerRadius="6" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="6,3" Margin="0,0,8,0">
                                         <Grid>
                                             <TextBlock Text="₹" Foreground="{StaticResource TextMuted}" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
-                                            <TextBox x:Name="TxtExtraPrice" GotFocus="ExtraInput_GotFocus" KeyDown="TxtExtraPrice_KeyDown" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="13" FontWeight="Bold" CaretBrush="{StaticResource Accent}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                                            <TextBox x:Name="TxtExtraPrice" GotFocus="ExtraInput_GotFocus" KeyDown="TxtExtraPrice_KeyDown" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="13" FontWeight="Bold" CaretBrush="{DynamicResource Accent}" Margin="12,0,0,0" VerticalAlignment="Center"/>
                                         </Grid>
                                     </Border>
                                     <!-- Remarks -->
@@ -989,12 +987,12 @@
                                                     </Style>
                                                 </TextBlock.Style>
                                             </TextBlock>
-                                            <TextBox x:Name="TxtExtraRemarks" GotFocus="ExtraInput_GotFocus" KeyDown="TxtExtraRemarks_KeyDown" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="13" CaretBrush="{StaticResource Accent}" VerticalAlignment="Center"/>
+                                            <TextBox x:Name="TxtExtraRemarks" GotFocus="ExtraInput_GotFocus" KeyDown="TxtExtraRemarks_KeyDown" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="13" CaretBrush="{DynamicResource Accent}" VerticalAlignment="Center"/>
                                         </Grid>
                                     </Border>
                                     <!-- Action Buttons -->
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
-                                        <Button Content="Add" Click="BtnAddExtra_Click" Style="{StaticResource ActionBtn}" Width="50" Height="28" FontSize="11" FontWeight="Bold" Background="{StaticResource AccentGrad}" Foreground="White"/>
+                                        <Button Content="Add" Click="BtnAddExtra_Click" Style="{StaticResource ActionBtn}" Width="50" Height="28" FontSize="11" FontWeight="Bold" Background="{DynamicResource AccentGrad}" Foreground="White"/>
                                         <Button Content="✕" Click="BtnCancelExtra_Click" Style="{StaticResource Stepper}" Width="28" Height="28" Margin="6,0,0,0"/>
                                     </StackPanel>
                                 </Grid>
@@ -1012,7 +1010,7 @@
                                             <DataTemplate.Triggers>
                                                 <DataTrigger Binding="{Binding Name}" Value="True">
                                                     <Setter TargetName="HeaderTxt" Property="Text" Value="PARCEL ITEMS"/>
-                                                    <Setter TargetName="HeaderTxt" Property="Foreground" Value="{StaticResource Accent}"/>
+                                                    <Setter TargetName="HeaderTxt" Property="Foreground" Value="{DynamicResource Accent}"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding Name}" Value="False">
                                                     <Setter TargetName="HeaderTxt" Property="Text" Value="DINE-IN ITEMS"/>
@@ -1038,7 +1036,7 @@
                                                         <ContentPresenter/>
                                                     </Border>
                                                     <!-- Left Selection Indicator Bar -->
-                                                    <Rectangle x:Name="ind" Width="3.5" HorizontalAlignment="Left" Fill="{StaticResource Accent}" Visibility="Collapsed"/>
+                                                    <Rectangle x:Name="ind" Width="3.5" HorizontalAlignment="Left" Fill="{DynamicResource Accent}" Visibility="Collapsed"/>
                                                 </Grid>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsSelected" Value="True">
@@ -1094,11 +1092,11 @@
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
                                                 <TextBlock Text="{Binding Name}" Foreground="{StaticResource TextPrimary}" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                                                <Border Background="{StaticResource AccentFaint}" CornerRadius="4" BorderBrush="{StaticResource Accent}" BorderThickness="1" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                <Border Background="{DynamicResource AccentFaint}" CornerRadius="4" BorderBrush="{DynamicResource Accent}" BorderThickness="1" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center"
                                                         Visibility="{Binding IsParcel, Converter={StaticResource CountToVis}}">
                                                     <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="P#" Foreground="{StaticResource Accent}" FontSize="9.5" FontWeight="Bold"/>
-                                                        <TextBlock Text="{Binding Qty}" Foreground="{StaticResource Accent}" FontSize="9.5" FontWeight="Bold"/>
+                                                        <TextBlock Text="P#" Foreground="{DynamicResource Accent}" FontSize="9.5" FontWeight="Bold"/>
+                                                        <TextBlock Text="{Binding Qty}" Foreground="{DynamicResource Accent}" FontSize="9.5" FontWeight="Bold"/>
                                                     </StackPanel>
                                                 </Border>
                                             </StackPanel>
@@ -1209,7 +1207,7 @@
                                                     </Border>
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                                            <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                                             <Setter TargetName="b" Property="Background" Value="#1A00704A"/>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
@@ -1235,8 +1233,8 @@
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="GRAND TOTAL" Foreground="{StaticResource TextFaint}" FontSize="10" FontWeight="Bold" HorizontalAlignment="Right"/>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,1,0,0">
-                                        <TextBlock Text="₹" Foreground="{StaticResource Accent}" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,3,0"/>
-                                        <TextBlock Text="{Binding GrandTotal, StringFormat='{}{0:0.##}'}" Foreground="{StaticResource Accent}" FontSize="21" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        <TextBlock Text="₹" Foreground="{DynamicResource Accent}" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                        <TextBlock Text="{Binding GrandTotal, StringFormat='{}{0:0.##}'}" Foreground="{DynamicResource Accent}" FontSize="21" FontWeight="Bold" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </StackPanel>
                             </StackPanel>
@@ -1274,14 +1272,14 @@
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="b" Property="Background" Value="{StaticResource AccentFaint}"/>
-                                                        <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
-                                                        <Setter TargetName="t1" Property="Foreground" Value="{StaticResource Accent}"/>
-                                                        <Setter TargetName="t2" Property="Foreground" Value="{StaticResource Accent}"/>
+                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentFaint}"/>
+                                                        <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                                        <Setter TargetName="t1" Property="Foreground" Value="{DynamicResource Accent}"/>
+                                                        <Setter TargetName="t2" Property="Foreground" Value="{DynamicResource Accent}"/>
                                                     </Trigger>
                                                     <Trigger Property="IsPressed" Value="True">
-                                                        <Setter TargetName="b" Property="Background" Value="{StaticResource AccentGrad}"/>
-                                                        <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentGrad}"/>
+                                                        <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                                         <Setter TargetName="t1" Property="Foreground" Value="White"/>
                                                         <Setter TargetName="t2" Property="Foreground" Value="#FFE0FFE0"/>
                                                         <Setter TargetName="b" Property="RenderTransform">
@@ -1311,7 +1309,7 @@
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="Button">
-                                                <Border x:Name="b" CornerRadius="8" Background="{StaticResource AccentGrad}" RenderTransformOrigin="0.5,0.5">
+                                                <Border x:Name="b" CornerRadius="8" Background="{DynamicResource AccentGrad}" RenderTransformOrigin="0.5,0.5">
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
                                                         <TextBlock x:Name="t1" Text="PRINT KOT" Foreground="White" FontSize="11.5" FontWeight="Bold" VerticalAlignment="Center"/>
                                                         <TextBlock x:Name="t2" Text="[F3]" Foreground="#FFFFE0C0" FontSize="9.5" FontWeight="Bold" VerticalAlignment="Center" Margin="6,0,0,0"/>
@@ -1322,7 +1320,7 @@
                                                         <Setter TargetName="b" Property="Opacity" Value="0.92"/>
                                                     </Trigger>
                                                     <Trigger Property="IsPressed" Value="True">
-                                                        <Setter TargetName="b" Property="Background" Value="{StaticResource AccentDim}"/>
+                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentDim}"/>
                                                         <Setter TargetName="b" Property="RenderTransform">
                                                             <Setter.Value>
                                                                 <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
@@ -1379,14 +1377,14 @@
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="b" Property="Background" Value="{StaticResource AccentFaint}"/>
-                                                        <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
-                                                        <Setter TargetName="t1" Property="Foreground" Value="{StaticResource Accent}"/>
-                                                        <Setter TargetName="t2" Property="Foreground" Value="{StaticResource Accent}"/>
+                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentFaint}"/>
+                                                        <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                                        <Setter TargetName="t1" Property="Foreground" Value="{DynamicResource Accent}"/>
+                                                        <Setter TargetName="t2" Property="Foreground" Value="{DynamicResource Accent}"/>
                                                     </Trigger>
                                                     <Trigger Property="IsPressed" Value="True">
-                                                        <Setter TargetName="b" Property="Background" Value="{StaticResource AccentGrad}"/>
-                                                        <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentGrad}"/>
+                                                        <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                                         <Setter TargetName="t1" Property="Foreground" Value="White"/>
                                                         <Setter TargetName="t2" Property="Foreground" Value="#FFE0FFE0"/>
                                                         <Setter TargetName="b" Property="RenderTransform">
@@ -1425,14 +1423,14 @@
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="b" Property="Background" Value="{StaticResource AccentFaint}"/>
-                                                        <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
-                                                        <Setter TargetName="t1" Property="Foreground" Value="{StaticResource Accent}"/>
-                                                        <Setter TargetName="t2" Property="Foreground" Value="{StaticResource Accent}"/>
+                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentFaint}"/>
+                                                        <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                                        <Setter TargetName="t1" Property="Foreground" Value="{DynamicResource Accent}"/>
+                                                        <Setter TargetName="t2" Property="Foreground" Value="{DynamicResource Accent}"/>
                                                     </Trigger>
                                                     <Trigger Property="IsPressed" Value="True">
-                                                        <Setter TargetName="b" Property="Background" Value="{StaticResource AccentGrad}"/>
-                                                        <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentGrad}"/>
+                                                        <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                                         <Setter TargetName="t1" Property="Foreground" Value="White"/>
                                                         <Setter TargetName="t2" Property="Foreground" Value="#FFE0FFE0"/>
                                                         <Setter TargetName="b" Property="RenderTransform">
@@ -1457,7 +1455,7 @@
                                             <Setter Property="Template">
                                                 <Setter.Value>
                                                     <ControlTemplate TargetType="Button">
-                                                        <Border x:Name="b" CornerRadius="8" Background="{StaticResource AccentGrad}" RenderTransformOrigin="0.5,0.5">
+                                                        <Border x:Name="b" CornerRadius="8" Background="{DynamicResource AccentGrad}" RenderTransformOrigin="0.5,0.5">
                                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
                                                                 <TextBlock Text="PRINT BILL" Foreground="White" FontSize="11.5" FontWeight="Bold" VerticalAlignment="Center"/>
                                                                 <TextBlock Text="[F4]" Foreground="#FFFFE0C0" FontSize="9.5" FontWeight="Bold" VerticalAlignment="Center" Margin="6,0,0,0"/>
@@ -1468,7 +1466,7 @@
                                                                 <Setter TargetName="b" Property="Opacity" Value="0.92"/>
                                                             </Trigger>
                                                             <Trigger Property="IsPressed" Value="True">
-                                                                <Setter TargetName="b" Property="Background" Value="{StaticResource AccentDim}"/>
+                                                                <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentDim}"/>
                                                                 <Setter TargetName="b" Property="RenderTransform">
                                                                     <Setter.Value>
                                                                         <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
@@ -1500,14 +1498,14 @@
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="b" Property="Background" Value="{StaticResource AccentFaint}"/>
-                                                        <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
-                                                        <Setter TargetName="t1" Property="Foreground" Value="{StaticResource Accent}"/>
-                                                        <Setter TargetName="t2" Property="Foreground" Value="{StaticResource Accent}"/>
+                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentFaint}"/>
+                                                        <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                                        <Setter TargetName="t1" Property="Foreground" Value="{DynamicResource Accent}"/>
+                                                        <Setter TargetName="t2" Property="Foreground" Value="{DynamicResource Accent}"/>
                                                     </Trigger>
                                                     <Trigger Property="IsPressed" Value="True">
-                                                        <Setter TargetName="b" Property="Background" Value="{StaticResource AccentGrad}"/>
-                                                        <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentGrad}"/>
+                                                        <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                                         <Setter TargetName="t1" Property="Foreground" Value="White"/>
                                                         <Setter TargetName="t2" Property="Foreground" Value="#FFE0FFE0"/>
                                                         <Setter TargetName="b" Property="RenderTransform">

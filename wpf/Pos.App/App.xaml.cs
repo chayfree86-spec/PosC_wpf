@@ -119,20 +119,26 @@ public partial class App : Application
 
         Services = sc.BuildServiceProvider();
 
-        // Create schema (idempotent) and seed sample data on first run so the
-        // screen has something to show before the API bootstrap sync exists.
+        // Create schema (idempotent). Nothing is seeded: the catalog, tables and staff all
+        // arrive from the server through the bootstrap sync, so an unsynced till shows an
+        // empty menu rather than demo items an operator could accidentally bill.
         var db = Services.GetRequiredService<DatabaseService>();
         new SqliteMigrationRunner(db).Migrate();
-        SampleSeeder.SeedIfEmpty(db);
 
         // Bills are written to SQLite first and pushed to the server in the background, so
         // the till keeps working whether or not the network does.
         var sync = Services.GetRequiredService<SyncCoordinator>();
         sync.Start();
 
-        // A saved setting goes out at once instead of waiting for the next scheduled pass —
-        // the operator has just pressed Save and expects it to be shared, not queued.
-        Services.GetRequiredService<AppSettingsRepository>().SettingQueued += sync.NudgePush;
+        // Settings are written straight to the server, not queued: the manager is standing at
+        // the screen and Save has to mean it reached MySQL, not that it might in a while.
+        var appSettings = Services.GetRequiredService<AppSettingsRepository>();
+        appSettings.PushNow = sync.PushSettingNow;
+        appSettings.PullNow = sync.RefreshSettingsNow;
+
+        // Only reached when that direct write couldn't get through. The value is already safe in
+        // SQLite and queued; this just stops it waiting for the next scheduled pass.
+        appSettings.SettingQueued += sync.NudgePush;
 
         // Nobody bills until the till knows who is standing at it.
         //
@@ -150,6 +156,14 @@ public partial class App : Application
         // and a captured id would keep crediting whoever opened the app this morning.
         Services.GetRequiredService<OrderRepository>().CurrentUserId = () => Session.User?.Id;
         ApplySignedInClient();
+
+        // The highlight colour belongs to the business, not the machine — one till serves both
+        // brands — so it is re-applied every time the counter changes hands, reading the new
+        // client's own choice (or falling back to the shipped green when it has none).
+        var clientContext = Services.GetRequiredService<ClientContext>();
+        void ApplyClientAccent() => ThemeService.Apply(appSettings.GetJsonForClient<string>(ThemeService.SettingKey));
+        clientContext.Changed += ApplyClientAccent;
+        ApplyClientAccent();
 
         var window = new MainWindow { DataContext = Services.GetRequiredService<MainViewModel>() };
         MainWindow = window;

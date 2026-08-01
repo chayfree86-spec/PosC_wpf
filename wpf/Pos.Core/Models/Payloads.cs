@@ -48,7 +48,9 @@ public sealed class NextBillNumberResult
 {
     public long NextBillNumber { get; set; }
     public long BillNumber { get; set; }
-    public string BillPrefix { get; set; } = "DR";
+    /// <summary>Empty until a business name is known — a bill prints #0007 rather than being
+    /// stamped with some other shop's letters.</summary>
+    public string BillPrefix { get; set; } = "";
     public string FormattedBillNumber { get; set; } = "";
 }
 
@@ -62,4 +64,15 @@ public sealed class SaveOrderResult
     public string? TableStatus { get; set; }
     public double TotalAmount { get; set; }
     public bool Cleared { get; set; }
+
+    /// <summary>
+    /// The bill number as it should be shown and printed — <c>#CC-0007</c>.
+    ///
+    /// Carried on the result rather than rebuilt by each caller: the printer used to receive
+    /// the bare number while Reports showed the prefixed one, so the paper handed to the
+    /// customer and the row in the sales log named the same bill differently. Empty for a save
+    /// that produced no bill number, such as a KOT or a cleared table.
+    /// </summary>
+    public string BillPrefix { get; set; } = "";
+    public string FormattedBillNumber { get; set; } = "";
 }

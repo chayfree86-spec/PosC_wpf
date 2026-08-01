@@ -19,7 +19,9 @@ public sealed class ClientContext
     /// signs nobody in — still reads and writes the client it has always had.</summary>
     public long ClientId { get; private set; } = 1;
 
-    /// <summary>Drives the bill prefix (daalroti → DR, chaychaupal → CC).</summary>
+    /// <summary>The server's identifier for this business. It no longer decides the bill
+    /// prefix — that is abbreviated from the NAME and kept in clients.bill_prefix, so adding a
+    /// third shop doesn't mean adding another slug to a list somewhere.</summary>
     public string Slug { get; private set; } = "";
 
     public string Name { get; private set; } = "";

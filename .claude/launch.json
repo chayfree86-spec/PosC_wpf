@@ -8,6 +8,12 @@
       "port": 8123
     },
     {
+      "name": "mobilemenu",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/web-project/htdocs/PosC_wpf/api/mobilemenu", "run", "dev", "--", "--port", "5190", "--strictPort"],
+      "port": 5190
+    },
+    {
       "name": "daalroti-web",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "C:/web-project/htdocs/daalroti-tracking", "run", "dev"],

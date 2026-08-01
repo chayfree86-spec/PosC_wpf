@@ -178,8 +178,7 @@ public partial class SettingsView : UserControl
         var pd = new PrintDialog();
         try
         {
-            if (!string.IsNullOrWhiteSpace(Vm.SelectedPrinter)
-                && !Vm.SelectedPrinter.StartsWith("Default Thermal", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(Vm.SelectedPrinter))
             {
                 var server = new System.Printing.LocalPrintServer();
                 pd.PrintQueue = server.GetPrintQueue(Vm.SelectedPrinter);

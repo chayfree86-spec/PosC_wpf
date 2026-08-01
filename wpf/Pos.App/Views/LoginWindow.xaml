@@ -28,13 +28,17 @@
                     Width="30" Height="30" HorizontalAlignment="Right" VerticalAlignment="Top"
                     ToolTip="Band karein (Esc)"/>
 
-            <!-- Branding -->
+            <!-- Branding.
+                 Fixed to the product, not to a business. Nobody has signed in yet, so there is
+                 no "current" brand to show — reading one business's profile here just meant the
+                 Chay Chaupal manager was greeted by the Daal Roti logo every morning. Which
+                 business the shift belongs to appears under the number instead, once it is typed. -->
             <StackPanel Grid.Row="1" HorizontalAlignment="Center" Margin="0,10,0,26">
-                <Border Background="{StaticResource AccentGrad}" CornerRadius="16" Width="60" Height="60">
-                    <TextBlock x:Name="TxtInitials" Text="POS" Foreground="White" FontWeight="Bold" FontSize="20"
+                <Border Background="{DynamicResource AccentGrad}" CornerRadius="16" Width="60" Height="60">
+                    <TextBlock Text="POS" Foreground="White" FontWeight="Bold" FontSize="17"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
-                <TextBlock x:Name="TxtStoreName" Text="POS" Foreground="{StaticResource TextPrimary}"
+                <TextBlock Text="POS Billing" Foreground="{StaticResource TextPrimary}"
                            FontSize="19" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,14,0,0"/>
                 <TextBlock Text="SIGN IN TO CONTINUE" Foreground="{StaticResource TextFaint}"
                            FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,3,0,0"/>
@@ -56,7 +60,7 @@
                                                  VerticalAlignment="Center" Margin="0,0,10,0"/>
                         <TextBox Grid.Column="1" x:Name="TxtMobile" Foreground="White" FontSize="16"
                                  Background="Transparent" BorderThickness="0" MaxLength="15"
-                                 CaretBrush="{StaticResource Accent}"
+                                 CaretBrush="{DynamicResource Accent}"
                                  VerticalContentAlignment="Center"
                                  PreviewTextInput="Digits_PreviewTextInput"
                                  TextChanged="Mobile_Changed"/>
@@ -67,9 +71,9 @@
                      caught before a PIN is keyed in rather than after it is rejected. -->
                 <StackPanel x:Name="StaffRow" Orientation="Horizontal" Margin="2,7,0,0" Visibility="Collapsed">
                     <materialDesign:PackIcon Kind="AccountCheckOutline" Width="15" Height="15"
-                                             Foreground="{StaticResource AccentText}" VerticalAlignment="Center"/>
+                                             Foreground="{DynamicResource AccentText}" VerticalAlignment="Center"/>
                     <TextBlock x:Name="TxtStaffName" Margin="7,0,0,0" FontSize="13" FontWeight="SemiBold"
-                               Foreground="{StaticResource AccentText}" TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource AccentText}" TextTrimming="CharacterEllipsis"
                                VerticalAlignment="Center"/>
                 </StackPanel>
 
@@ -92,13 +96,13 @@
                              likely reason someone gets stuck on this screen. -->
                         <PasswordBox Grid.Column="1" x:Name="TxtPin" Foreground="White" FontSize="16"
                                      Background="Transparent" BorderThickness="0" MaxLength="12"
-                                     CaretBrush="{StaticResource Accent}"
+                                     CaretBrush="{DynamicResource Accent}"
                                      VerticalContentAlignment="Center"
                                      PreviewTextInput="Digits_PreviewTextInput"
                                      PasswordChanged="Field_Changed"/>
                         <TextBox Grid.Column="1" x:Name="TxtPinPlain" Foreground="White" FontSize="16"
                                  Background="Transparent" BorderThickness="0" MaxLength="12"
-                                 CaretBrush="{StaticResource Accent}"
+                                 CaretBrush="{DynamicResource Accent}"
                                  VerticalContentAlignment="Center" Visibility="Collapsed"
                                  PreviewTextInput="Digits_PreviewTextInput"
                                  TextChanged="Field_Changed"/>
@@ -121,7 +125,7 @@
             <!-- Actions -->
             <StackPanel Grid.Row="3">
                 <Button x:Name="BtnLogin" Content="LOGIN" Click="Login_Click" Height="48"
-                        Background="{StaticResource AccentGrad}" Foreground="White"
+                        Background="{DynamicResource AccentGrad}" Foreground="White"
                         FontWeight="Bold" FontSize="14" Cursor="Hand">
                     <Button.Resources>
                         <Style TargetType="Border"><Setter Property="CornerRadius" Value="12"/></Style>

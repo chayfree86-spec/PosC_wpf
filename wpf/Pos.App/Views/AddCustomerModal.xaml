@@ -26,22 +26,22 @@
             <StackPanel Grid.Row="1" VerticalAlignment="Center">
                 <TextBlock Text="CUSTOMER NAME:" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
                 <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="8,4" Margin="0,0,0,10">
-                    <TextBox x:Name="TxtName" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                    <TextBox x:Name="TxtName" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
 
                 <TextBlock Text="MOBILE NUMBER:" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
                 <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="8,4" Margin="0,0,0,10">
-                    <TextBox x:Name="TxtPhone" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                    <TextBox x:Name="TxtPhone" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
 
                 <TextBlock Text="ADDRESS:" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
                 <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="8,4" Margin="0,0,0,10">
-                    <TextBox x:Name="TxtAddress" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                    <TextBox x:Name="TxtAddress" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
 
                 <TextBlock x:Name="OpeningLabel" Text="OPENING BALANCE (₹):" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
                 <Border x:Name="OpeningBorder" Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="8,4">
-                    <TextBox x:Name="TxtBalance" Text="0" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                    <TextBox x:Name="TxtBalance" Text="0" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
             </StackPanel>
 
@@ -60,7 +60,7 @@
                 </Button>
 
                 <Button Grid.Column="1" Content="SAVE CUSTOMER" Click="Save_Click" Height="42"
-                        Background="{StaticResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="13">
+                        Background="{DynamicResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="13">
                     <Button.Resources>
                         <Style TargetType="Border"><Setter Property="CornerRadius" Value="10"/></Style>
                     </Button.Resources>

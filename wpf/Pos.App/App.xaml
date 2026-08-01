@@ -45,7 +45,7 @@
                      4px one instead. Keyed TextBox styles don't inherit implicit styles, so the
                      setter is repeated on those. -->
                 <Setter Property="helpers:ThickCaret.Width" Value="4"/>
-                <Setter Property="SelectionBrush" Value="{StaticResource Accent}"/>
+                <Setter Property="SelectionBrush" Value="{DynamicResource Accent}"/>
                 <Setter Property="SelectionTextBrush" Value="White"/>
                 <!-- Must stay at 1: below 1 WPF falls back to painting a translucent
                      selection rectangle over the text and ignores SelectionTextBrush, which
@@ -66,6 +66,7 @@
             <conv:CountToVisibilityConverter x:Key="CountToVis"/>
             <conv:StringEqualsToVisibilityConverter x:Key="ModeToVis"/>
             <conv:StringIsNullOrEmptyToVisibilityConverter x:Key="StringToVis"/>
+            <conv:HexToBrushConverter x:Key="HexToBrush"/>
 
             <!-- ===== Sidebar nav item ===== -->
             <Style x:Key="NavItem" TargetType="Button">
@@ -84,7 +85,7 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="b" Property="Background" Value="{StaticResource AccentFaint}"/>
+                                    <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentFaint}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -97,7 +98,7 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
-                            <Border CornerRadius="10" Background="{StaticResource AccentGrad}" Padding="14,0">
+                            <Border CornerRadius="10" Background="{DynamicResource AccentGrad}" Padding="14,0">
                                 <ContentPresenter VerticalAlignment="Center"/>
                             </Border>
                         </ControlTemplate>
@@ -111,7 +112,7 @@
             <Style x:Key="SearchBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
                 <Setter Property="helpers:ThickCaret.Width" Value="4"/>
                 <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
-                <Setter Property="CaretBrush" Value="{StaticResource Accent}"/>
+                <Setter Property="CaretBrush" Value="{DynamicResource Accent}"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="Template">
                     <Setter.Value>
@@ -129,7 +130,7 @@
                                     <Setter TargetName="ph" Property="Visibility" Value="Visible"/>
                                 </Trigger>
                                 <Trigger Property="IsKeyboardFocused" Value="True">
-                                    <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                    <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -161,7 +162,7 @@
                                 <!-- Template triggers outrank style setters but lose to local
                                      values, so the usages must not set Foreground inline. -->
                                 <Trigger Property="IsKeyboardFocused" Value="True">
-                                    <Setter TargetName="b" Property="Background" Value="{StaticResource Accent}"/>
+                                    <Setter TargetName="b" Property="Background" Value="{DynamicResource Accent}"/>
                                     <Setter Property="Foreground" Value="White"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
@@ -171,7 +172,7 @@
             </Style>
 
             <Style x:Key="PriceCellEditBox" TargetType="TextBox" BasedOn="{StaticResource CellEditBox}">
-                <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+                <Setter Property="Foreground" Value="{DynamicResource Accent}"/>
                 <Setter Property="FontSize" Value="11.5"/>
             </Style>
 
@@ -188,8 +189,8 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
-                                    <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+                                    <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource Accent}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -216,7 +217,7 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                    <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                 </Trigger>
                                 <Trigger Property="IsSelected" Value="True">
                                     <Setter TargetName="b" Property="BorderBrush" Value="White"/>
@@ -243,8 +244,8 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
-                                    <Setter TargetName="b" Property="Background" Value="{StaticResource AccentFaint}"/>
+                                    <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                    <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentFaint}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -269,7 +270,7 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                    <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -300,8 +301,8 @@
                 </Setter>
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="BorderBrush" Value="{StaticResource Accent}"/>
-                        <Setter Property="Background" Value="{StaticResource AccentFaint}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                        <Setter Property="Background" Value="{DynamicResource AccentFaint}"/>
                     </Trigger>
                 </Style.Triggers>
             </Style>
@@ -382,7 +383,7 @@
                             <Setter.Value>
                                 <ControlTemplate TargetType="GridSplitter">
                                     <Grid Background="Transparent">
-                                        <Border Width="3" CornerRadius="2" Background="{StaticResource Accent}" HorizontalAlignment="Center"/>
+                                        <Border Width="3" CornerRadius="2" Background="{DynamicResource Accent}" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </ControlTemplate>
                             </Setter.Value>
@@ -411,7 +412,7 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Foreground" Value="{StaticResource AccentText}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource AccentText}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -438,7 +439,7 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="border" Property="Background" Value="{StaticResource AccentFaint}"/>
+                                    <Setter TargetName="border" Property="Background" Value="{DynamicResource AccentFaint}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -478,7 +479,7 @@
             <!-- ===== Dark DatePicker + Calendar ===== -->
             <Style TargetType="DatePickerTextBox">
                 <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
-                <Setter Property="CaretBrush" Value="{StaticResource Accent}"/>
+                <Setter Property="CaretBrush" Value="{DynamicResource Accent}"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="DatePickerTextBox">
@@ -498,9 +499,9 @@
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="Background" Value="{StaticResource AccentFaint}"/></Trigger>
-                                <Trigger Property="IsToday" Value="True"><Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/></Trigger>
-                                <Trigger Property="IsSelected" Value="True"><Setter TargetName="b" Property="Background" Value="{StaticResource Accent}"/><Setter Property="Foreground" Value="White"/></Trigger>
+                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="Background" Value="{DynamicResource AccentFaint}"/></Trigger>
+                                <Trigger Property="IsToday" Value="True"><Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
+                                <Trigger Property="IsSelected" Value="True"><Setter TargetName="b" Property="Background" Value="{DynamicResource Accent}"/><Setter Property="Foreground" Value="White"/></Trigger>
                                 <Trigger Property="IsEnabled" Value="False"><Setter Property="Foreground" Value="{StaticResource TextFaint}"/></Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -517,7 +518,7 @@
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="Background" Value="{StaticResource AccentFaint}"/></Trigger>
+                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="Background" Value="{DynamicResource AccentFaint}"/></Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>
@@ -573,7 +574,7 @@
                                 </Grid>
                             </Border>
                             <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Accent}"/></Trigger>
+                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>
@@ -621,7 +622,7 @@
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                                    <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -691,8 +692,8 @@
                                 <!-- IsHighlighted covers both mouse hover and keyboard arrow
                                      navigation, so the active row always reads as selected. -->
                                 <Trigger Property="IsHighlighted" Value="True">
-                                    <Setter TargetName="b" Property="Background" Value="{StaticResource MenuHighlight}"/>
-                                    <Setter Property="Foreground" Value="{StaticResource AccentText}"/>
+                                    <Setter TargetName="b" Property="Background" Value="{DynamicResource MenuHighlight}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource AccentText}"/>
                                 </Trigger>
                                 <!-- Destructive rows (Tag="danger") keep their red identity
                                      instead of turning green on highlight. -->
@@ -740,12 +741,12 @@
                             </StackPanel>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsChecked" Value="True">
-                                    <Setter TargetName="box" Property="Background" Value="{StaticResource Accent}"/>
-                                    <Setter TargetName="box" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                    <Setter TargetName="box" Property="Background" Value="{DynamicResource Accent}"/>
+                                    <Setter TargetName="box" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                     <Setter TargetName="tick" Property="Visibility" Value="Visible"/>
                                 </Trigger>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="box" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                    <Setter TargetName="box" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>

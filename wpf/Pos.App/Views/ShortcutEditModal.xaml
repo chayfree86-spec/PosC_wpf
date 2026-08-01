@@ -18,7 +18,7 @@
                     </Grid>
                     <Grid>
                         <TextBlock Text="New Assigned Key:" Foreground="{StaticResource TextMuted}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        <Border x:Name="PendingKeyBadge" Background="{StaticResource AccentGrad}" CornerRadius="5" Padding="8,3" HorizontalAlignment="Right" Visibility="Collapsed">
+                        <Border x:Name="PendingKeyBadge" Background="{DynamicResource AccentGrad}" CornerRadius="5" Padding="8,3" HorizontalAlignment="Right" Visibility="Collapsed">
                             <TextBlock x:Name="PendingKeyText" Text="" Foreground="White" FontSize="11" FontWeight="Bold" FontFamily="Consolas"/>
                         </Border>
                         <TextBlock x:Name="NonePendingText" Text="None selected yet" Foreground="{StaticResource TextFaint}" FontSize="11" FontStyle="Italic" HorizontalAlignment="Right"/>
@@ -38,7 +38,7 @@
                         <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
                         <Style.Triggers>
                             <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                                <Setter Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>
@@ -64,7 +64,7 @@
                     </Button.Resources>
                 </Button>
                 <Button x:Name="SaveKeyBtn" Grid.Column="2" Content="Save Key" Height="42" Click="Save_Click" Cursor="Hand" IsEnabled="False"
-                        Background="{StaticResource Accent}" Foreground="White" FontWeight="Bold" BorderThickness="0">
+                        Background="{DynamicResource Accent}" Foreground="White" FontWeight="Bold" BorderThickness="0">
                     <Button.Resources>
                         <Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style>
                     </Button.Resources>

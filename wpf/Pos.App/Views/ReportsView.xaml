@@ -19,7 +19,7 @@
                             <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/></Trigger>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -47,7 +47,7 @@
                 <TextBlock Text="VIEW &amp; ANALYZE SALES" Foreground="{StaticResource TextFaint}" FontSize="10" FontWeight="Bold"/>
             </StackPanel>
             <Button HorizontalAlignment="Right" VerticalAlignment="Center" Height="38" Padding="18,0" Cursor="Hand"
-                    Background="{StaticResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="12"
+                    Background="{DynamicResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="12"
                     Command="{Binding ExportCsvCommand}" Content="⬇  EXPORT CSV"/>
         </Grid>
 
@@ -58,41 +58,41 @@
                     <StackPanel Orientation="Horizontal">
                         <Button Content="Today" Margin="0,0,8,0" Command="{Binding SetRangeCommand}" CommandParameter="today">
                             <Button.Style><Style TargetType="Button" BasedOn="{StaticResource RangeBtn}">
-                                <Style.Triggers><DataTrigger Binding="{Binding RangeType}" Value="today"><Setter Property="Foreground" Value="{StaticResource Accent}"/></DataTrigger></Style.Triggers>
+                                <Style.Triggers><DataTrigger Binding="{Binding RangeType}" Value="today"><Setter Property="Foreground" Value="{DynamicResource Accent}"/></DataTrigger></Style.Triggers>
                             </Style></Button.Style>
                         </Button>
                         <Button Content="Yesterday" Margin="0,0,8,0" Command="{Binding SetRangeCommand}" CommandParameter="yesterday">
                             <Button.Style><Style TargetType="Button" BasedOn="{StaticResource RangeBtn}">
-                                <Style.Triggers><DataTrigger Binding="{Binding RangeType}" Value="yesterday"><Setter Property="Foreground" Value="{StaticResource Accent}"/></DataTrigger></Style.Triggers>
+                                <Style.Triggers><DataTrigger Binding="{Binding RangeType}" Value="yesterday"><Setter Property="Foreground" Value="{DynamicResource Accent}"/></DataTrigger></Style.Triggers>
                             </Style></Button.Style>
                         </Button>
                         <Button Content="Last 7 Days" Margin="0,0,8,0" Command="{Binding SetRangeCommand}" CommandParameter="week">
                             <Button.Style><Style TargetType="Button" BasedOn="{StaticResource RangeBtn}">
-                                <Style.Triggers><DataTrigger Binding="{Binding RangeType}" Value="week"><Setter Property="Foreground" Value="{StaticResource Accent}"/></DataTrigger></Style.Triggers>
+                                <Style.Triggers><DataTrigger Binding="{Binding RangeType}" Value="week"><Setter Property="Foreground" Value="{DynamicResource Accent}"/></DataTrigger></Style.Triggers>
                             </Style></Button.Style>
                         </Button>
                         <Button Content="Last 30 Days" Margin="0,0,8,0" Command="{Binding SetRangeCommand}" CommandParameter="month">
                             <Button.Style><Style TargetType="Button" BasedOn="{StaticResource RangeBtn}">
-                                <Style.Triggers><DataTrigger Binding="{Binding RangeType}" Value="month"><Setter Property="Foreground" Value="{StaticResource Accent}"/></DataTrigger></Style.Triggers>
+                                <Style.Triggers><DataTrigger Binding="{Binding RangeType}" Value="month"><Setter Property="Foreground" Value="{DynamicResource Accent}"/></DataTrigger></Style.Triggers>
                             </Style></Button.Style>
                         </Button>
                         <Button Content="Custom" Command="{Binding SetRangeCommand}" CommandParameter="custom">
                             <Button.Style><Style TargetType="Button" BasedOn="{StaticResource RangeBtn}">
-                                <Style.Triggers><DataTrigger Binding="{Binding RangeType}" Value="custom"><Setter Property="Foreground" Value="{StaticResource Accent}"/></DataTrigger></Style.Triggers>
+                                <Style.Triggers><DataTrigger Binding="{Binding RangeType}" Value="custom"><Setter Property="Foreground" Value="{DynamicResource Accent}"/></DataTrigger></Style.Triggers>
                             </Style></Button.Style>
                         </Button>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <!-- Staff filter. Opens on the signed-in operator's own bills; "Sabhi
-                             Staff" widens it back to the whole counter. Drives the summary
+                        <!-- Counter filter. Opens on the signed-in business's own day; "All"
+                             widens it to every brand on the till, combined. Drives the summary
                              cards as well as the log below, so both always answer the same
                              question. -->
-                        <TextBlock Text="Staff:" Foreground="{StaticResource TextMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Counter Name:" Foreground="{StaticResource TextMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <!-- ItemTemplate rather than DisplayMemberPath: the app's dark ComboBox
                              template shows the closed box through SelectionBoxItemTemplate, which
                              follows ItemTemplate. With only DisplayMemberPath set it stays null
                              and the box falls back to ToString() — the class name. -->
-                        <ComboBox ItemsSource="{Binding Staff}" SelectedItem="{Binding SelectedStaff, Mode=TwoWay}"
+                        <ComboBox ItemsSource="{Binding Counters}" SelectedItem="{Binding SelectedCounter, Mode=TwoWay}"
                                   Width="180" Height="34" FontSize="13" Margin="0,0,20,0">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
@@ -101,7 +101,7 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                         <TextBlock Text="Period:" Foreground="{StaticResource TextMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="{Binding PeriodDisplay}" Foreground="{StaticResource Accent}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding PeriodDisplay}" Foreground="{DynamicResource Accent}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Grid>
 
@@ -112,7 +112,7 @@
                     <TextBlock Text="To:" Foreground="{StaticResource TextMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <DatePicker SelectedDate="{Binding CustomEnd, Mode=TwoWay}" Width="150" Margin="0,0,16,0"/>
                     <Button Content="Apply" Height="34" Padding="18,0" Cursor="Hand" Command="{Binding ApplyCustomCommand}"
-                            Background="{StaticResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="12" BorderThickness="0"/>
+                            Background="{DynamicResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="12" BorderThickness="0"/>
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -142,8 +142,8 @@
                         <TextBlock Text="Total Bills" Foreground="{StaticResource TextMuted}" FontSize="12" FontWeight="SemiBold"/>
                         <TextBlock Text="{Binding TotalBills}" Foreground="White" FontSize="24" FontWeight="Black" Margin="0,4,0,0"/>
                     </StackPanel>
-                    <Border Width="46" Height="46" CornerRadius="12" Background="{StaticResource AccentFaint}" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <TextBlock Text="&#xE7BF;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{StaticResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border Width="46" Height="46" CornerRadius="12" Background="{DynamicResource AccentFaint}" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE7BF;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                 </Grid>
             </Border>
@@ -178,7 +178,7 @@
                         <Grid>
                             <TextBlock Text="🔍  सर्च करें (Bill#, Table, Amt, Name...)" Foreground="{StaticResource TextFaint}" FontSize="12" VerticalAlignment="Center"
                                        Visibility="{Binding SearchTerm, Converter={StaticResource StringToVis}}"/>
-                            <TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}" Foreground="White" FontSize="13" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                            <TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}" Foreground="White" FontSize="13" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                         </Grid>
                     </Border>
                 </Grid>
@@ -220,9 +220,9 @@
                                         <TextBlock Grid.Column="1" Text="{Binding DateText}" Foreground="{StaticResource TextMuted}" FontSize="13" VerticalAlignment="Center"/>
                                         <TextBlock Grid.Column="2" Text="{Binding StaffText}" Foreground="{StaticResource TextMuted}" FontSize="13" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                         <TextBlock Grid.Column="3" Text="{Binding TableText}" Foreground="{StaticResource TextMuted}" FontSize="13" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="4" Text="{Binding TotalText}" Foreground="{StaticResource Accent}" FontSize="15" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="4" Text="{Binding TotalText}" Foreground="{DynamicResource Accent}" FontSize="15" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                         <Button Grid.Column="5" Content="View" Click="ViewBill_Click" Cursor="Hand" HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                Height="30" Padding="14,0" Background="{StaticResource CardBg2}" Foreground="{StaticResource Accent}" FontWeight="Bold" FontSize="12" BorderThickness="1" BorderBrush="{StaticResource Border}"/>
+                                                Height="30" Padding="14,0" Background="{StaticResource CardBg2}" Foreground="{DynamicResource Accent}" FontWeight="Bold" FontSize="12" BorderThickness="1" BorderBrush="{StaticResource Border}"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -232,7 +232,7 @@
 
                 <!-- pagination -->
                 <Grid Grid.Row="3" Margin="0,12,0,0">
-                    <TextBlock Text="{Binding ExportMessage}" Foreground="{StaticResource Accent}" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="{Binding ExportMessage}" Foreground="{DynamicResource Accent}" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <Button Content="‹ Prev" Command="{Binding PrevPageCommand}" Height="32" Padding="14,0" Cursor="Hand"
                                 Background="{StaticResource CardBg2}" Foreground="{StaticResource TextPrimary}" FontWeight="SemiBold" FontSize="12" BorderThickness="1" BorderBrush="{StaticResource Border}"/>

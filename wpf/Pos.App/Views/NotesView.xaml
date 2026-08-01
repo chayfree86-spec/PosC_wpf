@@ -27,9 +27,9 @@
             <!-- Grid Wrap Cards List of Saved Quick Order Notes -->
             <StackPanel Grid.Row="1" Visibility="{Binding HasQuickNotes, Converter={StaticResource BoolToVis}}">
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                    <materialDesign:PackIcon Kind="NotebookEditOutline" Width="18" Height="18" Foreground="{StaticResource Accent}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <materialDesign:PackIcon Kind="NotebookEditOutline" Width="18" Height="18" Foreground="{DynamicResource Accent}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <TextBlock Text="SAVED QUICK ORDER NOTES" Foreground="{StaticResource TextPrimary}" FontSize="13.5" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <Border Background="{StaticResource AccentGrad}" CornerRadius="10" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                    <Border Background="{DynamicResource AccentGrad}" CornerRadius="10" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="{Binding QuickOrderNotes.Count}" Foreground="White" FontSize="11" FontWeight="Bold"/>
                     </Border>
                 </StackPanel>
@@ -53,14 +53,14 @@
                                     <!-- Row 0: Customer & Time -->
                                     <Grid Grid.Row="0">
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <materialDesign:PackIcon Kind="AccountOutline" Width="15" Height="15" Foreground="{StaticResource Accent}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <materialDesign:PackIcon Kind="AccountOutline" Width="15" Height="15" Foreground="{DynamicResource Accent}" Margin="0,0,6,0" VerticalAlignment="Center"/>
                                             <TextBlock Text="{Binding CustomerName}" Foreground="{StaticResource TextPrimary}" FontSize="13.5" FontWeight="Bold" VerticalAlignment="Center"/>
                                             <TextBlock Text="{Binding CustomerMobile, StringFormat=' ({0})'}" Foreground="{StaticResource TextMuted}" FontSize="11.5" VerticalAlignment="Center"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                            <materialDesign:PackIcon Kind="ClockOutline" Width="13" Height="13" Foreground="{StaticResource BlueLink}" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="{Binding TargetTime, StringFormat='Serving: {0}'}" Foreground="{StaticResource BlueLink}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <materialDesign:PackIcon Kind="ClockOutline" Width="13" Height="13" Foreground="{DynamicResource BlueLink}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding TargetTime, StringFormat='Serving: {0}'}" Foreground="{DynamicResource BlueLink}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                             <TextBlock Text="{Binding SavedTime, StringFormat='Saved: {0}'}" Foreground="{StaticResource TextFaint}" FontSize="10.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Grid>
@@ -98,7 +98,7 @@
                                                 </StackPanel>
                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                                                     <TextBlock Text="GRAND TOTAL: " Foreground="{StaticResource TextFaint}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding GrandTotal, StringFormat='₹{0:0.##}'}" Foreground="{StaticResource Accent}" FontSize="14" FontWeight="Bold"/>
+                                                    <TextBlock Text="{Binding GrandTotal, StringFormat='₹{0:0.##}'}" Foreground="{DynamicResource Accent}" FontSize="14" FontWeight="Bold"/>
                                                 </StackPanel>
                                             </Grid>
                                         </StackPanel>
@@ -130,8 +130,8 @@
                                                                 </Border>
                                                                 <ControlTemplate.Triggers>
                                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                                        <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
-                                                                        <Setter TargetName="b" Property="Background" Value="{StaticResource AccentFaint}"/>
+                                                                        <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentFaint}"/>
                                                                     </Trigger>
                                                                 </ControlTemplate.Triggers>
                                                             </ControlTemplate>
@@ -151,13 +151,13 @@
                                                             <ControlTemplate TargetType="Button">
                                                                 <Border x:Name="b" CornerRadius="8" Background="{StaticResource CardBg2}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1">
                                                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                                        <materialDesign:PackIcon Kind="SwapHorizontal" Width="13" Height="13" Foreground="{StaticResource BlueLink}" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                                                        <TextBlock Text="TRANSFER TO TABLE" Foreground="{StaticResource BlueLink}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                                        <materialDesign:PackIcon Kind="SwapHorizontal" Width="13" Height="13" Foreground="{DynamicResource BlueLink}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                                        <TextBlock Text="TRANSFER TO TABLE" Foreground="{DynamicResource BlueLink}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
                                                                     </StackPanel>
                                                                 </Border>
                                                                 <ControlTemplate.Triggers>
                                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                                        <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource BlueLink}"/>
+                                                                        <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource BlueLink}"/>
                                                                         <Setter TargetName="b" Property="Background" Value="{StaticResource CardBg}"/>
                                                                     </Trigger>
                                                                 </ControlTemplate.Triggers>

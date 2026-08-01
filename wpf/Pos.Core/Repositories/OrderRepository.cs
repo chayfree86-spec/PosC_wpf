@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using System.Text.Json;
 using Dapper;
 using Microsoft.Data.Sqlite;
@@ -74,6 +74,25 @@ public sealed class OrderRepository
         return NextBillNumberInternal(conn, null, clientId.Value);
     }
 
+    /// <summary>
+    /// This business's bill number as it should be printed — <c>#CC-0007</c>.
+    ///
+    /// For bills that already exist, where <see cref="SaveOrderResult.FormattedBillNumber"/>
+    /// isn't to hand: a reprint from the sales log has only the stored Order row, and pasting
+    /// the bare number onto the paper would make the duplicate read differently from the
+    /// original.
+    /// </summary>
+    public string FormatBillNumber(long? billNumber, long? clientId = null)
+    {
+        if (billNumber == null)
+        {
+            return "";
+        }
+        clientId ??= _client.ClientId;
+        using var conn = _db.OpenConnection();
+        return BillPrefix.Format(BillPrefix.Resolve(conn, null, clientId.Value), billNumber.Value);
+    }
+
     // ── KOT / Bill / Clear ───────────────────────────────────────────────────
 
     /// <summary>
@@ -123,19 +142,25 @@ public sealed class OrderRepository
             }, tx);
 
         var orderId = conn.ExecuteScalar<long>("SELECT last_insert_rowid()", transaction: tx);
-        ReadableUuid.Stamp(conn, tx, "orders", ReadableUuid.Order, orderId);
+        ReadableUuid.Stamp(conn, tx, "orders", ReadableUuid.Order, orderId, clientId.Value);
 
-        ReplaceItems(conn, tx, orderId, items);
+        ReplaceItems(conn, tx, orderId, clientId.Value, items);
         LogStatus(conn, tx, orderId, orderStatus);
         Enqueue(conn, tx, "order", orderId.ToString(), "upsert",
             SyncBody(clientId.Value, orderId, OrderUuid(conn, tx, orderId), payload.TableId, billNumber, total, null,
                      orderStatus, payload, items));
 
+        // Read inside the transaction — after the commit there is no tx to resolve through,
+        // and Resolve may need to write the column back on its first call.
+        var billPrefix = billNumber.HasValue ? BillPrefix.Resolve(conn, tx, clientId.Value) : "";
+
         tx.Commit();
         return new SaveOrderResult
         {
             Success = true, Id = orderId, BillNumber = billNumber, TableId = payload.TableId,
-            OrderStatus = orderStatus, TotalAmount = total
+            OrderStatus = orderStatus, TotalAmount = total,
+            BillPrefix = billPrefix,
+            FormattedBillNumber = billNumber.HasValue ? BillPrefix.Format(billPrefix, billNumber.Value) : ""
         };
     }
 
@@ -258,7 +283,7 @@ public sealed class OrderRepository
                     isParcelMode = payload.IsParcelMode ? 1 : 0
                 }, tx);
             orderId = conn.ExecuteScalar<long>("SELECT last_insert_rowid()", transaction: tx);
-            ReadableUuid.Stamp(conn, tx, "orders", ReadableUuid.Order, orderId);
+            ReadableUuid.Stamp(conn, tx, "orders", ReadableUuid.Order, orderId, clientId.Value);
         }
 
         var finalTotal = total;
@@ -277,16 +302,16 @@ public sealed class OrderRepository
                         @"UPDATE orders SET total_amount = @finalTotal, sync_version = sync_version + 1,
                             updated_at = datetime('now', '+330 minutes') WHERE id = @orderId",
                         new { finalTotal, orderId }, tx);
-                    ReplaceItems(conn, tx, orderId, merged);
+                    ReplaceItems(conn, tx, orderId, clientId.Value, merged);
                 }
                 else
                 {
-                    ReplaceItems(conn, tx, orderId, items);
+                    ReplaceItems(conn, tx, orderId, clientId.Value, items);
                 }
             }
             else
             {
-                ReplaceItems(conn, tx, orderId, items);
+                ReplaceItems(conn, tx, orderId, clientId.Value, items);
             }
         }
 
@@ -310,11 +335,15 @@ public sealed class OrderRepository
             SyncBody(clientId.Value, orderId, OrderUuid(conn, tx, orderId), tableId, billNumber, finalTotal, tableStatus,
                      orderStatus, payload, syncItems));
 
+        var billPrefix = billNumber.HasValue ? BillPrefix.Resolve(conn, tx, clientId.Value) : "";
+
         tx.Commit();
         return new SaveOrderResult
         {
             Success = true, Id = orderId, BillNumber = billNumber, TableId = tableId,
-            OrderStatus = orderStatus, TableStatus = tableStatus, TotalAmount = finalTotal
+            OrderStatus = orderStatus, TableStatus = tableStatus, TotalAmount = finalTotal,
+            BillPrefix = billPrefix,
+            FormattedBillNumber = billNumber.HasValue ? BillPrefix.Format(billPrefix, billNumber.Value) : ""
         };
     }
 
@@ -345,36 +374,17 @@ public sealed class OrderRepository
         next = Math.Max(1, next);
         next = ResolveUniqueBillNumber(conn, tx, clientId, next, null) ?? next;
 
-        var prefix = "DR";
-        try
-        {
-            var client = conn.QueryFirstOrDefault<ClientRow>(
-                "SELECT slug, name FROM clients WHERE id = @clientId", new { clientId }, tx);
-            var slug = (client?.Slug ?? "").ToLowerInvariant();
-            if (slug.Contains("chaychaupal") || slug.Contains("chay") || slug.Contains("cc"))
-            {
-                prefix = "CC";
-            }
-            else if (slug.Contains("daalroti") || slug.Contains("roti") || slug.Contains("dr"))
-            {
-                prefix = "DR";
-            }
-            else if (!string.IsNullOrWhiteSpace(client?.Name))
-            {
-                var words = client!.Name!.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                prefix = words.Length >= 2
-                    ? (string.Concat(words[0][0], words[1][0])).ToUpperInvariant()
-                    : client.Name!.Substring(0, Math.Min(2, client.Name!.Length)).ToUpperInvariant();
-            }
-        }
-        catch { /* keep default prefix */ }
+        // Read from clients.bill_prefix instead of pattern-matching the slug here. The old
+        // check listed the two known shops by name and fell back to "DR", so a third business
+        // on the counter printed Daal Roti's letters on its bills.
+        var prefix = BillPrefix.Resolve(conn, tx, clientId);
 
         return new NextBillNumberResult
         {
             NextBillNumber = next,
             BillNumber = next,
             BillPrefix = prefix,
-            FormattedBillNumber = $"#{prefix}-{next.ToString().PadLeft(4, '0')}"
+            FormattedBillNumber = BillPrefix.Format(prefix, next)
         };
     }
 
@@ -412,7 +422,7 @@ public sealed class OrderRepository
         return rawTableId.Value;
     }
 
-    private static void ReplaceItems(SqliteConnection conn, IDbTransaction tx, long orderId, IEnumerable<OrderItemInput> items)
+    private static void ReplaceItems(SqliteConnection conn, IDbTransaction tx, long orderId, long clientId, IEnumerable<OrderItemInput> items)
     {
         conn.Execute("DELETE FROM order_items WHERE order_id = @orderId", new { orderId }, tx);
         foreach (var item in items)
@@ -442,7 +452,7 @@ public sealed class OrderRepository
                 }, tx);
 
             ReadableUuid.Stamp(conn, tx, "order_items", ReadableUuid.OrderItem,
-                conn.ExecuteScalar<long>("SELECT last_insert_rowid()", transaction: tx));
+                conn.ExecuteScalar<long>("SELECT last_insert_rowid()", transaction: tx), clientId);
         }
     }
 
@@ -657,11 +667,5 @@ public sealed class OrderRepository
     {
         public long Id { get; set; }
         public long? BillNumber { get; set; }
-    }
-
-    private sealed class ClientRow
-    {
-        public string? Slug { get; set; }
-        public string? Name { get; set; }
     }
 }

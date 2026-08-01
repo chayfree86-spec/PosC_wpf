@@ -68,6 +68,47 @@ public sealed class BootstrapSyncService
         }
     }
 
+    /// <summary>
+    /// Brings just the shared settings down, without the menu, tables and areas a full
+    /// bootstrap drags with it.
+    ///
+    /// Called when the Settings screen opens, so what the operator is shown is what the server
+    /// actually holds rather than a local copy that may have drifted from it. Cheap enough to
+    /// run on every open — one request against <c>/settings</c>, no catalog.
+    ///
+    /// Answers false when the server can't be reached; the caller then shows the local values,
+    /// because a till that hides its own settings the moment the network drops is worse than one
+    /// showing a slightly stale GST number.
+    /// </summary>
+    public async Task<bool> RefreshSettingsAsync(long clientId, CancellationToken ct = default)
+    {
+        try
+        {
+            var root = await _api.GetAsync("/settings", ct);
+            if (root is null)
+            {
+                return false;
+            }
+
+            // Same {key, value, updated_at} rows the bootstrap response carries under
+            // "settings", so the merge below is the identical, newest-wins one.
+            var data = root.Value.TryGetProperty("data", out var d) ? d : root.Value;
+            var rows = data.ValueKind == JsonValueKind.Array
+                ? data.EnumerateArray().ToList()
+                : Array(data, "settings");
+
+            using var conn = _db.OpenConnection();
+            using var tx = conn.BeginTransaction();
+            UpsertSettings(conn, tx, rows, clientId);
+            tx.Commit();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     // ── upserts ──────────────────────────────────────────────────────────────
 
     private static void UpsertAreas(Microsoft.Data.Sqlite.SqliteConnection conn, System.Data.IDbTransaction tx,
@@ -250,11 +291,23 @@ public sealed class BootstrapSyncService
     }
 
     /// <summary>
-    /// Keeps the local clients row named the same as the server's.
+    /// Keeps the local clients row in step with the business's name.
     ///
-    /// It isn't only cosmetic: the business code at the front of every order key falls back to
-    /// this name, so a rename made anywhere else has to reach the till.
+    /// It isn't only cosmetic: the sidebar falls back to this name and the bill-number prefix is
+    /// abbreviated from it, so a stale clients row is a till showing one name and printing
+    /// another.
     /// </summary>
+    /// <remarks>
+    /// The profile wins over the server's clients row, which is the opposite of what this used
+    /// to do. <c>restaurant_profile</c> is the copy the Settings screen writes and the only one
+    /// that gets pushed; <c>clients.name</c> is never sent anywhere. Taking the server's clients
+    /// row unconditionally meant a rename saved at the counter was reverted by the very next
+    /// pull — twenty seconds later — while the profile it was saved into kept the new name. That
+    /// is the split that had the sidebar and the bill disagreeing with the bill number.
+    ///
+    /// <see cref="UpsertSettings"/> runs before this and has already merged the incoming profile
+    /// newest-wins, so the name read here is the one that won, whichever side it came from.
+    /// </remarks>
     private static void UpsertClient(Microsoft.Data.Sqlite.SqliteConnection conn, System.Data.IDbTransaction tx,
         JsonElement data)
     {
@@ -264,8 +317,16 @@ public sealed class BootstrapSyncService
         }
 
         var id = Num(client, "id");
-        var name = Text(client, "name");
-        if (id <= 0 || name.Length == 0)
+        if (id <= 0)
+        {
+            return;
+        }
+
+        // Falls back to the server's clients row only when the business has no profile on this
+        // till yet — a fresh install that has never had its details filled in.
+        var profileName = BusinessName.FromProfile(conn, tx, id);
+        var name = profileName.Length > 0 ? profileName : Text(client, "name");
+        if (name.Length == 0)
         {
             return;
         }
@@ -278,6 +339,10 @@ public sealed class BootstrapSyncService
                 slug = COALESCE(NULLIF(excluded.slug, ''), clients.slug),
                 updated_at = datetime('now', '+330 minutes')",
             new { id, slug = Text(client, "slug"), name }, tx);
+
+        // A rename has to move the bill prefix too, not just the name. Otherwise the till keeps
+        // stamping the old shop's letters until someone happens to re-save from Settings.
+        BillPrefix.Refresh(conn, tx, id, name);
     }
 
     /// <summary>
@@ -293,9 +358,12 @@ public sealed class BootstrapSyncService
         "upi_settings",
         "daily_reset_bill_counter",
         "login_pin",
-        // This app's own: which of the profile details get printed, and the hotkeys.
+        // This app's own: which of the profile details get printed, the hotkeys, and the
+        // highlight colour — all per business, so they follow the brand to any till it signs
+        // in to rather than being set up again on each one.
         "pos_wpf_settings",
         "pos_wpf_shortcuts",
+        "pos_accent_color",
     };
 
     /// <summary>

@@ -9,7 +9,7 @@
             CornerRadius="14" Padding="20">
         <StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                <TextBlock Text="%" Foreground="{StaticResource AccentText}" FontSize="18" FontWeight="Bold" Margin="0,0,8,0"/>
+                <TextBlock Text="%" Foreground="{DynamicResource AccentText}" FontSize="18" FontWeight="Bold" Margin="0,0,8,0"/>
                 <TextBlock Text="BILL DISCOUNT (छूट)" Foreground="{StaticResource TextPrimary}" FontSize="15" FontWeight="Bold"/>
             </StackPanel>
 
@@ -65,7 +65,7 @@
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0" Margin="0,0,0,8">
                     <TextBlock Text="NET PAYABLE" Foreground="{StaticResource TextFaint}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="TxtNet" Foreground="{StaticResource AccentText}" FontSize="22" FontWeight="Bold"
+                    <TextBlock x:Name="TxtNet" Foreground="{DynamicResource AccentText}" FontSize="22" FontWeight="Bold"
                                HorizontalAlignment="Right"/>
                 </Grid>
                 <Grid Grid.Row="1">
@@ -80,8 +80,8 @@
                     <Button Grid.Column="1" Content="CANCEL [Esc]" Click="Cancel_Click" Style="{StaticResource ActionBtn}"
                             Height="44" FontSize="12"/>
                     <Button Grid.Column="3" Content="APPLY [Enter]" Click="Apply_Click" Style="{StaticResource ActionBtn}"
-                            Height="44" FontSize="12" Background="{StaticResource GreenBg}"
-                            BorderBrush="{StaticResource Accent}" Foreground="{StaticResource AccentText}"/>
+                            Height="44" FontSize="12" Background="{DynamicResource GreenBg}"
+                            BorderBrush="{DynamicResource Accent}" Foreground="{DynamicResource AccentText}"/>
                 </Grid>
             </Grid>
         </StackPanel>

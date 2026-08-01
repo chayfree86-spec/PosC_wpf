@@ -11,21 +11,21 @@
             <StackPanel x:Name="NamePanel" Margin="0,0,0,12">
                 <TextBlock x:Name="NameLabel" Text="NAME *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
                 <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
-                    <TextBox x:Name="NameBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                    <TextBox x:Name="NameBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
             </StackPanel>
 
             <StackPanel x:Name="PricePanel" Margin="0,0,0,12">
                 <TextBlock Text="PRICE (₹) *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
                 <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
-                    <TextBox x:Name="PriceBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                    <TextBox x:Name="PriceBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
             </StackPanel>
 
             <StackPanel x:Name="RatePanel" Margin="0,0,0,12">
                 <TextBlock Text="GST RATE (%) *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
                 <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
-                    <TextBox x:Name="RateBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                    <TextBox x:Name="RateBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
             </StackPanel>
 
@@ -42,7 +42,7 @@
             <StackPanel x:Name="SortOrderPanel" Margin="0,0,0,12">
                 <TextBlock Text="SORT ORDER" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
                 <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
-                    <TextBox x:Name="SortOrderBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                    <TextBox x:Name="SortOrderBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
             </StackPanel>
 
@@ -67,7 +67,7 @@
                     </Button.Resources>
                 </Button>
                 <Button Grid.Column="2" Content="Save" Height="42" Click="Save_Click" Cursor="Hand"
-                        Background="{StaticResource Accent}" Foreground="White" FontWeight="Bold" BorderThickness="0">
+                        Background="{DynamicResource Accent}" Foreground="White" FontWeight="Bold" BorderThickness="0">
                     <Button.Resources>
                         <Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style>
                     </Button.Resources>

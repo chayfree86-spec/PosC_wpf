@@ -10,13 +10,11 @@ export const OrderStatus: React.FC = () => {
   useEffect(() => {
     if (!currentOrderId) return;
 
-    // Load initial order details if offline/localStorage exists
-    const localOrderString = localStorage.getItem(`mock-order-${currentOrderId}`);
-    if (localOrderString) {
-      setOrderDetail(JSON.parse(localOrderString));
-    }
+    // The receipt below is filled by the poll only. There used to be a `mock-order-<id>`
+    // localStorage read here, left over from the simulated-order days -- nothing has
+    // written that key since, so it could only ever have shown a stale order.
 
-    // Subscribe to real-time updates from PocketBase / Simulation
+    // Poll the POS API for this order's real status
     const unsubscribe = PocketBaseService.subscribeToOrderUpdates(currentOrderId, (updatedOrder) => {
       setOrderDetail(updatedOrder);
       setOrderStatus(updatedOrder.status);

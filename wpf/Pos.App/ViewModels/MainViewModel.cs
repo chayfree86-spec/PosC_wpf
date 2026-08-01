@@ -340,6 +340,12 @@ public partial class MainViewModel : ObservableObject
         {
             Reports.Reload();
         }
+        // Same reason, one screen over: the shop's profile can be changed from the dashboard or
+        // from another counter, and opening Settings on a stale copy means editing it.
+        else if (value == "Settings")
+        {
+            Settings.ReloadFromServer();
+        }
     }
 
     private void LoadCatalog()
@@ -677,7 +683,7 @@ public partial class MainViewModel : ObservableObject
             _printer.Enqueue("KOT", cfg, ticket);
             ClearCounter();
 
-            StatusMessage($"KOT — Quick Bill #{res.BillNumber}, Total: ₹{res.TotalAmount:0.##}");
+            StatusMessage($"KOT — Quick Bill {res.FormattedBillNumber}, Total: ₹{res.TotalAmount:0.##}");
         }
     }
 
@@ -736,7 +742,7 @@ public partial class MainViewModel : ObservableObject
         if (BillMode == "Table" && SelectedTable != null)
         {
             var res = _orders.SaveTableOrder(BuildPayload("completed"));
-            var bill = builder.BuildBill(lines, res.BillNumber?.ToString() ?? "", SelectedTable.TableNumber,
+            var bill = builder.BuildBill(lines, res.FormattedBillNumber, SelectedTable.TableNumber,
                                          discount, total, DateTime.Now);
 
             // Queued the instant the bill has its number: everything below is the counter
@@ -751,7 +757,7 @@ public partial class MainViewModel : ObservableObject
             MergeSavedLines();
             SelectedCartTab = "Old";
             RaiseTotals();
-            StatusMessage($"Bill — Table {SelectedTable.TableNumber}, Bill #{res.BillNumber}");
+            StatusMessage($"Bill — Table {SelectedTable.TableNumber}, Bill {res.FormattedBillNumber}");
         }
         else
         {
@@ -759,13 +765,13 @@ public partial class MainViewModel : ObservableObject
             // nothing was sent earlier — there is no running table order behind it.
             var ticket = builder.BuildKot(KotLines(), "Quick", null);
             var res = RecordQuickBill();
-            var bill = builder.BuildBill(lines, res.BillNumber?.ToString() ?? "", "", discount, total, DateTime.Now);
+            var bill = builder.BuildBill(lines, res.FormattedBillNumber, "", discount, total, DateTime.Now);
 
             _printer.Enqueue("KOT", cfg, ticket);
             _printer.Enqueue("Bill", cfg, bill, withQr: true);
 
             ClearCounter();
-            StatusMessage($"KOT + Bill — Quick Bill #{res.BillNumber}");
+            StatusMessage($"KOT + Bill — Quick Bill {res.FormattedBillNumber}");
         }
     }
 
@@ -791,7 +797,7 @@ public partial class MainViewModel : ObservableObject
         var billedAt = DateTime.TryParse(order.BilledAt ?? order.CreatedAt, out var d) ? d : DateTime.Now;
 
         var bill = new Pos.Core.Printing.ReceiptBuilder(cfg).BuildBill(
-            lines, order.BillNumber?.ToString() ?? "", order.TableNumber ?? "",
+            lines, _orders.FormatBillNumber(order.BillNumber), order.TableNumber ?? "",
             order.DiscountAmount, order.TotalAmount, billedAt);
 
         _printer.Enqueue("Bill", cfg, bill, withQr: true);

@@ -17,12 +17,12 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                 <Border Background="{StaticResource CardBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7" Margin="0,0,10,0">
                     <StackPanel Orientation="Horizontal">
-                        <Ellipse Width="8" Height="8" Fill="{StaticResource Accent}" VerticalAlignment="Center" Margin="0,0,7,0"/>
-                        <TextBlock Text="LIVE" Foreground="{StaticResource Accent}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <Ellipse Width="8" Height="8" Fill="{DynamicResource Accent}" VerticalAlignment="Center" Margin="0,0,7,0"/>
+                        <TextBlock Text="LIVE" Foreground="{DynamicResource Accent}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Border>
                 <Button Content="⟳  REFRESH" Command="{Binding RefreshCommand}" Height="38" Padding="16,0" Cursor="Hand"
-                        Background="{StaticResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="12" BorderThickness="0"/>
+                        Background="{DynamicResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="12" BorderThickness="0"/>
             </StackPanel>
         </Grid>
 
@@ -32,8 +32,8 @@
                 <!-- empty state -->
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
                             Visibility="{Binding PendingCount, Converter={StaticResource CountToVis}, ConverterParameter=invert}">
-                    <Border Width="72" Height="72" CornerRadius="18" Background="{StaticResource AccentFaint}" HorizontalAlignment="Center">
-                        <TextBlock Text="&#xE8A9;" FontFamily="Segoe MDL2 Assets" FontSize="34" Foreground="{StaticResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border Width="72" Height="72" CornerRadius="18" Background="{DynamicResource AccentFaint}" HorizontalAlignment="Center">
+                        <TextBlock Text="&#xE8A9;" FontFamily="Segoe MDL2 Assets" FontSize="34" Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <TextBlock Text="No pending QR orders" Foreground="{StaticResource TextPrimary}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,16,0,4"/>
                     <TextBlock Text="Orders customers place by scanning the table QR code appear here for you to accept." Foreground="{StaticResource TextMuted}" FontSize="12" HorizontalAlignment="Center" TextAlignment="Center" MaxWidth="380" TextWrapping="Wrap"/>

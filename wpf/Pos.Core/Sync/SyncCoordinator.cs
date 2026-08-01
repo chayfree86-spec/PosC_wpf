@@ -94,7 +94,107 @@ public sealed class SyncCoordinator : IDisposable
     /// <summary>A client configured with this till's current server URL, for callers (like
     /// catalog creation) that need to talk to the server directly rather than through the
     /// queue.</summary>
-    public PosApiClient CreateApiClient() => new(ApiUrl);
+    public PosApiClient CreateApiClient() => new(ApiUrl, _client.Slug, _client.ClientId);
+
+    /// <summary>
+    /// Writes one setting to the server there and then, and says whether it landed.
+    ///
+    /// Settings do not go through the queue by default any more. A shop's name, GST number or
+    /// UPI id is changed by a manager standing in front of the screen, and the whole point of
+    /// pressing Save is to see it take effect — a queued write that quietly waits, or quietly
+    /// never goes because the server is down, looks exactly like a save that worked. Bills stay
+    /// queued, because a sale must never be refused for want of a network.
+    ///
+    /// False means the value is saved locally but not on the server; the caller queues it so a
+    /// later pass still gets it there, and tells the operator rather than showing a plain
+    /// "Saved ✓".
+    /// </summary>
+    /// <param name="clientId">The business the setting belongs to, recorded at save time.</param>
+    public bool PushSettingNow(string key, string valueJson, long clientId)
+    {
+        if (!DirectWorthTrying)
+        {
+            return false;
+        }
+
+        try
+        {
+            // Task.Run, not a bare .Result: this is called from the UI thread, and awaiting a
+            // continuation that wants that same thread back would deadlock the till on Save.
+            // A short timeout for the same reason — the button must not hang on a dead server.
+            Task.Run(() => SyncQueueService.PushSettingAsync(ShortApiClient(), key, valueJson, clientId))
+                .GetAwaiter().GetResult();
+            _directDeadUntil = DateTime.MinValue;
+            return true;
+        }
+        catch
+        {
+            // Offline, or the server rejected it. Either way the queue is the safety net.
+            MarkDirectDead();
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Reads this business's settings back from the server into the local mirror, and says
+    /// whether it got through.
+    ///
+    /// The other half of <see cref="PushSettingNow"/>: saves go straight to the server, so the
+    /// Settings screen opens against the server too. Otherwise the operator could be editing a
+    /// local copy that no longer matches the row their change is about to overwrite.
+    ///
+    /// Merged newest-wins, not blindly overwritten — a change saved while the server was
+    /// unreachable is still sitting in the queue, and taking the server's older copy here would
+    /// throw it away before it was ever sent.
+    /// </summary>
+    public bool RefreshSettingsNow()
+    {
+        if (!DirectWorthTrying)
+        {
+            return false;
+        }
+
+        try
+        {
+            var ok = Task.Run(() => new BootstrapSyncService(_db, ShortApiClient())
+                .RefreshSettingsAsync(_client.ClientId)).GetAwaiter().GetResult();
+            if (ok)
+            {
+                _directDeadUntil = DateTime.MinValue;
+            }
+            else
+            {
+                MarkDirectDead();
+            }
+            return ok;
+        }
+        catch
+        {
+            MarkDirectDead();
+            return false;
+        }
+    }
+
+    /// <summary>The till's API client with a short fuse, for the calls made straight from the UI
+    /// thread. The background loop keeps the longer default.</summary>
+    private PosApiClient ShortApiClient() =>
+        new(ApiUrl, _client.Slug, _client.ClientId, TimeSpan.FromSeconds(5));
+
+    /// <summary>
+    /// How long the direct calls stop trying after one of them fails.
+    ///
+    /// Without this a save on an offline till pays the timeout once per setting, and Save writes
+    /// four of them — the counter would freeze for twenty seconds before saying "server offline".
+    /// One failure is enough to know; the rest of that save gives up instantly and goes to the
+    /// queue, and the background loop keeps retrying on its own schedule regardless.
+    /// </summary>
+    private static readonly TimeSpan DirectRetryDelay = TimeSpan.FromSeconds(15);
+
+    private DateTime _directDeadUntil = DateTime.MinValue;
+
+    private bool DirectWorthTrying => DateTime.UtcNow >= _directDeadUntil;
+
+    private void MarkDirectDead() => _directDeadUntil = DateTime.UtcNow.Add(DirectRetryDelay);
 
     private async Task LoopAsync(CancellationToken ct)
     {
@@ -126,13 +226,21 @@ public sealed class SyncCoordinator : IDisposable
 
     private async Task<SyncStatus> RunPassAsync(bool force, CancellationToken ct)
     {
-        var api = new PosApiClient(ApiUrl);
+        // Named, not anonymous: without the client headers the server falls back to whichever
+        // client is first in its table, so a second business's pushes were landing on the
+        // first one's rows.
+        var api = new PosApiClient(ApiUrl, _client.Slug, _client.ClientId);
         var queue = new SyncQueueService(_db, api);
 
         if (!await api.IsReachableAsync(ct))
         {
+            MarkDirectDead();
             return Publish(new SyncStatus(false, queue.PendingCount(), Status.LastSuccessIst, "Server offline"));
         }
+
+        // The server is answering again, so the Settings screen should go straight to it on the
+        // next save rather than sitting out the rest of the back-off.
+        _directDeadUntil = DateTime.MinValue;
 
         // Master data first, so a bill pushed straight after refers to items the server knows.
         string? pullError = null;

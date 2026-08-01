@@ -30,7 +30,7 @@
             <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1.5" Padding="8,4" Margin="0,0,0,14">
                 <Grid>
                     <TextBlock Text="₹" Foreground="{StaticResource TextMuted}" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBox x:Name="TxtAmount" Foreground="White" FontSize="18" FontWeight="Bold" Margin="20,0,0,0" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                    <TextBox x:Name="TxtAmount" Foreground="White" FontSize="18" FontWeight="Bold" Margin="20,0,0,0" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Grid>
             </Border>
 
@@ -38,7 +38,7 @@
             <TextBlock Text="PAYMENT MODE:" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,6"/>
             <Grid Margin="0,0,0,14">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                <Button x:Name="BtnCash" Grid.Column="0" Content="CASH" Click="Mode_Click" Tag="cash" Margin="0,0,3,0" Height="32" Background="{StaticResource Accent}" Foreground="White" FontWeight="Bold" BorderThickness="0"/>
+                <Button x:Name="BtnCash" Grid.Column="0" Content="CASH" Click="Mode_Click" Tag="cash" Margin="0,0,3,0" Height="32" Background="{DynamicResource Accent}" Foreground="White" FontWeight="Bold" BorderThickness="0"/>
                 <Button x:Name="BtnUpi" Grid.Column="1" Content="UPI" Click="Mode_Click" Tag="upi" Margin="3,0,3,0" Height="32" Background="{StaticResource CardBg}" Foreground="{StaticResource TextMuted}" FontWeight="Bold" BorderThickness="0"/>
                 <Button x:Name="BtnBank" Grid.Column="2" Content="BANK" Click="Mode_Click" Tag="bank" Margin="3,0,0,0" Height="32" Background="{StaticResource CardBg}" Foreground="{StaticResource TextMuted}" FontWeight="Bold" BorderThickness="0"/>
             </Grid>
@@ -46,7 +46,7 @@
             <!-- Remarks -->
             <TextBlock Text="REMARKS / NOTE:" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
             <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="8,4" Margin="0,0,0,16">
-                <TextBox x:Name="TxtRemarks" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                <TextBox x:Name="TxtRemarks" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
             </Border>
 
             <!-- Actions -->
@@ -55,7 +55,7 @@
                 <Button Grid.Column="0" Content="CANCEL" Click="Close_Click" Height="42" Margin="0,0,8,0"
                         Background="{StaticResource CardBg}" Foreground="{StaticResource TextMuted}" FontWeight="Bold" FontSize="12" BorderThickness="0"/>
                 <Button x:Name="BtnSubmit" Grid.Column="1" Content="SAVE TRANSACTION" Click="Save_Click" Height="42"
-                        Background="{StaticResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="13" BorderThickness="0"/>
+                        Background="{DynamicResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="13" BorderThickness="0"/>
             </Grid>
         </StackPanel>
     </Border>

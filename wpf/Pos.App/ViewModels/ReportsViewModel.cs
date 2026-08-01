@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Pos.App.Services;
+using Pos.Core.Data;
 using Pos.Core.Models;
 using Pos.Core.Repositories;
 
@@ -13,18 +13,25 @@ namespace Pos.App.ViewModels;
 public partial class ReportsViewModel : ObservableObject
 {
     private const int PageSize = 12;
-    private static readonly ReportStaff AllStaff = new() { Id = null, Name = "Sabhi Staff" };
+
+    /// <summary>The "every business on the till" row. Null id is what the queries read as
+    /// "don't filter by client".</summary>
+    private static readonly ReportCounter AllCounters = new() { Id = null, Name = "All (Sabhi Counter)" };
 
     private readonly ReportsRepository _repo;
+    private readonly ClientContext _client;
     private readonly List<ReportRow> _all = new();       // full result for the range
     private List<ReportRow> _filtered = new();           // after search
-    private string _prefix = "DR";
-    private bool _suspendReload;                         // while the staff list is rebuilt
+
+    /// <summary>Each business's bill prefix, worked out once and reused — in "All" mode the log
+    /// mixes brands, and every row has to carry its own shop's letters (#DR-… vs #CC-…).</summary>
+    private readonly Dictionary<long, string> _prefixByClient = new();
+    private bool _suspendReload;                         // while the counter list is rebuilt
 
     public ObservableCollection<ReportRow> Orders { get; } = new();   // current page
 
-    /// <summary>"All staff" plus each active operator, for the staff filter.</summary>
-    public ObservableCollection<ReportStaff> Staff { get; } = new();
+    /// <summary>"All" plus each business on the till, for the counter filter.</summary>
+    public ObservableCollection<ReportCounter> Counters { get; } = new();
 
     [ObservableProperty] private string _rangeType = "today";
     [ObservableProperty] private string _startDate = "";
@@ -38,54 +45,62 @@ public partial class ReportsViewModel : ObservableObject
     [ObservableProperty] private DateTime _customStart = DateTime.Today;
     [ObservableProperty] private DateTime _customEnd = DateTime.Today;
     [ObservableProperty] private int _currentPage;
-    [ObservableProperty] private ReportStaff? _selectedStaff;
+    [ObservableProperty] private ReportCounter? _selectedCounter;
 
     public string PeriodDisplay => $"{Fmt(StartDate)}   to   {Fmt(EndDate)}";
     public int OrderCount => _filtered.Count;
     public int TotalPages => Math.Max(1, (int)Math.Ceiling(_filtered.Count / (double)PageSize));
     public string PageInfo => $"Page {CurrentPage + 1} of {TotalPages}";
 
-    public ReportsViewModel(ReportsRepository repo)
+    public ReportsViewModel(ReportsRepository repo, ClientContext client)
     {
         _repo = repo;
+        _client = client;
         _suspendReload = true;
-        LoadStaff();
+        LoadCounters();
         _suspendReload = false;
         SetRange("today");
     }
 
     /// <summary>
-    /// Rebuilds the staff list and points the filter back at whoever is signed in.
+    /// Rebuilds the counter list and points the filter back at the business now signed in.
     ///
     /// Needed because this view model is a singleton that outlives a shift: without it, the
-    /// operator who takes over after a logout would open Reports to the previous person's
-    /// sales, which reads as the shop having taken their money.
+    /// manager who takes over after a logout would open Reports still filtered to the previous
+    /// brand, reading its takings as their own.
     /// </summary>
     public void SyncToSession()
     {
         _suspendReload = true;
-        LoadStaff();
+        LoadCounters();
         _suspendReload = false;
         Load();
     }
 
-    private void LoadStaff()
+    private void LoadCounters()
     {
-        var current = Session.User?.Id;
+        // The client the till is billing for right now. ClientContext, not Session: it is set at
+        // login and defaults sensibly on a till whose staff list has never synced (where nobody
+        // signs in), so the filter still opens on a real business rather than blank.
+        var current = _client.ClientId;
 
-        Staff.Clear();
-        Staff.Add(AllStaff);
-        foreach (var s in _repo.GetStaff())
+        // Names can change — a rename lands here before the filter is next rebuilt — so drop the
+        // cached prefixes with the list they were keyed to.
+        _prefixByClient.Clear();
+        Counters.Clear();
+        Counters.Add(AllCounters);
+        foreach (var c in _repo.GetCounters())
         {
-            Staff.Add(s);
+            Counters.Add(c);
         }
 
-        // Default to the operator's own bills — "what did I take today" is the question this
-        // page gets opened to answer. The whole shop is one dropdown away.
-        SelectedStaff = Staff.FirstOrDefault(s => s.Id == current) ?? Staff[0];
+        // Default to the signed-in business's own day — "what did this counter take today" is the
+        // question the page is opened to answer. The other brand, and the combined total, are one
+        // dropdown away.
+        SelectedCounter = Counters.FirstOrDefault(c => c.Id == current) ?? Counters[0];
     }
 
-    partial void OnSelectedStaffChanged(ReportStaff? value)
+    partial void OnSelectedCounterChanged(ReportCounter? value)
     {
         if (!_suspendReload)
         {
@@ -133,20 +148,32 @@ public partial class ReportsViewModel : ObservableObject
 
     private void Load()
     {
-        var userId = SelectedStaff?.Id;
+        // Null on the "All" row, which the queries read as "every business on the till".
+        var clientId = SelectedCounter?.Id;
 
-        _prefix = _repo.BillPrefix();
-        var s = _repo.GetSummary(StartDate, EndDate, userId: userId);
+        var s = _repo.GetSummary(StartDate, EndDate, clientId: clientId);
         TotalRevenue = "₹" + s.TotalSales.ToString("N0", CultureInfo.InvariantCulture);
         TotalBills = s.TotalOrders.ToString();
         TotalDiscounts = "₹" + s.TotalDiscounts.ToString("N0", CultureInfo.InvariantCulture);
 
         _all.Clear();
-        foreach (var o in _repo.GetSettledOrders(StartDate, EndDate, userId: userId))
+        foreach (var o in _repo.GetSettledOrders(StartDate, EndDate, clientId: clientId))
         {
-            _all.Add(new ReportRow(o, _prefix));
+            _all.Add(new ReportRow(o, PrefixFor(o.ClientId)));
         }
         ApplyFilter();
+    }
+
+    /// <summary>This client's bill prefix, resolved once and cached — one lookup per business
+    /// even when "All" mixes several into the same page.</summary>
+    private string PrefixFor(long clientId)
+    {
+        if (!_prefixByClient.TryGetValue(clientId, out var prefix))
+        {
+            prefix = _repo.BillPrefix(clientId);
+            _prefixByClient[clientId] = prefix;
+        }
+        return prefix;
     }
 
     partial void OnSearchTermChanged(string value) => ApplyFilter();
@@ -183,9 +210,9 @@ public partial class ReportsViewModel : ObservableObject
         try
         {
             var docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            // The staff goes in the filename too, so two operators exporting the same day
-            // don't overwrite each other's file.
-            var who = SelectedStaff?.Id is null ? "all" : Slug(SelectedStaff.Name);
+            // The counter goes in the filename too, so exporting Daal Roti's day and then Chay
+            // Chaupal's for the same dates doesn't overwrite the first file.
+            var who = SelectedCounter?.Id is null ? "all" : Slug(SelectedCounter.Name);
             var path = Path.Combine(docs, $"sales_report_{who}_{StartDate}_to_{EndDate}.csv");
             var sb = new StringBuilder();
             sb.AppendLine("Bill Number,Date,Staff,Customer,Mobile,Table,Discount,Total,Note");
@@ -208,11 +235,11 @@ public partial class ReportsViewModel : ObservableObject
 
     private static string Csv(string v) => v.Contains(',') ? $"\"{v.Replace("\"", "\"\"")}\"" : v;
 
-    /// <summary>Staff name reduced to something safe to put in a filename.</summary>
+    /// <summary>Counter name reduced to something safe to put in a filename.</summary>
     private static string Slug(string name)
     {
         var cleaned = new string(name.Select(c => char.IsLetterOrDigit(c) ? char.ToLowerInvariant(c) : '_').ToArray());
-        return cleaned.Trim('_') is { Length: > 0 } s ? s : "staff";
+        return cleaned.Trim('_') is { Length: > 0 } s ? s : "counter";
     }
 
     private static string Fmt(string ymd)
@@ -236,7 +263,7 @@ public sealed class ReportRow
         // so they show a dash rather than being hidden or blamed on someone.
         StaffText = string.IsNullOrWhiteSpace(o.CreatedByName) ? "—" : o.CreatedByName!;
         BillNoText = o.BillNumber.HasValue
-            ? $"#{prefix}-{o.BillNumber.Value.ToString().PadLeft(4, '0')}"
+            ? BillPrefix.Format(prefix, o.BillNumber.Value)
             : $"#{o.Id}";
         DateText = DateTime.TryParse(o.BilledAt ?? o.CreatedAt, out var d)
             ? d.ToString("dd/MM/yyyy HH:mm")

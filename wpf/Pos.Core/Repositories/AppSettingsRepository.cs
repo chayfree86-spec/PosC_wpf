@@ -122,14 +122,28 @@ public sealed class AppSettingsRepository
     /// window layout, its till code, the server address): syncing those would hand the next
     /// counter settings that are wrong for it.
     /// </summary>
-    public void SetSynced(string key, string valueJson)
+    public bool SetSynced(string key, string valueJson)
     {
         var clientId = _client.ClientId;
 
         // Business settings live per client, and the server keys them the same way — sending
         // one without saying whose it is would overwrite the other brand's profile.
+        //
+        // Written locally as well as to the server, always. The bill header, the GST number and
+        // the UPI id are read from here every time a receipt is printed, and a till that has to
+        // ask the server for them stops printing the moment the network does.
         SetForClient(key, valueJson, clientId);
 
+        // Straight to the server first. This used to only queue, so the operator pressed Save,
+        // saw "Saved ✓", and the change reached MySQL twenty seconds later — or never, if the
+        // API was unreachable, with nothing on screen saying so.
+        if (PushNow?.Invoke(key, valueJson, clientId) == true)
+        {
+            return true;
+        }
+
+        // Couldn't reach the server. Keep it in the queue so a later pass still gets it there,
+        // and let the caller say the save is only local for now.
         using var conn = _db.OpenConnection();
         conn.Execute(
             @"INSERT INTO sync_queue (entity_type, entity_id, operation, payload_json, status)
@@ -137,10 +151,35 @@ public sealed class AppSettingsRepository
             new { key, payload = JsonSerializer.Serialize(new { key, value_json = valueJson, client_id = clientId }) });
 
         SettingQueued?.Invoke();
+        return false;
     }
 
-    public void SetJsonSynced<T>(string key, T value)
+    public bool SetJsonSynced<T>(string key, T value)
         => SetSynced(key, JsonSerializer.Serialize(value));
+
+    /// <summary>
+    /// Sends a setting to the server synchronously, answering false when it didn't land.
+    ///
+    /// A settable hook rather than a constructor dependency because <see cref="SyncCoordinator"/>
+    /// already depends on this repository (it keeps the server address here), and taking it the
+    /// other way round too would be a cycle. Wired once at startup.
+    /// </summary>
+    public Func<string, string, long, bool>? PushNow { get; set; }
+
+    /// <summary>
+    /// Refreshes the local mirror from the server. Wired at startup alongside
+    /// <see cref="PushNow"/>, and for the same reason it isn't a constructor dependency.
+    /// </summary>
+    public Func<bool>? PullNow { get; set; }
+
+    /// <summary>
+    /// Re-reads this business's settings from the server before they are shown, so the Settings
+    /// screen displays what is actually in the database rather than a local copy of it.
+    ///
+    /// Returns false when the server couldn't be reached — the caller carries on with the local
+    /// values, which is the whole reason they are kept.
+    /// </summary>
+    public bool RefreshFromServer() => PullNow?.Invoke() == true;
 
     /// <summary>
     /// Renames the business in the local clients row.
@@ -156,9 +195,14 @@ public sealed class AppSettingsRepository
             return;
         }
 
+        var id = clientId ?? _client.ClientId;
         using var conn = _db.OpenConnection();
         conn.Execute("UPDATE clients SET name = @name WHERE id = @clientId",
-            new { name = name.Trim(), clientId = clientId ?? _client.ClientId });
+            new { name = name.Trim(), clientId = id });
+
+        // The bill prefix is short for the name, so it goes stale the moment the name changes:
+        // a shop renamed from "Daal Roti" to "Bombay Cafe" would keep printing #DR-0007.
+        BillPrefix.Refresh(conn, null, id, name);
     }
 
     /// <summary>Raised after a synced setting is queued, so the coordinator can push it now

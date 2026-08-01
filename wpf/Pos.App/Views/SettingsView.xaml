@@ -34,7 +34,7 @@
                             <ContentPresenter VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/></Trigger>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -42,7 +42,7 @@
         </Style>
         <Style x:Key="AddBtn" TargetType="Button">
             <Setter Property="Height" Value="34"/><Setter Property="Padding" Value="16,0"/><Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Background" Value="{StaticResource AccentGrad}"/><Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="{DynamicResource AccentGrad}"/><Setter Property="Foreground" Value="White"/>
             <Setter Property="FontWeight" Value="Bold"/><Setter Property="FontSize" Value="12"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -86,13 +86,13 @@
         <Style x:Key="FInput" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
             <Setter Property="helpers:ThickCaret.Width" Value="4"/>
             <Setter Property="Foreground" Value="White"/><Setter Property="FontSize" Value="14"/>
-            <Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="CaretBrush" Value="{StaticResource Accent}"/>
+            <Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="CaretBrush" Value="{DynamicResource Accent}"/>
         </Style>
         <Style x:Key="ColHead" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource TextFaint}"/><Setter Property="FontSize" Value="10"/><Setter Property="FontWeight" Value="Bold"/>
         </Style>
         <Style x:Key="SectionHead" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource AccentText}"/><Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentText}"/><Setter Property="FontSize" Value="11"/>
             <Setter Property="FontWeight" Value="Bold"/><Setter Property="Margin" Value="0,0,0,4"/>
         </Style>
         <Style x:Key="PrintToggle" TargetType="ToggleButton">
@@ -120,9 +120,9 @@
             <Style.Triggers>
                 <Trigger Property="IsChecked" Value="True">
                     <Setter Property="Content" Value="PRINT ON"/>
-                    <Setter Property="Background" Value="{StaticResource AccentFaint}"/>
-                    <Setter Property="Foreground" Value="{StaticResource Accent}"/>
-                    <Setter Property="BorderBrush" Value="{StaticResource Accent}"/>
+                    <Setter Property="Background" Value="{DynamicResource AccentFaint}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource Accent}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -145,7 +145,7 @@
             <Style.Triggers>
                 <Trigger Property="IsChecked" Value="True">
                     <Setter Property="Content" Value="🙈"/>
-                    <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource Accent}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -167,7 +167,7 @@
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/></Trigger>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -187,8 +187,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Track" Property="Background" Value="{StaticResource AccentGrad}"/>
-                                <Setter TargetName="Track" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentGrad}"/>
+                                <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource Accent}"/>
                                 <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
                                 <Setter TargetName="OnText" Property="Opacity" Value="1"/>
                                 <Setter TargetName="OffText" Property="Opacity" Value="0"/>
@@ -248,7 +248,7 @@
         </Style>
         <Style x:Key="GradBtnSm" TargetType="Button">
             <Setter Property="Height" Value="32"/><Setter Property="Padding" Value="14,0"/><Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Background" Value="{StaticResource AccentGrad}"/><Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="{DynamicResource AccentGrad}"/><Setter Property="Foreground" Value="White"/>
             <Setter Property="FontWeight" Value="Bold"/><Setter Property="FontSize" Value="11"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -262,7 +262,7 @@
         </Style>
         <Style x:Key="GradOutlineBtnSm" TargetType="Button" BasedOn="{StaticResource OutlineBtn}">
             <Setter Property="Height" Value="32"/><Setter Property="Padding" Value="14,0"/><Setter Property="FontSize" Value="11"/>
-            <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+            <Setter Property="Foreground" Value="{DynamicResource Accent}"/>
         </Style>
     </UserControl.Resources>
 
@@ -414,16 +414,71 @@
 
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
                                     <TextBlock Text="{Binding SavedMessage}" Foreground="#FF22C55E" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                                    <Button Command="{Binding SaveSettingsCommand}" Content="SAVE BRANDING DETAILS" Height="42" Padding="22,0" Background="{StaticResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="12" BorderThickness="0" Cursor="Hand"/>
+                                    <Button Command="{Binding SaveSettingsCommand}" Content="SAVE BRANDING DETAILS" Height="42" Padding="22,0" Background="{DynamicResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="12" BorderThickness="0" Cursor="Hand"/>
                                 </StackPanel>
                             </StackPanel>
                         </Grid>
+
+                        <!-- Theme colour. Highlight only — the status/stats palette a bill and a
+                             table are read by is left untouched, and this is saved per business. -->
+                        <Border Background="{StaticResource CardBg2}" CornerRadius="14" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="18" Margin="0,20,0,0">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBlock Text="&#xE790;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource Accent}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Theme Color" Foreground="White" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="App ka highlight color chunein. Stats aur table-status colors waise hi rahenge — sirf highlight badlega." Foreground="{StaticResource TextFaint}" FontSize="10" Margin="28,0,0,14" TextWrapping="Wrap"/>
+                                <ItemsControl ItemsSource="{Binding ThemeColors}" Margin="28,0,0,0">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Command="{Binding DataContext.SelectThemeColorCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding Hex}" ToolTip="{Binding Name}" Cursor="Hand"
+                                                    Width="46" Height="46" Margin="0,0,14,0">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Grid>
+                                                            <Border CornerRadius="12" Background="{Binding Swatch}"/>
+                                                            <Border CornerRadius="12" BorderBrush="White" BorderThickness="3"
+                                                                    Visibility="{Binding IsSelected, Converter={StaticResource BoolToVis}}"/>
+                                                            <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" Foreground="White" FontSize="18" FontWeight="Bold"
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                       Visibility="{Binding IsSelected, Converter={StaticResource BoolToVis}}"/>
+                                                        </Grid>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!-- Custom colour: any hex (or colour name). Applies on the
+                                     button or on Enter; the swatch beside it previews as you type. -->
+                                <StackPanel Orientation="Horizontal" Margin="28,16,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="Custom:" Foreground="{StaticResource TextMuted}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <Border Width="30" Height="30" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1"
+                                            Background="{Binding CustomColorInput, Converter={StaticResource HexToBrush}}" Margin="0,0,10,0"/>
+                                    <Border Width="150" Height="34" CornerRadius="8" Background="{StaticResource CardBg2}" BorderBrush="{StaticResource Border}" BorderThickness="1.5" Margin="0,0,10,0">
+                                        <TextBox Text="{Binding CustomColorInput, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center"
+                                                 Background="Transparent" BorderThickness="0" Foreground="{StaticResource TextPrimary}" FontSize="13" Padding="10,0" Tag="#RRGGBB">
+                                            <TextBox.InputBindings>
+                                                <KeyBinding Key="Return" Command="{Binding ApplyCustomColorCommand}"/>
+                                            </TextBox.InputBindings>
+                                        </TextBox>
+                                    </Border>
+                                    <Button Command="{Binding ApplyCustomColorCommand}" Content="APPLY" Height="34" Padding="18,0"
+                                            Background="{DynamicResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="11" BorderThickness="0" Cursor="Hand"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
 
                         <!-- PIN Management -->
                         <Border Background="{StaticResource CardBg2}" CornerRadius="14" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="18" Margin="0,20,0,0">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                                    <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource Accent}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource Accent}" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                     <StackPanel>
                                         <TextBlock Text="Security PIN Management" Foreground="White" FontSize="14" FontWeight="Bold"/>
                                         <TextBlock Text="Logins and transactions safeguard ke liye update karein." Foreground="{StaticResource TextFaint}" FontSize="10"/>
@@ -440,7 +495,7 @@
                                     <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource FBox}" Margin="0">
                                         <Grid>
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <PasswordBox x:Name="PbNewPin" Grid.Column="0" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="14" CaretBrush="{StaticResource Accent}" MaxLength="4" VerticalContentAlignment="Center"/>
+                                            <PasswordBox x:Name="PbNewPin" Grid.Column="0" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="14" CaretBrush="{DynamicResource Accent}" MaxLength="4" VerticalContentAlignment="Center"/>
                                             <ToggleButton x:Name="EyeNewPin" Grid.Column="1" Style="{StaticResource EyeToggle}" Checked="EyeNewPin_Checked" Unchecked="EyeNewPin_Unchecked"/>
                                         </Grid>
                                     </Border>
@@ -449,12 +504,12 @@
                                     <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource FBox}" Margin="0">
                                         <Grid>
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <PasswordBox x:Name="PbConfirmPin" Grid.Column="0" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="14" CaretBrush="{StaticResource Accent}" MaxLength="4" VerticalContentAlignment="Center"/>
+                                            <PasswordBox x:Name="PbConfirmPin" Grid.Column="0" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="14" CaretBrush="{DynamicResource Accent}" MaxLength="4" VerticalContentAlignment="Center"/>
                                             <ToggleButton x:Name="EyeConfirmPin" Grid.Column="1" Style="{StaticResource EyeToggle}" Checked="EyeConfirmPin_Checked" Unchecked="EyeConfirmPin_Unchecked"/>
                                         </Grid>
                                     </Border>
 
-                                    <Button Grid.Row="1" Grid.Column="4" Content="UPDATE SECURITY PIN" Background="{StaticResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="11" BorderThickness="0" Cursor="Hand" VerticalAlignment="Stretch" Click="UpdatePin_Click"/>
+                                    <Button Grid.Row="1" Grid.Column="4" Content="UPDATE SECURITY PIN" Background="{DynamicResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="11" BorderThickness="0" Cursor="Hand" VerticalAlignment="Stretch" Click="UpdatePin_Click"/>
                                 </Grid>
                                 <TextBlock Text="{Binding PinMessage}" FontWeight="Bold" Margin="0,10,0,0">
                                     <TextBlock.Style>
@@ -518,7 +573,7 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                         <Button Grid.Column="0" Content="Test Print" Style="{StaticResource OutlineBtn}" HorizontalAlignment="Stretch" Click="TestPrint_Click"/>
-                                        <Button Grid.Column="2" Content="Save Config" Height="38" Background="{StaticResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="12" BorderThickness="0" Cursor="Hand" Command="{Binding SaveSettingsCommand}"/>
+                                        <Button Grid.Column="2" Content="Save Config" Height="38" Background="{DynamicResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="12" BorderThickness="0" Cursor="Hand" Command="{Binding SaveSettingsCommand}"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
@@ -568,7 +623,7 @@
                         <Border Style="{StaticResource SubCard}">
                             <Grid>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource Accent}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource Accent}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                     <StackPanel>
                                         <TextBlock Text="Daily Reset Bill Counter" Foreground="White" FontSize="14" FontWeight="Bold"/>
                                         <TextBlock Text="Har naye din bill sequence counter ko wapas 1 se shuru karne ke liye enable karein." Foreground="{StaticResource TextFaint}" FontSize="10"/>
@@ -591,7 +646,7 @@
                             <TextBlock Text="Fast transaction and management actions keyboard layout key mapping." Foreground="{StaticResource TextMuted}" FontSize="12" Margin="0,2,0,0"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
-                            <Button Content="Save as Default" Height="34" Padding="14,0" Background="{StaticResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="11" BorderThickness="0" Cursor="Hand" Command="{Binding SaveShortcutsAsDefaultCommand}" Margin="0,0,8,0"/>
+                            <Button Content="Save as Default" Height="34" Padding="14,0" Background="{DynamicResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="11" BorderThickness="0" Cursor="Hand" Command="{Binding SaveShortcutsAsDefaultCommand}" Margin="0,0,8,0"/>
                             <Button Content="Reset to Defaults" Style="{StaticResource OutlineBtn}" Height="34" Command="{Binding ResetShortcutsToDefaultCommand}"/>
                         </StackPanel>
                     </Grid>
@@ -618,7 +673,7 @@
                                             <StackPanel Grid.Column="0" Margin="14,10">
                                                 <Grid>
                                                     <TextBlock Text="ACTION" Foreground="{StaticResource TextFaint}" FontSize="9" FontWeight="Bold"/>
-                                                    <Button Content="✎ Edit" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" Foreground="{StaticResource AccentText}" FontSize="9" FontWeight="Bold" Cursor="Hand"
+                                                    <Button Content="✎ Edit" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource AccentText}" FontSize="9" FontWeight="Bold" Cursor="Hand"
                                                             Click="EditShortcut_Click"/>
                                                 </Grid>
                                                 <TextBlock Text="{Binding Action}" Foreground="White" FontSize="12" FontWeight="Bold" TextWrapping="Wrap" Margin="0,3,0,0"/>
@@ -629,7 +684,7 @@
                                                         <Border Background="{TemplateBinding Background}" BorderBrush="{StaticResource Border}" BorderThickness="1,0,0,0">
                                                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                                                 <TextBlock Text="KEY" Foreground="{StaticResource TextFaint}" FontSize="8" FontWeight="Bold" HorizontalAlignment="Center"/>
-                                                                <TextBlock Text="{Binding Key}" Foreground="{StaticResource AccentText}" FontSize="14" FontWeight="Black" HorizontalAlignment="Center" Margin="0,2,0,0" TextWrapping="Wrap" TextAlignment="Center"/>
+                                                                <TextBlock Text="{Binding Key}" Foreground="{DynamicResource AccentText}" FontSize="14" FontWeight="Black" HorizontalAlignment="Center" Margin="0,2,0,0" TextWrapping="Wrap" TextAlignment="Center"/>
                                                             </StackPanel>
                                                         </Border>
                                                     </ControlTemplate>
@@ -648,13 +703,13 @@
                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
                         <Button Command="{Binding SelectSubTabCommand}" CommandParameter="category" Content="CATEGORIES &amp; SUBCATEGORIES">
-                            <Button.Style><Style TargetType="Button" BasedOn="{StaticResource UnderlineTab}"><Style.Triggers><DataTrigger Binding="{Binding ActiveSubTab}" Value="category"><Setter Property="Foreground" Value="{StaticResource Accent}"/><Setter Property="BorderBrush" Value="{StaticResource Accent}"/></DataTrigger></Style.Triggers></Style></Button.Style>
+                            <Button.Style><Style TargetType="Button" BasedOn="{StaticResource UnderlineTab}"><Style.Triggers><DataTrigger Binding="{Binding ActiveSubTab}" Value="category"><Setter Property="Foreground" Value="{DynamicResource Accent}"/><Setter Property="BorderBrush" Value="{DynamicResource Accent}"/></DataTrigger></Style.Triggers></Style></Button.Style>
                         </Button>
                         <Button Command="{Binding SelectSubTabCommand}" CommandParameter="table" Content="TABLES &amp; AREA MANAGEMENT">
-                            <Button.Style><Style TargetType="Button" BasedOn="{StaticResource UnderlineTab}"><Style.Triggers><DataTrigger Binding="{Binding ActiveSubTab}" Value="table"><Setter Property="Foreground" Value="{StaticResource Accent}"/><Setter Property="BorderBrush" Value="{StaticResource Accent}"/></DataTrigger></Style.Triggers></Style></Button.Style>
+                            <Button.Style><Style TargetType="Button" BasedOn="{StaticResource UnderlineTab}"><Style.Triggers><DataTrigger Binding="{Binding ActiveSubTab}" Value="table"><Setter Property="Foreground" Value="{DynamicResource Accent}"/><Setter Property="BorderBrush" Value="{DynamicResource Accent}"/></DataTrigger></Style.Triggers></Style></Button.Style>
                         </Button>
                         <Button Command="{Binding SelectSubTabCommand}" CommandParameter="gst" Content="GST SETTINGS">
-                            <Button.Style><Style TargetType="Button" BasedOn="{StaticResource UnderlineTab}"><Style.Triggers><DataTrigger Binding="{Binding ActiveSubTab}" Value="gst"><Setter Property="Foreground" Value="{StaticResource Accent}"/><Setter Property="BorderBrush" Value="{StaticResource Accent}"/></DataTrigger></Style.Triggers></Style></Button.Style>
+                            <Button.Style><Style TargetType="Button" BasedOn="{StaticResource UnderlineTab}"><Style.Triggers><DataTrigger Binding="{Binding ActiveSubTab}" Value="gst"><Setter Property="Foreground" Value="{DynamicResource Accent}"/><Setter Property="BorderBrush" Value="{DynamicResource Accent}"/></DataTrigger></Style.Triggers></Style></Button.Style>
                         </Button>
                     </StackPanel>
                     <Border Grid.Row="1" BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1" Margin="0,0,0,16"/>
@@ -701,28 +756,28 @@
                                                         </Style.Triggers>
                                                     </Style>
                                                 </StackPanel.Style>
-                                                <materialDesign:PackIcon Kind="FolderOutline" Width="15" Height="15" Foreground="{StaticResource AccentText}" VerticalAlignment="Center" Margin="0,0,8,0"
+                                                <materialDesign:PackIcon Kind="FolderOutline" Width="15" Height="15" Foreground="{DynamicResource AccentText}" VerticalAlignment="Center" Margin="0,0,8,0"
                                                            Visibility="{Binding IsParent, Converter={StaticResource CountToVis}}"/>
                                                 <TextBlock Text="↳" Foreground="{StaticResource TextFaint}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,6,0"
                                                            Visibility="{Binding IsParent, Converter={StaticResource CountToVis}, ConverterParameter=invert}"/>
-                                                <Border Width="20" Height="20" CornerRadius="5" Background="{StaticResource AccentGrad}" VerticalAlignment="Center" Margin="0,0,8,0"
+                                                <Border Width="20" Height="20" CornerRadius="5" Background="{DynamicResource AccentGrad}" VerticalAlignment="Center" Margin="0,0,8,0"
                                                         Visibility="{Binding IsParent, Converter={StaticResource CountToVis}, ConverterParameter=invert}">
                                                     <materialDesign:PackIcon Kind="FileDocumentOutline" Width="11" Height="11" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
                                                 <TextBlock Text="{Binding Name}" Foreground="White" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
-                                                <Border Background="{StaticResource AccentFaint}" BorderBrush="{StaticResource Accent}" BorderThickness="1" CornerRadius="4"
+                                                <Border Background="{DynamicResource AccentFaint}" BorderBrush="{DynamicResource Accent}" BorderThickness="1" CornerRadius="4"
                                                         Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                                                    <TextBlock FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentText}" VerticalAlignment="Center">
+                                                    <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentText}" VerticalAlignment="Center">
                                                         <Run Text="{Binding ItemCount, Mode=OneWay}"/><Run Text=" Items"/>
                                                     </TextBlock>
                                                 </Border>
                                             </StackPanel>
 
                                             <!-- Type badge -->
-                                            <Border Grid.Column="1" Background="{StaticResource AccentFaint}" BorderBrush="{StaticResource Accent}" BorderThickness="1" CornerRadius="5" Padding="8,3"
+                                            <Border Grid.Column="1" Background="{DynamicResource AccentFaint}" BorderBrush="{DynamicResource Accent}" BorderThickness="1" CornerRadius="5" Padding="8,3"
                                                     HorizontalAlignment="Left" VerticalAlignment="Center"
                                                     Visibility="{Binding IsParent, Converter={StaticResource CountToVis}}">
-                                                <TextBlock Text="PARENT CATEGORY" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentText}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="PARENT CATEGORY" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentText}" VerticalAlignment="Center"/>
                                             </Border>
                                             <Border Grid.Column="1" Background="{StaticResource CardBg}" BorderBrush="{StaticResource Border}" BorderThickness="1" CornerRadius="5" Padding="8,3"
                                                     HorizontalAlignment="Left" VerticalAlignment="Center"
@@ -842,7 +897,7 @@
                                         <Grid>
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="160"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="White" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding Rate, StringFormat='{}{0}%'}" Foreground="{StaticResource AccentText}" FontSize="13" FontWeight="Bold" FontFamily="Consolas" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Rate, StringFormat='{}{0}%'}" Foreground="{DynamicResource AccentText}" FontSize="13" FontWeight="Bold" FontFamily="Consolas" VerticalAlignment="Center"/>
                                             <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
                                                 <Button Style="{StaticResource MiniOutlineBtn}" Content="&#xE70F;" FontFamily="Segoe MDL2 Assets" Click="EditGst_Click"/>
                                                 <Button Style="{StaticResource MiniOutlineBtn}" Content="&#xE74D;" FontFamily="Segoe MDL2 Assets" Foreground="#FFEF4444" Command="{Binding DataContext.DeleteGstRateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
@@ -922,7 +977,7 @@
                                         <TextBlock Grid.Column="1" Text="{Binding Name}" Foreground="White" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                         <TextBlock Grid.Column="2" Text="{Binding CategoryName}" Foreground="{StaticResource TextMuted}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                         <TextBlock Grid.Column="3" Text="{Binding SubcategoryName}" Foreground="{StaticResource TextMuted}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Grid.Column="4" Text="{Binding Price, StringFormat='₹{0:0.##}'}" Foreground="{StaticResource AccentText}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="4" Text="{Binding Price, StringFormat='₹{0:0.##}'}" Foreground="{DynamicResource AccentText}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
                                         <StackPanel Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Right">
                                             <Button Style="{StaticResource MiniBtn}" Content="&#xE70F;" FontFamily="Segoe MDL2 Assets" Click="EditMenu_Click"/>
                                             <Button Style="{StaticResource MiniBtn}" Content="&#xE74D;" FontFamily="Segoe MDL2 Assets" Foreground="#FFEF4444" Command="{Binding DataContext.DeleteMenuItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding Item}"/>

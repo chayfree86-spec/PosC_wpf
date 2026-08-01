@@ -96,8 +96,7 @@ public sealed class ReceiptPrinter : IDisposable
     /// <summary>Returns the cached queue, reopening it only when the chosen printer changes.</summary>
     private PrintQueue? Resolve(PrintConfig cfg)
     {
-        if (string.IsNullOrWhiteSpace(cfg.PrinterName)
-            || cfg.PrinterName.StartsWith("Default Thermal", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(cfg.PrinterName))
         {
             return null;
         }

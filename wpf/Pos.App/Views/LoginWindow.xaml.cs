@@ -31,7 +31,6 @@ public partial class LoginWindow : Window
         _auth = App.Services.GetRequiredService<AuthRepository>();
         _settings = App.Services.GetRequiredService<AppSettingsRepository>();
 
-        ApplyBranding();
         RestoreLastMobile();
     }
 
@@ -53,24 +52,6 @@ public partial class LoginWindow : Window
         finally
         {
             Application.Current.ShutdownMode = previous;
-        }
-    }
-
-    private void ApplyBranding()
-    {
-        try
-        {
-            var settings = App.Services.GetService<SettingsViewModel>();
-            if (settings?.StoreName is { Length: > 0 } name)
-            {
-                TxtStoreName.Text = name;
-                TxtInitials.Text = settings.StoreInitials;
-            }
-        }
-        catch
-        {
-            // Branding is decoration. A shop name that won't load is no reason to keep
-            // someone from signing in, so the defaults in XAML stand.
         }
     }
 

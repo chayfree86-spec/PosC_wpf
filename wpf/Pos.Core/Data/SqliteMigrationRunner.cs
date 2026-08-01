@@ -453,6 +453,21 @@ public sealed class SqliteMigrationRunner
                         'login_pin', 'pos_wpf_settings', 'pos_wpf_shortcuts'
                      );");
         });
+
+        // The bill-number prefix — the letters in #CC-0007 — abbreviated from the business name.
+        //
+        // A versioned migration rather than one of the AddColumnIfMissing calls at the top of
+        // Migrate(): that block runs BEFORE migration 1 creates the clients table, and
+        // AddColumnIfMissing quietly does nothing when the table is missing. On a fresh install
+        // the column would therefore not appear until the app's SECOND launch, and every bill
+        // taken on the first one would fail on "no such column: bill_prefix".
+        //
+        // Left empty rather than backfilled: BillPrefix.Resolve fills each row in on first use,
+        // so a till that has never synced its profile doesn't get stamped with a guess.
+        Apply(conn, 19, "sqlite_pos_client_bill_prefix", m =>
+        {
+            m.AddColumnIfMissing("clients", "bill_prefix", "TEXT");
+        });
     }
 
     private static void Apply(SqliteConnection conn, int version, string name, Action<Ctx> work)

@@ -44,7 +44,7 @@
                     <!-- Grand Total Summary -->
                     <Grid Margin="0,0,0,14">
                         <TextBlock Text="NET AMOUNT TO PAY:" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold"/>
-                        <TextBlock x:Name="TxtNetTotal" Text="₹ 0" Foreground="{StaticResource Accent}" FontSize="26" FontWeight="Bold" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="TxtNetTotal" Text="₹ 0" Foreground="{DynamicResource Accent}" FontSize="26" FontWeight="Bold" HorizontalAlignment="Right"/>
                     </Grid>
 
                     <Border Height="1" Background="{StaticResource BorderSoft}" Margin="0,0,0,14"/>
@@ -52,13 +52,13 @@
                     <!-- Cash Calculation Container (Visible for Cash mode) -->
                     <StackPanel x:Name="CashPanel">
                         <TextBlock Text="RECEIVED CASH (प्राप्त राशि):" Foreground="{StaticResource TextPrimary}" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                        <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Accent}" BorderThickness="1.5" Padding="8,4" Margin="0,0,0,10">
+                        <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Accent}" BorderThickness="1.5" Padding="8,4" Margin="0,0,0,10">
                             <Grid>
                                 <TextBlock Text="₹" Foreground="{StaticResource TextMuted}" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
                                 <TextBox x:Name="TxtReceived" TextChanged="TxtReceived_TextChanged" KeyDown="TxtReceived_KeyDown"
                                          PreviewTextInput="TxtReceived_PreviewTextInput"
                                          Foreground="White" FontSize="20" FontWeight="Bold" Margin="20,0,0,0"
-                                         Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                                         Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                             </Grid>
                         </Border>
 
@@ -80,14 +80,14 @@
                         <Border Background="{StaticResource WindowBg}" CornerRadius="8" Padding="12,10">
                             <Grid>
                                 <TextBlock Text="CHANGE DUE (वापस देना है):" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="TxtChangeDue" Text="₹ 0" Foreground="{StaticResource Green}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                <TextBlock x:Name="TxtChangeDue" Text="₹ 0" Foreground="{DynamicResource Green}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Right"/>
                             </Grid>
                         </Border>
                     </StackPanel>
 
                     <!-- Non-Cash Info Label -->
                     <TextBlock x:Name="NonCashInfo" Text="Proceeding with Digital / Account Settlement."
-                               Foreground="{StaticResource BlueLink}" FontSize="13" FontWeight="SemiBold" TextAlignment="Center"
+                               Foreground="{DynamicResource BlueLink}" FontSize="13" FontWeight="SemiBold" TextAlignment="Center"
                                Margin="0,20,0,20" Visibility="Collapsed"/>
 
                 </StackPanel>
@@ -108,7 +108,7 @@
                 </Button>
 
                 <Button x:Name="BtnSettleConfirm" Grid.Column="1" Click="Settle_Click" Height="44"
-                        Background="{StaticResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="13">
+                        Background="{DynamicResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="13">
                     <Button.Resources>
                         <Style TargetType="Border"><Setter Property="CornerRadius" Value="10"/></Style>
                     </Button.Resources>

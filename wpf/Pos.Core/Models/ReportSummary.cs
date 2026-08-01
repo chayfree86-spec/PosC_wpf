@@ -8,11 +8,17 @@ public sealed class ReportSummary
     public double TotalDiscounts { get; set; }
 }
 
-/// <summary>One entry in the Reports page's staff filter.</summary>
-public sealed class ReportStaff
+/// <summary>
+/// One entry in the Reports page's counter filter — a business billing on this till.
+///
+/// The page used to filter by operator; on a shared counter the more useful question is which
+/// BUSINESS took the money, since Daal Roti and Chay Chaupal sell from the same machine. The
+/// operator who rang each bill still shows in the log's own column.
+/// </summary>
+public sealed class ReportCounter
 {
-    /// <summary>Null on the "All staff" entry, which is what the queries take to mean
-    /// "don't filter".</summary>
+    /// <summary>Null on the "All" entry, which is what the queries take to mean "every business
+    /// on this till, combined".</summary>
     public long? Id { get; set; }
     public string Name { get; set; } = "";
 

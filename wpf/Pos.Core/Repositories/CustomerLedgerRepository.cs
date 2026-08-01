@@ -1,4 +1,4 @@
-using Dapper;
+﻿using Dapper;
 using Pos.Core.Data;
 using Pos.Core.Models;
 using Pos.Core.Sync;
@@ -77,7 +77,7 @@ public sealed class CustomerLedgerRepository
                         datetime('now', '+330 minutes'));
                 SELECT last_insert_rowid();";
             id = conn.ExecuteScalar<long>(sql, c);
-            ReadableUuid.Stamp(conn, null, "customers", ReadableUuid.Customer, id);
+            ReadableUuid.Stamp(conn, null, "customers", ReadableUuid.Customer, id, c.ClientId);
         }
 
         Enqueue(conn, "customer", id, "upsert", new { name = c.Name, mobile = c.Phone, address = c.Address });
@@ -107,7 +107,7 @@ public sealed class CustomerLedgerRepository
                     datetime('now', '+330 minutes'));";
         conn.Execute(insertSql, entry, tx);
         var entryId = conn.ExecuteScalar<long>("SELECT last_insert_rowid()", transaction: tx);
-        ReadableUuid.Stamp(conn, tx, "ledger_entries", ReadableUuid.LedgerEntry, entryId);
+        ReadableUuid.Stamp(conn, tx, "ledger_entries", ReadableUuid.LedgerEntry, entryId, entry.ClientId);
 
         // Update customer balance: 'gave' increases Udhaar balance (+), 'got' reduces Udhaar balance (-)
         double balanceChange = entry.Type == "gave" ? entry.Amount : -entry.Amount;

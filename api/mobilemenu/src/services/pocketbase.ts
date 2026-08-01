@@ -369,13 +369,16 @@ export const PocketBaseService = {
         : [];
 
       return {
-        name: typeof businessName === 'string' && businessName.trim() ? businessName : 'Chay Chaupal',
+        name: typeof businessName === 'string' && businessName.trim() ? businessName : '',
         logoUrl: typeof businessLogo === 'string' && businessLogo.trim() ? resolveAssetUrl(businessLogo) : null,
         downloadImages: normalizedDownloadImages,
       };
     } catch (err) {
-      console.log('Business settings fetch failed. Using fallback business info.', err);
-      return { name: 'Chay Chaupal', logoUrl: null, downloadImages: [] };
+      // Nothing is invented when /settings is unreachable. The header falls back to the
+      // restaurant the customer actually picked, which is real data; a canned brand name
+      // here used to show one restaurant's identity while ordering from another's menu.
+      console.log('Business settings fetch failed.', err);
+      return { name: '', logoUrl: null, downloadImages: [] };
     }
   },
 

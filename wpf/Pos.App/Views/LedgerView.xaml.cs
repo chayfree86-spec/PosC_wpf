@@ -17,8 +17,10 @@ public partial class LedgerView : UserControl
 
     private LedgerViewModel? Vm => DataContext as LedgerViewModel;
 
+    // Whatever the signed-in business actually saved, and nothing if it saved none: a
+    // hardcoded name here would head another brand's customer statement.
     private static string StoreName =>
-        App.Services?.GetService<SettingsViewModel>()?.StoreName ?? "Chay Chaupal";
+        App.Services?.GetService<SettingsViewModel>()?.StoreName ?? "";
 
     // ── Customer CRUD ──
     private void AddCustomer_Click(object sender, RoutedEventArgs e)
@@ -100,7 +102,9 @@ public partial class LedgerView : UserControl
     private string BuildStatementText(Customer c)
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"*{StoreName} — Customer Statement*");
+        sb.AppendLine(string.IsNullOrWhiteSpace(StoreName)
+            ? "*Customer Statement*"
+            : $"*{StoreName} — Customer Statement*");
         sb.AppendLine($"Customer: {c.Name}");
         if (!string.IsNullOrWhiteSpace(c.Phone)) sb.AppendLine($"Mobile: {c.Phone}");
         sb.AppendLine($"Outstanding: {c.FormattedBalance}");
@@ -129,8 +133,7 @@ public partial class LedgerView : UserControl
         // resolvable, fall back to the standard print dialog.
         try
         {
-            if (!string.IsNullOrWhiteSpace(printerName)
-                && !printerName.StartsWith("Default Thermal", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(printerName))
             {
                 var server = new System.Printing.LocalPrintServer();
                 pd.PrintQueue = server.GetPrintQueue(printerName);
@@ -168,7 +171,7 @@ public partial class LedgerView : UserControl
                 LineHeight = size + 3
             });
 
-        Add(StoreName, 15, true, TextAlignment.Center);
+        if (!string.IsNullOrWhiteSpace(StoreName)) Add(StoreName, 15, true, TextAlignment.Center);
         Add("CUSTOMER STATEMENT", 9, false, TextAlignment.Center);
         Add(new string('-', cols));
         Add($"Name : {c.Name}", 11, true);

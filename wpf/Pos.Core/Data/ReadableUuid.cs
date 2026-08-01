@@ -46,71 +46,44 @@ public static class ReadableUuid
     /// its own SQLite and its own row ids, so counter two must be told it is
     /// <c>app_settings['pos_till_code'] = DALR2</c>, or both would mint DALR1-ORD-00003.
     /// </summary>
-    public static string TillCode(SqliteConnection conn, IDbTransaction? tx = null)
+    public static string TillCode(SqliteConnection conn, IDbTransaction? tx, long clientId)
     {
         var till = conn.ExecuteScalar<string>(
             "SELECT value_json FROM app_settings WHERE key = 'pos_till_code' LIMIT 1", transaction: tx);
-        return string.IsNullOrWhiteSpace(till) ? BusinessCode(conn, tx) + "1" : till.Trim().Trim('"');
+        return string.IsNullOrWhiteSpace(till) ? BusinessCode(conn, tx, clientId) + "1" : till.Trim().Trim('"');
     }
 
     /// <summary>
     /// Four characters of the business name, letters and digits only — "Dal Roti" → DALR,
     /// "Chay Chaupal" → CHAY. Padded if the name is shorter, so every key is the same shape.
     /// </summary>
-    public static string BusinessCode(SqliteConnection conn, IDbTransaction? tx = null)
+    /// <remarks>
+    /// Scoped to the business being billed for. It used to read <c>clients ORDER BY id LIMIT 1</c>,
+    /// which on a counter serving two brands is simply whichever was created first — so every
+    /// Chay Chaupal key on a shared till was stamped DALR.
+    /// </remarks>
+    public static string BusinessCode(SqliteConnection conn, IDbTransaction? tx, long clientId)
     {
-        var name = ProfileName(conn, tx)
-                   ?? conn.ExecuteScalar<string>("SELECT name FROM clients ORDER BY id LIMIT 1", transaction: tx);
+        // Through BusinessName so a rename on the Settings screen reaches the keys. This used to
+        // read app_settings, where the profile has not lived since business settings moved to
+        // client_settings — a table nothing writes any more, so the code was frozen at whatever
+        // the shop was called on the day that migration ran.
+        var letters = new string(BusinessName.Resolve(conn, tx, clientId)
+            .Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
 
-        var letters = new string((name ?? "").Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
         return letters.Length >= 4 ? letters[..4]
              : letters.Length > 0 ? letters.PadRight(4, 'X')
              : DefaultTillCode;
     }
 
     /// <summary>
-    /// The store name, from whichever profile has one — this app's own Settings screen first
-    /// (<c>pos_wpf_settings.StoreName</c>), then the Electron app's older
-    /// <c>restaurant_profile.name</c> in the same database.
-    ///
-    /// Reading only the Electron key, as this used to, meant renaming the store on the
-    /// Settings screen changed the name on every bill but not the prefix on the keys.
-    /// </summary>
-    private static string? ProfileName(SqliteConnection conn, IDbTransaction? tx)
-    {
-        return Read("pos_wpf_settings", "StoreName") ?? Read("restaurant_profile", "name");
-
-        string? Read(string key, string property)
-        {
-            var json = conn.ExecuteScalar<string>(
-                "SELECT value_json FROM app_settings WHERE key = @key LIMIT 1", new { key }, tx);
-            if (string.IsNullOrWhiteSpace(json))
-            {
-                return null;
-            }
-
-            try
-            {
-                using var doc = JsonDocument.Parse(json);
-                var value = doc.RootElement.TryGetProperty(property, out var n) ? n.GetString() : null;
-                return string.IsNullOrWhiteSpace(value) ? null : value;
-            }
-            catch (JsonException)
-            {
-                // A hand-edited profile shouldn't stop a bill from being saved.
-                return null;
-            }
-        }
-    }
-
-    /// <summary>
     /// Rewrites one freshly inserted row's uuid. Call it straight after the insert, inside the
     /// same transaction, so the row is never visible with the random default.
     /// </summary>
-    public static void Stamp(SqliteConnection conn, IDbTransaction? tx, string table, string code, long id)
+    public static void Stamp(SqliteConnection conn, IDbTransaction? tx, string table, string code, long id, long clientId)
     {
         conn.Execute(
             $@"UPDATE ""{table}"" SET uuid = @prefix || substr('00000' || id, -5) WHERE id = @id",
-            new { prefix = $"{TillCode(conn, tx)}-{code}-", id }, tx);
+            new { prefix = $"{TillCode(conn, tx, clientId)}-{code}-", id }, tx);
     }
 }

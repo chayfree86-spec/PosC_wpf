@@ -24,7 +24,7 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Background" Value="{StaticResource AccentGrad}"/>
+                    <Setter Property="Background" Value="{DynamicResource AccentGrad}"/>
                     <Setter Property="Foreground" Value="White"/>
                 </Trigger>
             </Style.Triggers>
@@ -45,7 +45,7 @@
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/></Trigger>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -86,7 +86,7 @@
             </Grid>
             <Grid Margin="0,6,0,0">
                 <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
-                    <TextBox x:Name="NameBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"
+                    <TextBox x:Name="NameBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"
                              TextChanged="NameBox_TextChanged" PreviewKeyDown="NameBox_PreviewKeyDown"/>
                 </Border>
                 <TextBlock x:Name="NamePlaceholder" Text="Type in English for Hindi" Foreground="{StaticResource TextFaint}" FontSize="14"
@@ -115,22 +115,22 @@
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="ITEM PRICE (₹) *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
                     <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
-                        <TextBox x:Name="PriceBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                        <TextBox x:Name="PriceBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                     </Border>
                 </StackPanel>
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="ITEM CODE" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
                     <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
-                        <TextBox x:Name="CodeBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{StaticResource Accent}"/>
+                        <TextBox x:Name="CodeBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                     </Border>
                 </StackPanel>
             </Grid>
 
             <!-- Last added item confirmation (add mode, shown after each save so entry can continue) -->
-            <Border x:Name="LastAddedPanel" Background="{StaticResource AccentFaint}" BorderBrush="{StaticResource Accent}" BorderThickness="1"
+            <Border x:Name="LastAddedPanel" Background="{DynamicResource AccentFaint}" BorderBrush="{DynamicResource Accent}" BorderThickness="1"
                     CornerRadius="8" Padding="12,9" Margin="0,14,0,0" Visibility="Collapsed">
                 <StackPanel>
-                    <TextBlock Text="LAST ADDED ITEM" Foreground="{StaticResource Accent}" FontSize="9" FontWeight="Bold" Margin="0,0,0,4"/>
+                    <TextBlock Text="LAST ADDED ITEM" Foreground="{DynamicResource Accent}" FontSize="9" FontWeight="Bold" Margin="0,0,0,4"/>
                     <Grid>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock x:Name="LastAddedName" Foreground="White" FontSize="13" FontWeight="Bold"/>
@@ -150,7 +150,7 @@
                     </Button.Resources>
                 </Button>
                 <Button Grid.Column="2" x:Name="SaveButton" Content="Save Menu Item" Height="42" Click="Save_Click" Cursor="Hand"
-                        Background="{StaticResource Accent}" Foreground="White" FontWeight="Bold" BorderThickness="0">
+                        Background="{DynamicResource Accent}" Foreground="White" FontWeight="Bold" BorderThickness="0">
                     <Button.Resources>
                         <Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style>
                     </Button.Resources>
