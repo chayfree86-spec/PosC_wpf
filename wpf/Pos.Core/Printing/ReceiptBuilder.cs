@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -33,6 +33,12 @@ public sealed class PrintConfig
     public string QrImagePath { get; init; } = "";
     public bool PrintQrOnBill { get; init; }
 
+    /// <summary>Payee details for the bill's UPI QR. When <see cref="UpiId"/> is set the QR is
+    /// generated per bill with the amount pre-filled; <see cref="QrImagePath"/> is only the
+    /// fallback for a shop that pasted a plain static code instead.</summary>
+    public string UpiId { get; init; } = "";
+    public string UpiName { get; init; } = "";
+
     public bool Is58mm => PaperSize.Contains("58");
 }
 
@@ -49,10 +55,67 @@ public sealed class ReceiptBuilder
 
     public ReceiptBuilder(PrintConfig cfg) => _cfg = cfg;
 
+    /// <summary>
+    /// Brackets a run of text the printer should render bold. These are control characters that
+    /// never occur in a receipt, so they ride along through the column maths untouched and are
+    /// stripped back out when the line is drawn. Consolas bold has the same advance width as
+    /// regular, so emphasising the time can't nudge the columns beside it out of line.
+    /// </summary>
+    public const char EmphasisOn = '\u0002';
+    public const char EmphasisOff = '\u0003';
+    private static string Emphasise(string s) => EmphasisOn + s + EmphasisOff;
+
+    /// <summary>
+    /// A line-leading marker: draw this whole row bigger and bold. Used for the KOT's item
+    /// rows, which the kitchen reads across the counter — the name and quantity have to carry.
+    /// Non-printing, stripped when the line is rendered.
+    /// </summary>
+    public const char BigLine = '\u0001';
+
+    /// <summary>
+    /// A line-leading marker: this row is columns, tab-separated, laid out in a real grid rather
+    /// than padded with spaces. Space padding only lines up in a monospace font, and the item
+    /// names here are often Hindi — Devanagari has no monospace, so its glyphs are whatever width
+    /// they are and the qty/amount after them drift. A grid pins each column by pixel, so the
+    /// numbers line up whatever the script: first column left-aligned (the name), the rest
+    /// right-aligned (qty, amount).
+    /// </summary>
+    public const char Columnar = '\u0004';
+    private const char ColSep = '\t';
+
+    /// <summary>A columnar row; <paramref name="big"/> also prints it in the KOT's larger bold font.</summary>
+    private static string ColRow(bool big, params string[] cells) =>
+        (big ? BigLine.ToString() : "") + Columnar + string.Join(ColSep, cells);
+
+    /// <summary>The item's display name for a grid row — no padding (the grid sizes the column),
+    /// just the name with a parcel marker where needed.</summary>
+    private static string ColName(PrintLine item, bool showHash)
+    {
+        var name = item.Name ?? "";
+        if (!item.IsParcel) return name;
+
+        var hash = "";
+        if (showHash)
+        {
+            var m = Regex.Match(name, @"#(\d+)");
+            hash = m.Success ? "#" + m.Groups[1].Value : "#" + item.Qty;
+        }
+        name = Regex.Replace(name, @"\s*#\d*|\s*[\[\(]parcel[\]\)]", "", RegexOptions.IgnoreCase).Trim();
+        return $"{name} (P{hash})";
+    }
+
     // 80mm ≈ 42 monospace columns, 58mm ≈ 32.
     public int Cols => _cfg.Is58mm ? 32 : 42;
     private int KotNameWidth => _cfg.Is58mm ? 26 : 36;
     private const int KotQtyWidth = 6;
+
+    // The KOT prints entirely in a bigger font, so fewer characters fit the roll — a narrower
+    // name column keeps the larger rows from running past the paper. Every KOT line uses this
+    // same column count so the header, the rules and the item rows share one grid and the qty
+    // lines up straight down; mixing the big rows with base-font rules is what threw it off.
+    private int KotBigNameWidth => _cfg.Is58mm ? 18 : 28;
+    private const int KotBigQtyWidth = 4;
+    private int KotCols => KotBigNameWidth + KotBigQtyWidth;   // 80mm: 32, 58mm: 22
     private int BillNameWidth => _cfg.Is58mm ? 16 : 24;
     private int BillQtyWidth => _cfg.Is58mm ? 5 : 6;
     private int BillAmtWidth => _cfg.Is58mm ? 11 : 12;
@@ -101,23 +164,52 @@ public sealed class ReceiptBuilder
         return Fit(baseName + " " + tag, width);
     }
 
+    // ── Test print ─────────────────────────────────────────────────────────────
+    /// <summary>
+    /// The "Test Print" ticket, built here so it goes through the very same layout — width,
+    /// margins, font — as a real bill. It used to be assembled separately in the Settings view,
+    /// which is how it drifted: the receipts were widened and enlarged while the test print kept
+    /// the old small, narrow shape, so a test no longer showed what a bill would look like.
+    /// </summary>
+    public string BuildTest(string printerName, DateTime now)
+    {
+        var sb = new StringBuilder();
+        if (StoreHeading is { } heading) sb.AppendLine(Centre(heading, Cols));
+        sb.AppendLine(Centre("TEST PRINT", Cols));
+        sb.AppendLine(Line);
+        sb.AppendLine("Printer : " + Fit(printerName, Cols - 10).TrimEnd());
+        sb.AppendLine("Paper   : " + _cfg.PaperSize);
+        sb.AppendLine("Copies  : " + _cfg.Copies);
+        sb.AppendLine("Time    : " + now.ToString("dd-MMM-yyyy hh:mm tt", CultureInfo.InvariantCulture));
+        sb.AppendLine(Line);
+        sb.AppendLine(Centre("Printer working correctly.", Cols));
+        sb.AppendLine(Line);
+        return sb.ToString();
+    }
+
     // ── KOT ──────────────────────────────────────────────────────────────────
     public string BuildKot(IReadOnlyList<PrintLine> items, string tableLabel, string? note, DateTime? now = null)
     {
         var stamp = now ?? DateTime.Now;
+        var cols = KotCols;
         var sb = new StringBuilder();
-        sb.AppendLine(Centre("KOT", Cols));
+
+        // The whole KOT prints in the larger font: BigLine on every row keeps one column grid, so
+        // the qty runs straight down and the rules span the same width as the rows.
+        var kotLine = new string('-', cols);
+        sb.AppendLine(BigLine + Centre("KOT", cols));
 
         var time = stamp.ToString("HH:mm");
         var date = stamp.ToString("ddMMM", CultureInfo.InvariantCulture);
 
-        // left = table, centre = time, right = date
-        var side = (Cols - 12) / 2;
-        sb.AppendLine(Fit(tableLabel, side) + Centre(time, 12) + RightFit(date, Cols - side - 12));
+        // left = table, centre = time (bold — the kitchen reads the order time off this), right = date
+        const int timeW = 8;
+        var side = (cols - timeW) / 2;
+        sb.AppendLine(BigLine + Fit(tableLabel, side) + Emphasise(Centre(time, timeW)) + RightFit(date, cols - side - timeW));
 
-        sb.AppendLine(Line);
-        sb.AppendLine(Fit("Item Name", KotNameWidth) + RightFit("qty", KotQtyWidth));
-        sb.AppendLine(Line);
+        sb.AppendLine(BigLine + kotLine);
+        sb.AppendLine(ColRow(true, "Item Name", "qty"));
+        sb.AppendLine(BigLine + kotLine);
 
         var parcels = items.Where(i => i.IsParcel).ToList();
         var dineIn = items.Where(i => !i.IsParcel).ToList();
@@ -126,7 +218,7 @@ public sealed class ReceiptBuilder
         {
             foreach (var i in dineIn) sb.AppendLine(KotRow(i, true));
             sb.AppendLine();
-            sb.AppendLine(Centre("Parcel#", Cols));
+            sb.AppendLine(BigLine + Centre("Parcel#", cols));
             foreach (var i in parcels) sb.AppendLine(KotRow(i, false));
         }
         else
@@ -134,17 +226,17 @@ public sealed class ReceiptBuilder
             foreach (var i in items) sb.AppendLine(KotRow(i, true));
         }
 
-        sb.AppendLine(Line);
+        sb.AppendLine(BigLine + kotLine);
         if (!string.IsNullOrWhiteSpace(note))
         {
-            sb.AppendLine($"Note: {note}");
-            sb.AppendLine(Line);
+            sb.AppendLine(BigLine + $"Note: {note}");
+            sb.AppendLine(BigLine + kotLine);
         }
         return sb.ToString();
     }
 
-    private string KotRow(PrintLine i, bool showHash) =>
-        ItemNameCell(i, KotNameWidth, showHash) + RightFit(Math.Max(1, i.Qty).ToString(), KotQtyWidth);
+    private static string KotRow(PrintLine i, bool showHash) =>
+        ColRow(true, ColName(i, showHash), Math.Max(1, i.Qty).ToString());
 
     // ── Bill header (shop branding) ──────────────────────────────────────────
 
@@ -191,19 +283,24 @@ public sealed class ReceiptBuilder
 
         // InvariantCulture: "/" in a format string means "culture's date separator",
         // which renders as "-" on some machines. The receipt must always read dd/MM/yy.
-        var dateStr = billedAt.ToString("dd/MM/yy, HH:mm", CultureInfo.InvariantCulture);
+        //
+        // The time is bolded; the width maths run on the marker-free length so the emphasis
+        // can't throw the "Date … Table" spacing off.
+        var datePart = billedAt.ToString("dd/MM/yy, ", CultureInfo.InvariantCulture);
+        var timePart = billedAt.ToString("HH:mm", CultureInfo.InvariantCulture);
+        var dateVisible = $"Date: {datePart}{timePart}";
+        var datePrinted = $"Date: {datePart}{Emphasise(timePart)}";
         if (!string.IsNullOrWhiteSpace(tableNumber))
         {
-            var dateLabel = $"Date: {dateStr}";
             var tableLabel = $"Table No: {tableNumber}";
-            var gap = Cols - dateLabel.Length - tableLabel.Length;
-            if (gap >= 1) sb.AppendLine(dateLabel + new string(' ', gap) + tableLabel);
-            else { sb.AppendLine(dateLabel); sb.AppendLine(tableLabel); }
+            var gap = Cols - dateVisible.Length - tableLabel.Length;
+            if (gap >= 1) sb.AppendLine(datePrinted + new string(' ', gap) + tableLabel);
+            else { sb.AppendLine(datePrinted); sb.AppendLine(tableLabel); }
         }
-        else sb.AppendLine($"Date: {dateStr}");
+        else sb.AppendLine(datePrinted);
 
         sb.AppendLine(Line);
-        sb.AppendLine(Fit("Item Name", BillNameWidth) + RightFit("qty", BillQtyWidth) + RightFit("Rs.", BillAmtWidth));
+        sb.AppendLine(ColRow(false, "Item Name", "qty", "Rs."));
         sb.AppendLine(Line);
 
         var parcels = items.Where(i => i.IsParcel).ToList();
@@ -227,25 +324,20 @@ public sealed class ReceiptBuilder
         if (discount > 0)
         {
             var subtotal = grandTotal + discount;
-            sb.AppendLine(Fit("Subtotal", BillNameWidth) + RightFit(totalQty.ToString(), BillQtyWidth)
-                          + RightFit(subtotal.ToString("0"), BillAmtWidth));
-            sb.AppendLine(Fit("Discount", BillNameWidth) + new string(' ', BillQtyWidth)
-                          + RightFit($"-{discount:0}", BillAmtWidth));
+            sb.AppendLine(ColRow(false, "Subtotal", totalQty.ToString(), subtotal.ToString("0")));
+            sb.AppendLine(ColRow(false, "Discount", "", $"-{discount:0}"));
             sb.AppendLine(Line);
         }
 
-        sb.AppendLine(Fit("Total", BillNameWidth) + RightFit(totalQty.ToString(), BillQtyWidth)
-                      + RightFit($"Rs. {grandTotal:0}", BillAmtWidth));
+        sb.AppendLine(ColRow(false, "Total", totalQty.ToString(), $"Rs. {grandTotal:0}"));
         sb.AppendLine(Line);
         sb.AppendLine(Centre("Thankyou ! Visit Again", Cols));
         return sb.ToString();
     }
 
-    private string BillRow(PrintLine i, bool showHash)
+    private static string BillRow(PrintLine i, bool showHash)
     {
         var qty = Math.Max(1, i.Qty);
-        return ItemNameCell(i, BillNameWidth, showHash)
-               + RightFit(qty.ToString(), BillQtyWidth)
-               + RightFit((i.Price * qty).ToString("0"), BillAmtWidth);
+        return ColRow(false, ColName(i, showHash), qty.ToString(), (i.Price * qty).ToString("0"));
     }
 }

@@ -36,11 +36,13 @@ public sealed class PrintSpooler : IDisposable
     }
 
     /// <summary>Queues a receipt. Returns immediately — the caller never waits on paper.</summary>
-    public void Enqueue(string what, PrintConfig config, string text, bool withQr = false)
+    /// <param name="qrAmount">The bill total, encoded into the UPI QR so the customer's payment
+    /// app opens with it filled in. Zero (KOT, or a shop with no UPI id) prints no amount.</param>
+    public void Enqueue(string what, PrintConfig config, string text, bool withQr = false, double qrAmount = 0)
     {
         if (!string.IsNullOrWhiteSpace(text))
         {
-            _jobs.Add(new Job(what, config, text, withQr));
+            _jobs.Add(new Job(what, config, text, withQr, qrAmount));
         }
     }
 
@@ -67,7 +69,7 @@ public sealed class PrintSpooler : IDisposable
                     continue;
                 }
 
-                var error = printer.Print(job.Config, job.Text, job.WithQr);
+                var error = printer.Print(job.Config, job.Text, job.WithQr, job.QrAmount);
                 if (error is not null)
                 {
                     Failed?.Invoke(job.What, error);
@@ -82,5 +84,5 @@ public sealed class PrintSpooler : IDisposable
 
     public void Dispose() => _jobs.CompleteAdding();
 
-    private sealed record Job(string What, PrintConfig Config, string Text, bool WithQr, bool IsWarmup = false);
+    private sealed record Job(string What, PrintConfig Config, string Text, bool WithQr, double QrAmount = 0, bool IsWarmup = false);
 }

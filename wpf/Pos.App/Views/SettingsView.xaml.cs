@@ -12,10 +12,28 @@ namespace Pos.App.Views;
 
 public partial class SettingsView : UserControl
 {
+    private bool _qrHooked;
+
     public SettingsView()
     {
         InitializeComponent();
-        Loaded += (_, _) => RefreshQrPreview();
+        Loaded += (_, _) =>
+        {
+            // Redraw the QR preview whenever the UPI id or name changes, so it always shows the
+            // code the bill will actually print. Hooked once, after the DataContext is in place.
+            if (!_qrHooked && Vm is { } vm)
+            {
+                vm.PropertyChanged += (_, e) =>
+                {
+                    if (e.PropertyName is nameof(SettingsViewModel.UpiId) or nameof(SettingsViewModel.UpiName))
+                    {
+                        RefreshQrPreview();
+                    }
+                };
+                _qrHooked = true;
+            }
+            RefreshQrPreview();
+        };
     }
 
     private SettingsViewModel? Vm => DataContext as SettingsViewModel;
@@ -171,48 +189,19 @@ public partial class SettingsView : UserControl
     private void TestPrint_Click(object sender, RoutedEventArgs e)
     {
         if (Vm is null) return;
-        var is58 = Vm.PaperSize.Contains("58");
-        double width = is58 ? 200 : 280;
-        int cols = is58 ? 32 : 42;
 
-        var pd = new PrintDialog();
-        try
+        // Through the same builder and printer as a real bill, so the test shows exactly what a
+        // receipt will look like — same width, margins and font — rather than a separate,
+        // now-outdated shape.
+        var cfg = Vm.BuildPrintConfig();
+        var text = new Pos.Core.Printing.ReceiptBuilder(cfg).BuildTest(Vm.SelectedPrinter, DateTime.Now);
+
+        using var printer = new Services.ReceiptPrinter();
+        var error = printer.Print(cfg, text, withQr: false);
+        if (error is not null)
         {
-            if (!string.IsNullOrWhiteSpace(Vm.SelectedPrinter))
-            {
-                var server = new System.Printing.LocalPrintServer();
-                pd.PrintQueue = server.GetPrintQueue(Vm.SelectedPrinter);
-            }
-            else if (pd.ShowDialog() != true) return;
+            ThemeMessageBox.Show(error, "Test Print", "error");
         }
-        catch
-        {
-            if (pd.ShowDialog() != true) return;
-        }
-
-        var doc = new FlowDocument
-        {
-            PageWidth = width, PageHeight = 5000, ColumnWidth = width,
-            PagePadding = new Thickness(6, 8, 6, 8),
-            FontFamily = new FontFamily("Consolas"), FontSize = 9, Foreground = Brushes.Black
-        };
-        void Add(string t, double size = 9, bool bold = false, TextAlignment a = TextAlignment.Left)
-            => doc.Blocks.Add(new Paragraph(new Run(t)) { FontSize = size, FontWeight = bold ? FontWeights.Bold : FontWeights.Normal, TextAlignment = a, Margin = new Thickness(0), LineHeight = size + 3 });
-
-        Add(Vm.StoreName, 15, true, TextAlignment.Center);
-        Add("TEST PRINT", 9, false, TextAlignment.Center);
-        Add(new string('-', cols));
-        Add($"Printer : {Vm.SelectedPrinter}");
-        Add($"Paper   : {Vm.PaperSize}");
-        Add($"Copies  : {Vm.PrintCopies}");
-        Add($"Time    : {DateTime.Now:dd-MMM-yyyy hh:mm tt}");
-        Add(new string('-', cols));
-        Add("Printer connection is working correctly.", 9, false, TextAlignment.Center);
-        Add(new string('-', cols));
-
-        var paginator = ((IDocumentPaginatorSource)doc).DocumentPaginator;
-        paginator.PageSize = new Size(width, 5000);
-        pd.PrintDocument(paginator, "Test Print");
     }
 
     private void UploadQr_Click(object sender, MouseButtonEventArgs e)
@@ -233,17 +222,40 @@ public partial class SettingsView : UserControl
 
     private void RefreshQrPreview()
     {
-        if (Vm is null || string.IsNullOrWhiteSpace(Vm.QrImagePath) || !File.Exists(Vm.QrImagePath))
+        if (Vm is null) return;
+
+        BitmapImage? bmp = null;
+
+        // Prefer the code generated from the UPI id — that is what the bill prints, with the
+        // amount added per bill. The uploaded image is only the fallback for a shop with no id.
+        if (!string.IsNullOrWhiteSpace(Vm.UpiId))
+        {
+            var png = Pos.Core.Printing.UpiQr.PngForBill(Vm.UpiId, Vm.UpiName, 0);
+            if (png is not null)
+            {
+                bmp = new BitmapImage();
+                bmp.BeginInit();
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.StreamSource = new MemoryStream(png);
+                bmp.EndInit();
+            }
+        }
+        else if (!string.IsNullOrWhiteSpace(Vm.QrImagePath) && File.Exists(Vm.QrImagePath))
+        {
+            bmp = new BitmapImage();
+            bmp.BeginInit();
+            bmp.CacheOption = BitmapCacheOption.OnLoad;
+            bmp.UriSource = new Uri(Vm.QrImagePath);
+            bmp.EndInit();
+        }
+
+        if (bmp is null)
         {
             QrPreview.Visibility = Visibility.Collapsed;
             QrPlaceholder.Visibility = Visibility.Visible;
             return;
         }
-        var bmp = new BitmapImage();
-        bmp.BeginInit();
-        bmp.CacheOption = BitmapCacheOption.OnLoad;
-        bmp.UriSource = new Uri(Vm.QrImagePath);
-        bmp.EndInit();
+
         QrPreview.Source = bmp;
         QrPreview.Visibility = Visibility.Visible;
         QrPlaceholder.Visibility = Visibility.Collapsed;

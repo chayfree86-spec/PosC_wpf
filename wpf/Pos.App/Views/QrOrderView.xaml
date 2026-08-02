@@ -45,6 +45,91 @@
                               Visibility="{Binding PendingCount, Converter={StaticResource CountToVis}}">
                     <ItemsControl ItemsSource="{Binding PendingOrders}">
                         <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Width="290" Margin="0,0,14,14" Background="{StaticResource CardBg}"
+                                        BorderBrush="{StaticResource Border}" BorderThickness="1.5" CornerRadius="12" Padding="14">
+                                    <StackPanel>
+                                        <!-- table + status -->
+                                        <Grid>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding TableText}" Foreground="White" FontSize="15" FontWeight="Bold"/>
+                                                <TextBlock Text="{Binding CustomerText}" Foreground="{StaticResource TextMuted}" FontSize="11"
+                                                           Visibility="{Binding CustomerText, Converter={StaticResource StringToVis}}"/>
+                                            </StackPanel>
+                                            <Border HorizontalAlignment="Right" VerticalAlignment="Top" CornerRadius="6" Padding="7,2"
+                                                    Background="{DynamicResource AccentFaint}" BorderBrush="{DynamicResource Accent}" BorderThickness="1">
+                                                <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource AccentText}" FontSize="9.5" FontWeight="Bold"/>
+                                            </Border>
+                                        </Grid>
+
+                                        <Border Height="1" Background="{StaticResource BorderSoft}" Margin="0,10"/>
+
+                                        <!-- items -->
+                                        <ItemsControl ItemsSource="{Binding Items}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="0,0,0,5">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="{Binding QtyText}" Foreground="{DynamicResource AccentText}" FontSize="12" FontWeight="Bold" Margin="0,0,8,0"/>
+                                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Foreground="{StaticResource TextPrimary}" FontSize="12.5" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Grid.Column="2" Text="{Binding AmountText}" Foreground="{StaticResource TextMuted}" FontSize="12"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <Border Height="1" Background="{StaticResource BorderSoft}" Margin="0,6,0,10"/>
+
+                                        <!-- total + time -->
+                                        <Grid Margin="0,0,0,12">
+                                            <TextBlock Text="{Binding TimeText}" Foreground="{StaticResource TextFaint}" FontSize="11" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding TotalText}" Foreground="{DynamicResource Accent}" FontSize="17" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                        </Grid>
+
+                                        <!-- Already taken: the board keeps showing accepted orders,
+                                             so the buttons go away once it is on the table. Pressing
+                                             Accept twice would add its items to the table twice. -->
+                                        <Border Background="{DynamicResource AccentFaint}" BorderBrush="{DynamicResource Accent}" BorderThickness="1"
+                                                CornerRadius="8" Padding="10,7">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsPending}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="✓  Table par daal diya gaya" Foreground="{DynamicResource AccentText}"
+                                                       FontSize="11.5" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                        </Border>
+
+                                        <!-- actions -->
+                                        <Grid Visibility="{Binding IsPending, Converter={StaticResource BoolToVis}}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="2*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Button Grid.Column="0" Content="REJECT" Height="36" Cursor="Hand" FontWeight="Bold" FontSize="11"
+                                                    Background="{StaticResource CardBg2}" Foreground="#EF4444" BorderThickness="1" BorderBrush="{StaticResource Border}"
+                                                    Command="{Binding DataContext.RejectCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"/>
+                                            <Button Grid.Column="2" Content="ACCEPT → TABLE" Height="36" Cursor="Hand" FontWeight="Bold" FontSize="11"
+                                                    Background="{DynamicResource AccentGrad}" Foreground="White" BorderThickness="0"
+                                                    Command="{Binding DataContext.AcceptCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
             </Grid>

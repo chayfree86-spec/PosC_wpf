@@ -20,6 +20,7 @@ public partial class ReportsViewModel : ObservableObject
 
     private readonly ReportsRepository _repo;
     private readonly ClientContext _client;
+    private readonly CustomerLedgerRepository _ledgerRepo;
     private readonly List<ReportRow> _all = new();       // full result for the range
     private List<ReportRow> _filtered = new();           // after search
 
@@ -52,14 +53,48 @@ public partial class ReportsViewModel : ObservableObject
     public int TotalPages => Math.Max(1, (int)Math.Ceiling(_filtered.Count / (double)PageSize));
     public string PageInfo => $"Page {CurrentPage + 1} of {TotalPages}";
 
-    public ReportsViewModel(ReportsRepository repo, ClientContext client)
+    public ReportsViewModel(ReportsRepository repo, CustomerLedgerRepository ledgerRepo, ClientContext client)
     {
         _repo = repo;
+        _ledgerRepo = ledgerRepo;
         _client = client;
         _suspendReload = true;
         LoadCounters();
         _suspendReload = false;
         SetRange("today");
+    }
+
+    /// <summary>The customers the "Add to Khata" dialog offers to pick from.</summary>
+    public IReadOnlyList<Customer> GetLedgerCustomers() => _ledgerRepo.GetCustomers().ToList();
+
+    /// <summary>
+    /// Files an already-billed order onto a customer's khata — a new customer, or one picked in
+    /// the dialog. The order itself is untouched (it is a finished sale, already counted in the
+    /// figures above); this only records the udhaar so it shows up in Len-Den under that customer.
+    /// </summary>
+    public void AddOrderToLedger(ReportRow row, long? existingCustomerId, string name, string mobile)
+    {
+        name = (name ?? "").Trim();
+        mobile = (mobile ?? "").Trim();
+
+        var customerId = existingCustomerId ?? _ledgerRepo.SaveCustomer(new Customer
+        {
+            ClientId = _client.ClientId,
+            Name = string.IsNullOrWhiteSpace(name) ? "Customer" : name,
+            Phone = mobile,
+            CreatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+        });
+
+        _ledgerRepo.AddLedgerEntry(new LedgerEntry
+        {
+            ClientId = _client.ClientId,
+            CustomerId = customerId,
+            Type = "gave",              // debit — the customer owes this
+            Amount = row.Order.TotalAmount,
+            PaymentMode = "credit",
+            Remarks = $"Bill {row.BillNoText}",
+            CreatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+        });
     }
 
     /// <summary>

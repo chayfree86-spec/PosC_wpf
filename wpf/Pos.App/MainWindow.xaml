@@ -597,19 +597,52 @@
 
                             <Grid Grid.Row="0" Margin="0,0,0,12">
                                 <TextBlock Text="MOST SELLING ITEMS" Foreground="{DynamicResource Accent}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
-                                <Border HorizontalAlignment="Right" Background="#26EA580C" BorderBrush="{DynamicResource Accent}" BorderThickness="1" CornerRadius="6" Padding="6,1.5">
-                                    <TextBlock Text="popular" Foreground="{DynamicResource Accent}" FontSize="9.5" FontWeight="Bold" VerticalAlignment="Center"/>
-                                </Border>
                             </Grid>
 
-                            <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="36"
-                                           Foreground="{StaticResource TextFaint}" HorizontalAlignment="Center"/>
-                                <TextBlock Text="No Sales Data Yet" Foreground="{StaticResource TextPrimary}"
-                                           FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,12,0,4"/>
-                                <TextBlock Text="Popular items appear here after sales" Foreground="{StaticResource TextFaint}"
-                                           FontSize="11.5" HorizontalAlignment="Center"/>
-                            </StackPanel>
+                            <Grid Grid.Row="1">
+                                <!-- Best-sellers: items sold more than ten times, most first. -->
+                                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                              Visibility="{Binding HasPopularItems, Converter={StaticResource BoolToVis}}">
+                                    <ItemsControl ItemsSource="{Binding PopularItems}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1" CornerRadius="10" Padding="12,10" Margin="0,0,0,8">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{StaticResource TextPrimary}" FontSize="13.5" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,10,0"/>
+                                                        <Border Grid.Column="1" Background="{DynamicResource AccentFaint}" BorderBrush="{DynamicResource Accent}" BorderThickness="1" CornerRadius="6" Padding="8,3" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding QtyText}" Foreground="{DynamicResource AccentText}" FontSize="11" FontWeight="Bold"/>
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+
+                                <!-- Empty state until an item crosses ten sold. -->
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasPopularItems}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="36"
+                                               Foreground="{StaticResource TextFaint}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="No Sales Data Yet" Foreground="{StaticResource TextPrimary}"
+                                               FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,12,0,4"/>
+                                    <TextBlock Text="Popular items appear here after sales" Foreground="{StaticResource TextFaint}"
+                                               FontSize="11.5" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
                         </Grid>
                     </Border>
                 </Grid>

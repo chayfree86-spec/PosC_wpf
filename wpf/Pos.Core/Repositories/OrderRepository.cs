@@ -75,6 +75,41 @@ public sealed class OrderRepository
     }
 
     /// <summary>
+    /// The best-sellers for the "Most Selling Items" panel: items whose total quantity sold —
+    /// across this business's settled/completed, report-visible bills — is over
+    /// <paramref name="minQty"/>, most-sold first.
+    ///
+    /// Grouped on the menu item where it is known, falling back to the printed name for the few
+    /// rows that never carried an id, so a renamed item doesn't split into two entries. KOT-only
+    /// rows never counted (report_visible = 0), so a ticket the kitchen made but no one paid for
+    /// can't inflate a "best seller".
+    /// </summary>
+    /// <param name="categoryId">Restricts the list to one menu category — the same one the item
+    /// grid is filtered to — so the panel tracks the tab the operator is on. Null is every
+    /// category (the "All Items" tab).</param>
+    public IReadOnlyList<PopularItem> GetPopularItems(int minQty = 10, int limit = 20, long? categoryId = null, long? clientId = null)
+    {
+        clientId ??= _client.ClientId;
+        using var conn = _db.OpenConnection();
+        return conn.Query<PopularItem>(
+            @"SELECT COALESCE(oi.item_id, 0)        AS ItemId,
+                     oi.item_name                   AS Name,
+                     SUM(MAX(oi.quantity, 1))       AS Qty
+              FROM order_items oi
+              JOIN orders o ON o.id = oi.order_id
+              LEFT JOIN menu_items mi ON mi.id = oi.item_id
+              WHERE o.client_id = @clientId
+                AND o.report_visible = 1
+                AND o.order_status IN ('settled', 'completed')
+                AND (@categoryId IS NULL OR mi.category_id = @categoryId OR mi.sub_category_id = @categoryId)
+              GROUP BY COALESCE(oi.item_id, oi.item_name)
+              HAVING SUM(MAX(oi.quantity, 1)) > @minQty
+              ORDER BY Qty DESC, oi.item_name ASC
+              LIMIT @limit",
+            new { clientId, minQty, limit, categoryId }).AsList();
+    }
+
+    /// <summary>
     /// This business's bill number as it should be printed — <c>#CC-0007</c>.
     ///
     /// For bills that already exist, where <see cref="SaveOrderResult.FormattedBillNumber"/>

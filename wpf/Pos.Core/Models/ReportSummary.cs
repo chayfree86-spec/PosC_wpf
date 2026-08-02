@@ -8,6 +8,18 @@ public sealed class ReportSummary
     public double TotalDiscounts { get; set; }
 }
 
+/// <summary>A best-seller for the Orders screen's "Most Selling Items" panel: an item and how
+/// many of it have been sold in total.</summary>
+public sealed class PopularItem
+{
+    public long ItemId { get; set; }
+    public string Name { get; set; } = "";
+    public long Qty { get; set; }
+
+    /// <summary>The badge on the right of each row, e.g. "42 sold".</summary>
+    public string QtyText => $"{Qty} sold";
+}
+
 /// <summary>
 /// One entry in the Reports page's counter filter — a business billing on this till.
 ///

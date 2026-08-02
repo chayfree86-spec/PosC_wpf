@@ -31,6 +31,9 @@ public sealed class SyncCoordinator : IDisposable
     public const string ApiUrlSettingKey = "pos_api_base_url";
     public const string DefaultApiUrl = "http://127.0.0.1:8123/api";
 
+    /// <summary>The .env key a deployment sets to point this till at its server.</summary>
+    public const string ApiUrlEnvKey = "POS_API_URL";
+
     private readonly DatabaseService _db;
     private readonly AppSettingsRepository _settings;
     private readonly ClientContext _client;
@@ -49,10 +52,24 @@ public sealed class SyncCoordinator : IDisposable
     /// <summary>Raised after every pass so the UI can show the current state.</summary>
     public event Action<SyncStatus>? StatusChanged;
 
+    /// <summary>
+    /// The server this till talks to.
+    ///
+    /// The <c>.env</c> beside the executable wins: that is the file a deployment edits, and the
+    /// whole point of moving the address there is that pointing a till at the live server is a
+    /// config change rather than a rebuild. Below it sits the value stored in app_settings — a
+    /// per-machine override kept for installs that already had one — and finally the built-in
+    /// development default.
+    /// </summary>
     public string ApiUrl
     {
         get
         {
+            if (DotEnv.Get(ApiUrlEnvKey) is { } fromEnv && fromEnv.Trim().Length > 0)
+            {
+                return fromEnv.Trim().TrimEnd('/');
+            }
+
             var saved = _settings.Get(ApiUrlSettingKey);
             return string.IsNullOrWhiteSpace(saved) ? DefaultApiUrl : saved.Trim().TrimEnd('/');
         }

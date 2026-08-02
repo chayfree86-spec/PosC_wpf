@@ -697,7 +697,11 @@ public partial class SettingsViewModel : ObservableObject
         ShowFoodLicense = ShowFoodLicenseOnBill,
         ShowAddress = ShowAddressOnBill,
         QrImagePath = QrImagePath,
-        PrintQrOnBill = PrintQrCodeOnBill
+        PrintQrOnBill = PrintQrCodeOnBill,
+        // With a UPI id set, the bill's QR is built per bill with the amount filled in; the
+        // uploaded image is only the fallback for a shop that has no id.
+        UpiId = UpiId,
+        UpiName = UpiName
     };
 
     /// <summary>

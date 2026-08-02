@@ -33,6 +33,11 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<CategoryTabVM> CategoryTabs { get; } = new();
     public FastObservableCollection<MenuItem> VisibleItems { get; } = new();
 
+    /// <summary>Best-sellers for the "Most Selling Items" panel — items sold more than ten times.
+    /// Refreshed after every bill so it reflects the day as it builds.</summary>
+    public ObservableCollection<PopularItem> PopularItems { get; } = new();
+    public bool HasPopularItems => PopularItems.Count > 0;
+
     /// <summary>
     /// What the search dropdown shows: the top <see cref="MaxSuggestions"/> matches.
     /// The dropdown's open cost grows with the number of rows it has to lay out, so an
@@ -233,6 +238,20 @@ public partial class MainViewModel : ObservableObject
         Notes = notes;
         Qr = qr;
 
+        // A QR order the operator accepts is written straight to its table; reload so the floor
+        // shows it as occupied with the right amount without waiting for the next refresh.
+        Qr.OrderAccepted += () =>
+        {
+            LoadTables();
+            if (SelectedTable != null)
+            {
+                // Re-open the current table so its cart picks up items the customer just added.
+                var id = SelectedTable.Id;
+                SelectedTable = null;
+                SelectedTable = Tables.FirstOrDefault(t => t.Id == id);
+            }
+        };
+
         Cart.CollectionChanged += (_, _) => RaiseTotals();
         // Settings edits (menu items, categories, tables, areas) must reflect on the Orders
         // screen immediately — otherwise it keeps serving stale catalog data until restart.
@@ -259,6 +278,7 @@ public partial class MainViewModel : ObservableObject
         LoadCatalog();
         LoadTables();
         RefreshSavedNotesState();
+        LoadPopularItems();
 
         _printer.Failed += (what, error) =>
         {
@@ -346,6 +366,12 @@ public partial class MainViewModel : ObservableObject
         {
             Settings.ReloadFromServer();
         }
+        // A bill put on a khata from the Reports screen writes straight to the repository; reload
+        // Len-Den on the way in so the new udhaar is there without an app restart.
+        else if (value == "Ledger")
+        {
+            Ledger.LoadData();
+        }
     }
 
     private void LoadCatalog()
@@ -364,7 +390,10 @@ public partial class MainViewModel : ObservableObject
         foreach (var c in _menu.GetCategories())
         {
             Categories.Add(c);
-            var cnt = _allItems.Count(i => i.CategoryId == c.Id);
+            // Count items in this category AND in it as a sub-category. Sub-categories (Cold
+            // Coffee, Burger…) hold their items through sub_category_id, not category_id, so a
+            // count that only checked category_id showed them as empty even when they weren't.
+            var cnt = _allItems.Count(i => i.CategoryId == c.Id || i.SubCategoryId == c.Id);
             CategoryTabs.Add(new CategoryTabVM
             {
                 Category = c,
@@ -375,25 +404,53 @@ public partial class MainViewModel : ObservableObject
         SelectedCategoryTab = CategoryTabs.FirstOrDefault();
     }
 
+    /// <summary>Refreshes the "Most Selling Items" panel. Cheap enough to run after each sale —
+    /// one grouped query — so the panel keeps pace with the day.</summary>
+    private void LoadPopularItems()
+    {
+        // Track the category the item grid is filtered to; the "All Items" tab (null category)
+        // shows every best-seller.
+        var categoryId = SelectedCategoryTab?.Category?.Id;
+        PopularItems.Clear();
+        foreach (var p in _orders.GetPopularItems(categoryId: categoryId))
+        {
+            PopularItems.Add(p);
+        }
+        OnPropertyChanged(nameof(HasPopularItems));
+    }
+
+    /// <summary>True while <see cref="LoadTables"/> rebuilds the table list. The list box drops
+    /// and re-picks its selection as the collection is cleared and refilled, and that churn must
+    /// not be mistaken for the operator moving between tables (which would park/restore drafts).</summary>
+    private bool _reloadingTables;
+
     private void LoadTables()
     {
-        var currentId = SelectedTable?.Id;
-        var currentArea = SelectedArea?.AreaValue;
-        _allTables = _tables.All().ToList();
-
-        Areas.Clear();
-        Areas.Add(new AreaTab { Name = "ALL", AreaValue = null, Count = _allTables.Count });
-        foreach (var g in _allTables
-                     .GroupBy(t => string.IsNullOrWhiteSpace(t.AreaName) ? "OTHER" : t.AreaName!)
-                     .OrderBy(g => g.Key))
+        _reloadingTables = true;
+        try
         {
-            Areas.Add(new AreaTab { Name = g.Key.ToUpperInvariant(), AreaValue = g.Key, Count = g.Count() });
+            var currentId = SelectedTable?.Id;
+            var currentArea = SelectedArea?.AreaValue;
+            _allTables = _tables.All().ToList();
+
+            Areas.Clear();
+            Areas.Add(new AreaTab { Name = "ALL", AreaValue = null, Count = _allTables.Count });
+            foreach (var g in _allTables
+                         .GroupBy(t => string.IsNullOrWhiteSpace(t.AreaName) ? "OTHER" : t.AreaName!)
+                         .OrderBy(g => g.Key))
+            {
+                Areas.Add(new AreaTab { Name = g.Key.ToUpperInvariant(), AreaValue = g.Key, Count = g.Count() });
+            }
+            SelectedArea = Areas.FirstOrDefault(a => a.AreaValue == currentArea) ?? Areas.FirstOrDefault();
+
+            if (currentId != null)
+            {
+                SelectedTable = _allTables.FirstOrDefault(t => t.Id == currentId);
+            }
         }
-        SelectedArea = Areas.FirstOrDefault(a => a.AreaValue == currentArea) ?? Areas.FirstOrDefault();
-
-        if (currentId != null)
+        finally
         {
-            SelectedTable = _allTables.FirstOrDefault(t => t.Id == currentId);
+            _reloadingTables = false;
         }
     }
 
@@ -428,7 +485,10 @@ public partial class MainViewModel : ObservableObject
         }
         else if (SelectedCategoryTab?.Category != null)
         {
-            src = src.Where(i => i.CategoryId == SelectedCategoryTab.Category.Id);
+            // Match items filed directly under the category and those under it as a sub-category,
+            // so picking a sub-category (Cold Coffee, Burger…) actually shows its items.
+            var catId = SelectedCategoryTab.Category.Id;
+            src = src.Where(i => i.CategoryId == catId || i.SubCategoryId == catId);
         }
 
         return src as IList<MenuItem> ?? src.ToList();
@@ -511,7 +571,13 @@ public partial class MainViewModel : ObservableObject
 
     partial void OnSelectedAreaChanged(AreaTab? value) => RefreshTables();
     partial void OnSelectedCategoryChanged(Category? value) => RefreshVisibleItems();
-    partial void OnSelectedCategoryTabChanged(CategoryTabVM? value) => RefreshVisibleItems();
+
+    partial void OnSelectedCategoryTabChanged(CategoryTabVM? value)
+    {
+        RefreshVisibleItems();
+        // The best-sellers panel follows the same tab as the item grid.
+        LoadPopularItems();
+    }
 
     // True once the selected table already has a saved/running order ("OLD ORDER").
     [ObservableProperty]
@@ -522,14 +588,79 @@ public partial class MainViewModel : ObservableObject
         (BillMode == "Table" && !HasExistingOrder) ||
         (BillMode == "Table" && HasExistingOrder && SelectedCartTab == "New");
 
-    partial void OnSelectedTableChanged(TableView? value)
+    /// <summary>
+    /// Each working context keeps its own rung-but-not-yet-saved items, parked while a different
+    /// one is being worked so nothing is lost or moved: a table's draft by table id, and the
+    /// quick bill's in <see cref="_quickDraft"/>. Only a manual delete — or saving — takes items
+    /// out; a draft is consumed the moment its context is reopened. Purely in memory, so unsaved
+    /// work does not outlive the app, which is the same as any other unsaved order.
+    /// </summary>
+    private readonly Dictionary<long, List<CartLine>> _tableDrafts = new();
+    private List<CartLine> _quickDraft = new();
+
+    private static CartLine CopyLine(CartLine l) => new()
     {
+        ItemId = l.ItemId, Name = l.Name, Price = l.Price, IsParcel = l.IsParcel, Qty = l.Qty, IsSaved = false
+    };
+
+    /// <summary>Parks a context's unsaved items — a table (by id), or the quick bill (null).</summary>
+    private void StashDraft(TableView? context, List<CartLine> unsaved)
+    {
+        if (context is null)
+        {
+            _quickDraft = unsaved;
+        }
+        else if (unsaved.Count > 0)
+        {
+            _tableDrafts[context.Id] = unsaved;
+        }
+        else
+        {
+            _tableDrafts.Remove(context.Id);
+        }
+    }
+
+    /// <summary>Takes back (and clears) a context's parked draft.</summary>
+    private List<CartLine> TakeDraft(TableView? context)
+    {
+        if (context is null)
+        {
+            var quick = _quickDraft;
+            _quickDraft = new List<CartLine>();
+            return quick;
+        }
+        if (_tableDrafts.Remove(context.Id, out var draft))
+        {
+            return draft;
+        }
+        return new List<CartLine>();
+    }
+
+    partial void OnSelectedTableChanged(TableView? oldValue, TableView? newValue)
+    {
+        // Only a real user switch parks and restores drafts. Two things must NOT:
+        //  • the same table re-picked by a fresh object (LoadTables refreshing amount/status);
+        //  • the null flicker LoadTables causes — clearing the Tables collection makes the list
+        //    box drop its selection (→ this fires with a null table) before it is re-selected.
+        // Treating those as switches would stash the current unsaved items and then restore them
+        // on top of the freshly reloaded saved order, doubling every line just KOT'd.
+        var sameTable = oldValue != null && newValue != null && oldValue.Id == newValue.Id;
+        var userSwitch = !sameTable && !_reloadingTables;
+
+        if (userSwitch)
+        {
+            // Park the unsaved items of the context being left — a table's, or the quick bill's.
+            // They belong to it; they are never carried onto the table being opened.
+            StashDraft(oldValue, Cart.Where(l => !l.IsSaved).Select(CopyLine).ToList());
+        }
+
         Cart.Clear();
         HasExistingOrder = false;
         SelectedCartTab = "Old";
-        if (value != null)
+
+        if (newValue != null)
         {
-            var active = _orders.GetActiveOrderForTable(value.Id);
+            var active = _orders.GetActiveOrderForTable(newValue.Id);
             if (active != null)
             {
                 foreach (var it in active.Items)
@@ -542,6 +673,21 @@ public partial class MainViewModel : ObservableObject
                 }
                 HasExistingOrder = true;
             }
+        }
+
+        if (userSwitch)
+        {
+            // Bring back the newly-entered context's own parked draft. On a table that already has
+            // a saved order these are additions, so they show in the "New" tab beside it.
+            foreach (var l in TakeDraft(newValue))
+            {
+                if (HasExistingOrder) SelectedCartTab = "New";
+                AddLine(l);
+            }
+        }
+
+        if (newValue != null)
+        {
             BillMode = "Table";
             CenterMode = "Table";
         }
@@ -682,6 +828,7 @@ public partial class MainViewModel : ObservableObject
             var res = RecordQuickBill();
             _printer.Enqueue("KOT", cfg, ticket);
             ClearCounter();
+            LoadPopularItems();
 
             StatusMessage($"KOT — Quick Bill {res.FormattedBillNumber}, Total: ₹{res.TotalAmount:0.##}");
         }
@@ -747,7 +894,9 @@ public partial class MainViewModel : ObservableObject
 
             // Queued the instant the bill has its number: everything below is the counter
             // redrawing itself, and the customer should not be watching paper wait for it.
-            _printer.Enqueue("Bill", cfg, bill, withQr: true);
+            // The grand total rides along so the bill's UPI QR opens the customer's app with the
+            // amount already filled in.
+            _printer.Enqueue("Bill", cfg, bill, withQr: true, qrAmount: total);
 
             LoadTables();
             foreach (var l in Cart)
@@ -768,11 +917,13 @@ public partial class MainViewModel : ObservableObject
             var bill = builder.BuildBill(lines, res.FormattedBillNumber, "", discount, total, DateTime.Now);
 
             _printer.Enqueue("KOT", cfg, ticket);
-            _printer.Enqueue("Bill", cfg, bill, withQr: true);
+            _printer.Enqueue("Bill", cfg, bill, withQr: true, qrAmount: total);
 
             ClearCounter();
             StatusMessage($"KOT + Bill — Quick Bill {res.FormattedBillNumber}");
         }
+
+        LoadPopularItems();
     }
 
     /// <summary>
@@ -800,7 +951,7 @@ public partial class MainViewModel : ObservableObject
             lines, _orders.FormatBillNumber(order.BillNumber), order.TableNumber ?? "",
             order.DiscountAmount, order.TotalAmount, billedAt);
 
-        _printer.Enqueue("Bill", cfg, bill, withQr: true);
+        _printer.Enqueue("Bill", cfg, bill, withQr: true, qrAmount: order.TotalAmount);
     }
 
     [RelayCommand]
@@ -843,6 +994,7 @@ public partial class MainViewModel : ObservableObject
         BillMode = "Quick";
         CenterMode = "Table";
         RaiseTotals();
+        LoadPopularItems();
         StatusMessage("Bill Settled & Table Freed.");
     }
 

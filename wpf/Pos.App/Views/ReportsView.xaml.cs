@@ -23,4 +23,23 @@ public partial class ReportsView : UserControl
 
         new BillViewModal(row, items, reprint, main?.Settings.BuildPrintConfig()) { Owner = owner }.ShowDialog();
     }
+
+    /// <summary>Puts this already-billed order on a customer's khata — pick an existing customer
+    /// or add a new one, and the bill's amount is filed as udhaar against them.</summary>
+    private void AddToLedger_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not ReportsViewModel vm) return;
+        if ((sender as FrameworkElement)?.DataContext is not ReportRow row) return;
+
+        var owner = Window.GetWindow(this);
+        var order = row.Order;
+        var dlg = new BillToLedgerModal(order.TotalAmount, vm.GetLedgerCustomers(),
+            order.CustomerName ?? "", order.CustomerMobile ?? "") { Owner = owner };
+        if (dlg.ShowDialog() != true) return;
+
+        vm.AddOrderToLedger(row, dlg.SelectedCustomerId, dlg.CustomerName, dlg.CustomerMobile);
+        ThemeMessageBox.Show(owner,
+            $"{row.BillNoText} — {dlg.CustomerName} ke khaate me ₹{order.TotalAmount:0.##} jud gaya.",
+            "Khata Updated", "success");
+    }
 }

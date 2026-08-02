@@ -68,6 +68,11 @@ public sealed class PosApiClient
         long? clientIdOverride = null) =>
         SendJsonAsync(HttpMethod.Put, path, json, ct, clientIdOverride);
 
+    /// <summary>Sends a partial update — the verb the QR-order board uses to move an order to
+    /// accepted or rejected.</summary>
+    public Task<JsonElement?> PatchJsonAsync(string path, string json, CancellationToken ct = default) =>
+        SendJsonAsync(new HttpMethod("PATCH"), path, json, ct);
+
     /// <summary>Deletes a catalog row. No body — the id is in the path.</summary>
     public async Task<JsonElement?> DeleteAsync(string path, CancellationToken ct = default)
     {

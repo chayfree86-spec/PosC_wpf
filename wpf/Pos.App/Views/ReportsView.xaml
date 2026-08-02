@@ -191,7 +191,7 @@
                         <ColumnDefinition Width="160"/>
                         <ColumnDefinition Width="100"/>
                         <ColumnDefinition Width="120"/>
-                        <ColumnDefinition Width="90"/>
+                        <ColumnDefinition Width="170"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="BILL #" Style="{StaticResource ColHead}"/>
                     <TextBlock Grid.Column="1" Text="DATE" Style="{StaticResource ColHead}"/>
@@ -214,15 +214,20 @@
                                             <ColumnDefinition Width="160"/>
                                             <ColumnDefinition Width="100"/>
                                             <ColumnDefinition Width="120"/>
-                                            <ColumnDefinition Width="90"/>
+                                            <ColumnDefinition Width="170"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="{Binding BillNoText}" Foreground="White" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
                                         <TextBlock Grid.Column="1" Text="{Binding DateText}" Foreground="{StaticResource TextMuted}" FontSize="13" VerticalAlignment="Center"/>
                                         <TextBlock Grid.Column="2" Text="{Binding StaffText}" Foreground="{StaticResource TextMuted}" FontSize="13" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                         <TextBlock Grid.Column="3" Text="{Binding TableText}" Foreground="{StaticResource TextMuted}" FontSize="13" VerticalAlignment="Center"/>
                                         <TextBlock Grid.Column="4" Text="{Binding TotalText}" Foreground="{DynamicResource Accent}" FontSize="15" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                                        <Button Grid.Column="5" Content="View" Click="ViewBill_Click" Cursor="Hand" HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                Height="30" Padding="14,0" Background="{StaticResource CardBg2}" Foreground="{DynamicResource Accent}" FontWeight="Bold" FontSize="12" BorderThickness="1" BorderBrush="{StaticResource Border}"/>
+                                        <StackPanel Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                            <Button Content="📒 Khata" Click="AddToLedger_Click" Tag="{Binding}" Cursor="Hand"
+                                                    Height="30" Padding="12,0" Margin="0,0,8,0" Background="{StaticResource CardBg2}" Foreground="{DynamicResource AccentText}" FontWeight="Bold" FontSize="12" BorderThickness="1" BorderBrush="{StaticResource Border}"
+                                                    ToolTip="Is bill ko customer ke khaate (udhaar) me daalein"/>
+                                            <Button Content="View" Click="ViewBill_Click" Cursor="Hand"
+                                                    Height="30" Padding="14,0" Background="{StaticResource CardBg2}" Foreground="{DynamicResource Accent}" FontWeight="Bold" FontSize="12" BorderThickness="1" BorderBrush="{StaticResource Border}"/>
+                                        </StackPanel>
                                     </Grid>
                                 </Border>
                             </DataTemplate>

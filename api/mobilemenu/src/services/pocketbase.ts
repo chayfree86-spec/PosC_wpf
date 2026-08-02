@@ -236,14 +236,12 @@ const resolveAssetUrl = (url: unknown) => {
   const rawUrl = getFirstImageUrl(url);
   if (!rawUrl) return '';
 
-  // Extract Google Drive File ID and proxy it through our local gdrive-handler.php
+  // A Google Drive link is served straight from Drive's own CDN. This used to be proxied
+  // through api/menu/gdrive-handler.php, which no longer exists — that folder was renamed to
+  // api/report and the handler dropped — so the proxy URL 404'd and the image never loaded.
   const driveMatch = rawUrl.match(/(?:drive\.google\.com\/(?:uc\?(?:export=view&)?id=|open\?id=|file\/d\/)|lh3\.googleusercontent\.com\/d\/)([a-zA-Z0-9_-]{25,})/);
   if (driveMatch?.[1]) {
-    const fileId = driveMatch[1];
-    const params = new URLSearchParams(window.location.search);
-    const savedSession = getSavedAdminSession();
-    const client = params.get('client') || params.get('pos_client') || savedSession.client || '';
-    return `${window.location.origin}${getAppRootPath()}/api/menu/gdrive-handler.php?action=view&id=${fileId}&client=${encodeURIComponent(client)}`;
+    return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
   }
 
   const value = cleanImageUrl(rawUrl);
