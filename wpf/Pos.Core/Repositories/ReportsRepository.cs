@@ -73,7 +73,7 @@ public sealed class ReportsRepository
     {
         using var conn = _db.OpenConnection();
         return conn.Query<ReportCounter>(
-            "SELECT id, name FROM clients ORDER BY id").AsList();
+            "SELECT id, name, slug FROM clients ORDER BY id").AsList();
     }
 
     /// <summary>Line items for a single order (for the bill view).</summary>

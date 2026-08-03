@@ -33,6 +33,7 @@ public sealed class ReportCounter
     /// on this till, combined".</summary>
     public long? Id { get; set; }
     public string Name { get; set; } = "";
+    public string Slug { get; set; } = "";
 
     /// <summary>What a ComboBox row reports to automation and screen readers, which read the
     /// item itself rather than the template that draws it — without this they announce the

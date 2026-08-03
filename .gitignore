@@ -466,3 +466,6 @@ api/menu/test_backend.php
 
 # NOTE: vendor/ jaan-boojh kar TRACKED hai — usme sirf composer ka autoloader hai
 # aur shared hosting par composer install chalane ka koi tareeka nahi.
+
+# Server-side runtime state (migration lock/log/cache)
+storage/

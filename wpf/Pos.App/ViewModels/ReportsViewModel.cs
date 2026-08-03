@@ -2,11 +2,13 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pos.Core.Data;
 using Pos.Core.Models;
 using Pos.Core.Repositories;
+using Pos.Core.Sync;
 
 namespace Pos.App.ViewModels;
 
@@ -16,11 +18,12 @@ public partial class ReportsViewModel : ObservableObject
 
     /// <summary>The "every business on the till" row. Null id is what the queries read as
     /// "don't filter by client".</summary>
-    private static readonly ReportCounter AllCounters = new() { Id = null, Name = "All (Sabhi Counter)" };
+    private static readonly ReportCounter AllCounters = new() { Id = null, Name = "All (Sabhi Counter)", Slug = "" };
 
     private readonly ReportsRepository _repo;
     private readonly ClientContext _client;
     private readonly CustomerLedgerRepository _ledgerRepo;
+    private readonly SyncCoordinator _sync;
     private readonly List<ReportRow> _all = new();       // full result for the range
     private List<ReportRow> _filtered = new();           // after search
 
@@ -53,11 +56,12 @@ public partial class ReportsViewModel : ObservableObject
     public int TotalPages => Math.Max(1, (int)Math.Ceiling(_filtered.Count / (double)PageSize));
     public string PageInfo => $"Page {CurrentPage + 1} of {TotalPages}";
 
-    public ReportsViewModel(ReportsRepository repo, CustomerLedgerRepository ledgerRepo, ClientContext client)
+    public ReportsViewModel(ReportsRepository repo, CustomerLedgerRepository ledgerRepo, ClientContext client, SyncCoordinator sync)
     {
         _repo = repo;
         _ledgerRepo = ledgerRepo;
         _client = client;
+        _sync = sync;
         _suspendReload = true;
         LoadCounters();
         _suspendReload = false;
@@ -181,21 +185,151 @@ public partial class ReportsViewModel : ObservableObject
     /// <summary>Re-reads the current range and staff selection from the database.</summary>
     public void Reload() => Load();
 
-    private void Load()
+    private static string? GetJsonString(JsonElement el, string name)
     {
-        // Null on the "All" row, which the queries read as "every business on the till".
-        var clientId = SelectedCounter?.Id;
-
-        var s = _repo.GetSummary(StartDate, EndDate, clientId: clientId);
-        TotalRevenue = "₹" + s.TotalSales.ToString("N0", CultureInfo.InvariantCulture);
-        TotalBills = s.TotalOrders.ToString();
-        TotalDiscounts = "₹" + s.TotalDiscounts.ToString("N0", CultureInfo.InvariantCulture);
-
-        _all.Clear();
-        foreach (var o in _repo.GetSettledOrders(StartDate, EndDate, clientId: clientId))
+        if (el.TryGetProperty(name, out var p) && p.ValueKind != JsonValueKind.Null && p.ValueKind != JsonValueKind.Undefined)
         {
-            _all.Add(new ReportRow(o, PrefixFor(o.ClientId)));
+            return p.ToString();
         }
+        return null;
+    }
+
+    private static double GetJsonDouble(JsonElement el, string name)
+    {
+        if (el.TryGetProperty(name, out var p) && p.ValueKind != JsonValueKind.Null && p.ValueKind != JsonValueKind.Undefined)
+        {
+            if (double.TryParse(p.ToString(), out var d))
+            {
+                return d;
+            }
+        }
+        return 0.0;
+    }
+
+    private static long? GetJsonLong(JsonElement el, string name)
+    {
+        if (el.TryGetProperty(name, out var p) && p.ValueKind != JsonValueKind.Null && p.ValueKind != JsonValueKind.Undefined)
+        {
+            if (long.TryParse(p.ToString(), out var l))
+            {
+                return l;
+            }
+        }
+        return null;
+    }
+
+    private Order? ParseOrder(JsonElement el)
+    {
+        try
+        {
+            var o = new Order();
+            o.Id = GetJsonLong(el, "id") ?? 0;
+            o.Uuid = GetJsonString(el, "sqlite_uuid") ?? GetJsonString(el, "uuid");
+            o.ClientId = GetJsonLong(el, "client_id") ?? 0;
+            o.TableId = GetJsonLong(el, "table_id");
+            o.OrderStatus = GetJsonString(el, "order_status") ?? "settled";
+            o.TotalAmount = GetJsonDouble(el, "total_amount");
+            o.DiscountAmount = GetJsonDouble(el, "discount_amount");
+            o.CustomerName = GetJsonString(el, "customer_name");
+            o.CustomerMobile = GetJsonString(el, "customer_mobile");
+            o.BilledAt = GetJsonString(el, "billed_at");
+            o.BillNumber = GetJsonLong(el, "bill_number");
+            o.TableNumber = GetJsonString(el, "table_number");
+            o.CreatedByName = GetJsonString(el, "created_by_name");
+            return o;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async void Load()
+    {
+        var clientId = SelectedCounter?.Id;
+        var clientSlug = SelectedCounter?.Slug ?? _client.Slug;
+        if (string.IsNullOrWhiteSpace(clientSlug))
+        {
+            clientSlug = _client.Slug;
+        }
+
+        bool loadedFromServer = false;
+        try
+        {
+            var api = new PosApiClient(_sync.ApiUrl, clientSlug, clientId ?? 0, TimeSpan.FromSeconds(5));
+            var query = $"/reports/summary?start_date={StartDate}&end_date={EndDate}&report_client={clientSlug}";
+            var root = await api.GetAsync(query);
+            if (root is { } jsonDoc)
+            {
+                var data = jsonDoc.TryGetProperty("data", out var d) ? d : jsonDoc;
+                
+                // Parse KPIs / Summary
+                if (data.TryGetProperty("today", out var todayProp))
+                {
+                    var totalSales = todayProp.TryGetProperty("revenue", out var revProp) ? double.Parse(revProp.ToString()) : 0.0;
+                    var totalOrders = todayProp.TryGetProperty("count", out var cntProp) ? int.Parse(cntProp.ToString()) : 0;
+                    
+                    TotalRevenue = "₹" + totalSales.ToString("N0", CultureInfo.InvariantCulture);
+                    TotalBills = totalOrders.ToString();
+                    TotalDiscounts = "₹0";
+                }
+                else if (data.TryGetProperty("kpis", out var kpiProp))
+                {
+                    var totalSales = kpiProp.TryGetProperty("today_sale", out var revProp) ? double.Parse(revProp.ToString()) : 0.0;
+                    TotalRevenue = "₹" + totalSales.ToString("N0", CultureInfo.InvariantCulture);
+                    TotalBills = "0";
+                    TotalDiscounts = "₹0";
+                }
+
+                // Parse Range Orders / Settled Orders
+                _all.Clear();
+                if (data.TryGetProperty("range_orders", out var rangeOrdersProp) && rangeOrdersProp.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var oEl in rangeOrdersProp.EnumerateArray())
+                    {
+                        var order = ParseOrder(oEl);
+                        if (order != null)
+                        {
+                            _all.Add(new ReportRow(order, PrefixFor(order.ClientId)));
+                        }
+                    }
+                    TotalBills = _all.Count.ToString();
+                }
+                else if (data.TryGetProperty("recent_bills", out var recentBillsProp) && recentBillsProp.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var oEl in recentBillsProp.EnumerateArray())
+                    {
+                        var order = ParseOrder(oEl);
+                        if (order != null)
+                        {
+                            _all.Add(new ReportRow(order, PrefixFor(order.ClientId)));
+                        }
+                    }
+                    TotalBills = _all.Count.ToString();
+                }
+
+                loadedFromServer = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[REPORT SYNC ERROR] Failed to fetch live reports: {ex.Message}");
+        }
+
+        if (!loadedFromServer)
+        {
+            var s = _repo.GetSummary(StartDate, EndDate, clientId: clientId);
+            TotalRevenue = "₹" + s.TotalSales.ToString("N0", CultureInfo.InvariantCulture);
+            TotalBills = s.TotalOrders.ToString();
+            TotalDiscounts = "₹" + s.TotalDiscounts.ToString("N0", CultureInfo.InvariantCulture);
+
+            _all.Clear();
+            foreach (var o in _repo.GetSettledOrders(StartDate, EndDate, clientId: clientId))
+            {
+                _all.Add(new ReportRow(o, PrefixFor(o.ClientId)));
+            }
+        }
+
         ApplyFilter();
     }
 

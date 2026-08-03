@@ -140,6 +140,12 @@ public partial class App : Application
         // SQLite and queued; this just stops it waiting for the next scheduled pass.
         appSettings.SettingQueued += sync.NudgePush;
 
+        // Bring the staff list up to date from the server BEFORE the login screen opens, so a PIN
+        // or user changed on the server works on the very next start rather than only after a
+        // background pass. Time-boxed and best-effort: if the line is down this returns quickly and
+        // sign-in falls back to the local copy, keeping the counter openable offline.
+        sync.RefreshStaffBeforeLogin(TimeSpan.FromSeconds(6));
+
         // Nobody bills until the till knows who is standing at it.
         //
         // Skipped on a machine whose staff list has never come down: there is nothing to check

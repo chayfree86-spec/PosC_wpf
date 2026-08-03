@@ -67,6 +67,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// Catch the schema up to the code after a deploy. Cheap when there is nothing new (a stat of the
+// migrations folder, no database round-trip) and self-guarded so it never breaks a request — the
+// worst case is the schema stays put and the failure is logged for the next attempt. This is the
+// no-SSH path; `php migrate.php` does the same thing explicitly.
+(new App\Core\MigrationRunner())->autoRun();
+
 $router = new Router();
 require $root . '/routes/api.php';
 

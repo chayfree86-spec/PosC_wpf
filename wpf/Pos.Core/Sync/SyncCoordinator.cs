@@ -1,3 +1,4 @@
+using Dapper;
 using Pos.Core.Data;
 using Pos.Core.Repositories;
 
@@ -112,6 +113,55 @@ public sealed class SyncCoordinator : IDisposable
     /// catalog creation) that need to talk to the server directly rather than through the
     /// queue.</summary>
     public PosApiClient CreateApiClient() => new(ApiUrl, _client.Slug, _client.ClientId);
+
+    /// <summary>
+    /// Pulls every business's staff list down from the server before the login screen opens, so a
+    /// PIN or user changed on the server is in effect the moment the till next starts — not one
+    /// background pass later, after the manager has already been turned away with their old PIN.
+    ///
+    /// Sign-in is checked against the local copy on purpose (the counter must open when the line
+    /// is down), so this is best-effort and time-boxed: if the server is slow or unreachable it
+    /// gives up within <paramref name="budget"/> and login falls back to whatever is already in
+    /// SQLite. The whole point is only to make that local copy fresh first when the network allows.
+    ///
+    /// Login is not tied to one business — any brand's manager can sign in — so it refreshes each
+    /// client the till already knows about, not just one.
+    /// </summary>
+    public void RefreshStaffBeforeLogin(TimeSpan budget)
+    {
+        try
+        {
+            // Runs on the thread pool, waited (not awaited) with a cap: startup blocks briefly at
+            // most, and a call still in flight when the budget runs out simply finishes in the
+            // background — its rows are just as welcome a second late.
+            Task.Run(RefreshAllClientsAsync).Wait(budget);
+        }
+        catch
+        {
+            // Offline, slow, or the task faulted — the local staff list stands and login proceeds.
+        }
+    }
+
+    private async Task RefreshAllClientsAsync()
+    {
+        var api = ShortApiClient();
+        if (!await api.IsReachableAsync())
+        {
+            return;
+        }
+
+        long[] clientIds;
+        using (var conn = _db.OpenConnection())
+        {
+            clientIds = conn.Query<long>("SELECT id FROM clients").ToArray();
+        }
+
+        var boot = new BootstrapSyncService(_db, api);
+        foreach (var id in clientIds)
+        {
+            await boot.PullAsync(id);
+        }
+    }
 
     /// <summary>
     /// Writes one setting to the server there and then, and says whether it landed.

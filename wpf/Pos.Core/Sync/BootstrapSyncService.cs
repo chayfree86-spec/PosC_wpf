@@ -260,8 +260,15 @@ public sealed class BootstrapSyncService
     }
 
     /// <summary>
-    /// The operators, mirrored from the server. Read-only here — staff are managed centrally,
-    /// and no credentials come down with them (the server sends name/role/contact only).
+    /// The operators, mirrored from the server. Read-only here — staff are managed centrally on
+    /// the dashboard. The server does send each user's bcrypt PIN hash so the till can check a
+    /// sign-in offline; the raw PIN is never transmitted or stored. A response that omits the PIN
+    /// (an older server) leaves the one already held in place rather than clearing it.
+    ///
+    /// Upsert only — it does not remove a local user the server has stopped listing. Deactivating
+    /// a user (is_active = 0) propagates because the row still arrives and its flag is copied;
+    /// a hard delete on the server does not, and that user could still sign in on this till until
+    /// the local row is cleared.
     /// </summary>
     private static void UpsertUsers(Microsoft.Data.Sqlite.SqliteConnection conn, System.Data.IDbTransaction tx,
         List<JsonElement> rows, long clientId)
