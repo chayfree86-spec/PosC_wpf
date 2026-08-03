@@ -407,6 +407,8 @@ FodyWeavers.xsd
 # Secrets / per-machine environment. Server par apna .env alag rehta hai.
 .env
 .env.*
+*.env
+**/*.env
 !.env.example
 
 # Local databases (asli data — kabhi commit nahi)

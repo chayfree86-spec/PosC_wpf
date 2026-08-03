@@ -415,35 +415,42 @@ public partial class SettingsViewModel : ObservableObject
         var device = _settings.GetJson<DeviceSnapshot>(DeviceSettingsKey);
         // No printer until somebody picks one. Defaulting to whatever the machine listed
         // first sent bills to "Microsoft Print to PDF", whose save dialog froze the till.
-        if (s == null && device == null) { SelectedPrinter = ""; return; }
-        s ??= new SettingsSnapshot();
         // Canonical key wins; the old single blob is only a fallback for installs that saved
         // before the profile moved there.
-        StoreName = Pick(profile?.Name, s.StoreName, StoreName);
-        StoreWebsite = Pick(profile?.Website, s.StoreWebsite, StoreWebsite);
-        StorePhone = Pick(profile?.ContactNumber, s.StorePhone, StorePhone);
-        StoreEmail = Pick(profile?.Email, s.StoreEmail, StoreEmail);
-        StoreGstNo = Pick(profile?.GstNumber, s.StoreGstNo, StoreGstNo);
-        StoreFoodLicenseNo = Pick(profile?.FoodLicenseNo, s.StoreFoodLicenseNo, StoreFoodLicenseNo);
-        StoreAddress = Pick(profile?.Address, s.StoreAddress, StoreAddress);
-        StoreLogoUrl = Pick(profile?.Logo, s.StoreLogoUrl, StoreLogoUrl);
-        ShowNameOnBill = s.ShowNameOnBill;
-        ShowWebsiteOnBill = s.ShowWebsiteOnBill;
-        ShowPhoneOnBill = s.ShowPhoneOnBill;
-        ShowEmailOnBill = s.ShowEmailOnBill;
-        ShowAddressOnBill = s.ShowAddressOnBill;
-        ShowGstOnBill = s.ShowGstOnBill;
-        ShowFoodLicenseOnBill = s.ShowFoodLicenseOnBill;
-        UpiId = Pick(upi?.UpiId, s.UpiId, UpiId);
-        UpiName = Pick(upi?.UpiName, s.UpiName, UpiName);
-        UpiPhone = Pick(upi?.UpiPhone, s.UpiPhone, UpiPhone);
-        PrintQrCodeOnBill = upi?.PrintQrCode ?? s.PrintQrCodeOnBill;
-        DailyResetBillCounter = _settings.GetJsonForClient<bool?>(DailyResetKey) ?? s.DailyResetBillCounter;
+        StoreName = Pick(profile?.Name, s?.StoreName, StoreName);
+        StoreWebsite = Pick(profile?.Website, s?.StoreWebsite, StoreWebsite);
+        StorePhone = Pick(profile?.ContactNumber, s?.StorePhone, StorePhone);
+        StoreEmail = Pick(profile?.Email, s?.StoreEmail, StoreEmail);
+        StoreGstNo = Pick(profile?.GstNumber, s?.StoreGstNo, StoreGstNo);
+        StoreFoodLicenseNo = Pick(profile?.FoodLicenseNo, s?.StoreFoodLicenseNo, StoreFoodLicenseNo);
+        StoreAddress = Pick(profile?.Address, s?.StoreAddress, StoreAddress);
+        StoreLogoUrl = Pick(profile?.Logo, s?.StoreLogoUrl, StoreLogoUrl);
 
-        var printer = device?.SelectedPrinter ?? s.SelectedPrinter;
-        PaperSize = device?.PaperSize ?? s.PaperSize ?? PaperSize;
-        PrintCopies = (device?.PrintCopies ?? s.PrintCopies) <= 0 ? 1 : (device?.PrintCopies ?? s.PrintCopies);
-        QrImagePath = device?.QrImagePath ?? s.QrImagePath ?? QrImagePath;
+        if (s != null)
+        {
+            ShowNameOnBill = s.ShowNameOnBill;
+            ShowWebsiteOnBill = s.ShowWebsiteOnBill;
+            ShowPhoneOnBill = s.ShowPhoneOnBill;
+            ShowEmailOnBill = s.ShowEmailOnBill;
+            ShowAddressOnBill = s.ShowAddressOnBill;
+            ShowGstOnBill = s.ShowGstOnBill;
+            ShowFoodLicenseOnBill = s.ShowFoodLicenseOnBill;
+            DailyResetBillCounter = _settings.GetJsonForClient<bool?>(DailyResetKey) ?? s.DailyResetBillCounter;
+        }
+        else
+        {
+            DailyResetBillCounter = _settings.GetJsonForClient<bool?>(DailyResetKey) ?? false;
+        }
+
+        UpiId = Pick(upi?.UpiId, s?.UpiId, UpiId);
+        UpiName = Pick(upi?.UpiName, s?.UpiName, UpiName);
+        UpiPhone = Pick(upi?.UpiPhone, s?.UpiPhone, UpiPhone);
+        PrintQrCodeOnBill = upi?.PrintQrCode ?? s?.PrintQrCodeOnBill ?? true;
+
+        var printer = device?.SelectedPrinter ?? s?.SelectedPrinter;
+        PaperSize = device?.PaperSize ?? s?.PaperSize ?? PaperSize;
+        PrintCopies = (device?.PrintCopies ?? s?.PrintCopies ?? 0) <= 0 ? 1 : (device?.PrintCopies ?? s?.PrintCopies ?? 1);
+        QrImagePath = device?.QrImagePath ?? s?.QrImagePath ?? QrImagePath;
         SelectedPrinter = !string.IsNullOrEmpty(printer) && AvailablePrinters.Contains(printer) ? printer : "";
     }
 

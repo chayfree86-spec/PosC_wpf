@@ -23,6 +23,22 @@
     <Resource Include="Fonts\*.ttf" />
   </ItemGroup>
 
+  <!-- Point Release builds at the live server. deploy.env is copied into the build/publish
+       output as ".env", which the app reads on startup (see DotEnv / SyncCoordinator.ApiUrl).
+       Debug builds skip this and keep the local development default, so nothing here disturbs
+       day-to-day work on 127.0.0.1. -->
+  <Target Name="CopyDeployEnvToOutput" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <Copy SourceFiles="deploy.env" DestinationFiles="$(OutDir).env" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyDeployEnvToPublish" AfterTargets="Publish" Condition="'$(Configuration)' == 'Release'">
+    <Copy SourceFiles="deploy.env" DestinationFiles="$(PublishDir).env" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Local .env file copy target for development/debug builds -->
+  <Target Name="CopyLocalEnvToOutput" AfterTargets="Build" Condition="Exists('.env')">
+    <Copy SourceFiles=".env" DestinationFiles="$(OutDir).env" SkipUnchangedFiles="true" />
+  </Target>
+
   <ItemGroup>
     <!-- WPF's default is to render text selection through an adorner, which paints the
          highlight *over* the text and ignores SelectionTextBrush — selected text vanishes

@@ -1,3 +1,4 @@
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
@@ -45,10 +46,21 @@ public sealed class PosApiClient
 
     public async Task<JsonElement?> GetAsync(string path, CancellationToken ct = default)
     {
-        var response = await _http.GetAsync(Url(path), ct);
-        response.EnsureSuccessStatusCode();
-        var json = await response.Content.ReadAsStringAsync(ct);
-        return string.IsNullOrWhiteSpace(json) ? null : JsonDocument.Parse(json).RootElement.Clone();
+        var url = Url(path);
+        LogRequest("GET", url);
+        try
+        {
+            var response = await _http.GetAsync(url, ct);
+            var json = await response.Content.ReadAsStringAsync(ct);
+            LogResponse("GET", url, response.StatusCode, json);
+            response.EnsureSuccessStatusCode();
+            return string.IsNullOrWhiteSpace(json) ? null : JsonDocument.Parse(json).RootElement.Clone();
+        }
+        catch (Exception ex)
+        {
+            LogError("GET", url, ex);
+            throw;
+        }
     }
 
     /// <summary>Posts a raw JSON body. Throws with the server's message so the queue row can
@@ -76,38 +88,60 @@ public sealed class PosApiClient
     /// <summary>Deletes a catalog row. No body — the id is in the path.</summary>
     public async Task<JsonElement?> DeleteAsync(string path, CancellationToken ct = default)
     {
-        var response = await _http.DeleteAsync(Url(path), ct);
-        var body = await response.Content.ReadAsStringAsync(ct);
-        if (!response.IsSuccessStatusCode)
+        var url = Url(path);
+        LogRequest("DELETE", url);
+        try
         {
-            throw new HttpRequestException($"HTTP {(int)response.StatusCode}: {Trim(body)}");
+            var response = await _http.DeleteAsync(url, ct);
+            var body = await response.Content.ReadAsStringAsync(ct);
+            LogResponse("DELETE", url, response.StatusCode, body);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"HTTP {(int)response.StatusCode}: {Trim(body)}");
+            }
+            return string.IsNullOrWhiteSpace(body) ? null : JsonDocument.Parse(body).RootElement.Clone();
         }
-        return string.IsNullOrWhiteSpace(body) ? null : JsonDocument.Parse(body).RootElement.Clone();
+        catch (Exception ex)
+        {
+            LogError("DELETE", url, ex);
+            throw;
+        }
     }
 
     private async Task<JsonElement?> SendJsonAsync(HttpMethod method, string path, string json, CancellationToken ct,
         long? clientIdOverride = null)
     {
-        using var request = new HttpRequestMessage(method, Url(path))
+        var url = Url(path);
+        LogRequest(method.Method, url, json);
+        try
         {
-            Content = new StringContent(json, Encoding.UTF8, "application/json")
-        };
-        if (clientIdOverride is > 0 && clientIdOverride != ClientId)
-        {
-            // Set on the request, which is what HttpClient sends instead of the default of the
-            // same name. The slug header still names the client this object was built for, but
-            // the server resolves X-Client-Id before it looks at the slug, so this wins.
-            request.Headers.Add("X-Client-Id", clientIdOverride.Value.ToString());
-        }
-        var response = await _http.SendAsync(request, ct);
-        var body = await response.Content.ReadAsStringAsync(ct);
+            using var request = new HttpRequestMessage(method, url)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+            if (clientIdOverride is > 0 && clientIdOverride != ClientId)
+            {
+                // Set on the request, which is what HttpClient sends instead of the default of the
+                // same name. The slug header still names the client this object was built for, but
+                // the server resolves X-Client-Id before it looks at the slug, so this wins.
+                request.Headers.Add("X-Client-Id", clientIdOverride.Value.ToString());
+            }
+            var response = await _http.SendAsync(request, ct);
+            var body = await response.Content.ReadAsStringAsync(ct);
+            LogResponse(method.Method, url, response.StatusCode, body);
 
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new HttpRequestException($"HTTP {(int)response.StatusCode}: {Trim(body)}");
-        }
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"HTTP {(int)response.StatusCode}: {Trim(body)}");
+            }
 
-        return string.IsNullOrWhiteSpace(body) ? null : JsonDocument.Parse(body).RootElement.Clone();
+            return string.IsNullOrWhiteSpace(body) ? null : JsonDocument.Parse(body).RootElement.Clone();
+        }
+        catch (Exception ex)
+        {
+            LogError(method.Method, url, ex);
+            throw;
+        }
     }
 
     /// <summary>True when the API answers at all — used to decide whether syncing is worth
@@ -130,4 +164,57 @@ public sealed class PosApiClient
 
     private static string Trim(string s) =>
         string.IsNullOrEmpty(s) ? "" : (s.Length > 300 ? s[..300] : s).Replace('\n', ' ').Replace('\r', ' ');
+
+    private static void LogRequest(string method, string url, string? body = null)
+    {
+        var logLine = $"[{DateTime.Now:HH:mm:ss.fff}] [API REQ] {method} {url}";
+        if (body != null)
+        {
+            logLine += $" | Body: {Trim(body)}";
+        }
+        System.Diagnostics.Debug.WriteLine(logLine);
+        Console.WriteLine(logLine);
+        WriteToFile(logLine);
+    }
+
+    private static void LogResponse(string method, string url, System.Net.HttpStatusCode status, string? responseBody = null)
+    {
+        var logLine = $"[{DateTime.Now:HH:mm:ss.fff}] [API RES] {method} {url} -> {(int)status} {status}";
+        if (responseBody != null)
+        {
+            logLine += $" | Response: {Trim(responseBody)}";
+        }
+        System.Diagnostics.Debug.WriteLine(logLine);
+        Console.WriteLine(logLine);
+        WriteToFile(logLine);
+    }
+
+    private static void LogError(string method, string url, Exception ex)
+    {
+        var logLine = $"[{DateTime.Now:HH:mm:ss.fff}] [API ERR] {method} {url} -> {ex.Message}";
+        System.Diagnostics.Debug.WriteLine(logLine);
+        Console.WriteLine(logLine);
+        WriteToFile(logLine);
+    }
+
+    private static void WriteToFile(string logLine)
+    {
+        try
+        {
+            var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            if (!string.IsNullOrEmpty(documents))
+            {
+                var dir = Path.Combine(documents, "ChayChaupalPOS");
+                if (Directory.Exists(dir))
+                {
+                    var file = Path.Combine(dir, "api_debug.log");
+                    File.AppendAllText(file, logLine + Environment.NewLine);
+                }
+            }
+        }
+        catch
+        {
+            // Ignore logging errors to prevent crash
+        }
+    }
 }

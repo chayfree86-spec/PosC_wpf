@@ -3,7 +3,7 @@
 
   RewriteEngine On
 
-  RewriteRule ^api/menu(/.*)?$ - [L]
+  RewriteRule ^api/report(/.*)?$ - [L]
   RewriteRule ^api/mobilemenu(/.*)?$ - [L]
 
   RewriteRule ^api/?$ index.php [QSA,L]
