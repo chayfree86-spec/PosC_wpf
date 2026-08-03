@@ -469,3 +469,4 @@ api/menu/test_backend.php
 
 # Server-side runtime state (migration lock/log/cache)
 storage/
+wpf/dist-final/

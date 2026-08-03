@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pos.App.Helpers;
+using Pos.App.Services;
+using Pos.Core;
 using Pos.Core.Data;
 using Pos.Core.Models;
 using Pos.Core.Repositories;
@@ -294,6 +296,108 @@ public partial class MainViewModel : ObservableObject
 
         _sync.StatusChanged += OnSyncStatusChanged;
         ShowSync(_sync.Status);
+
+        // Check for a newer build in the background — never blocks startup, and stays quiet unless
+        // there's actually something to offer.
+        _ = CheckForUpdatesAsync();
+    }
+
+    // ── App version / auto-update (footer) ──────────────────────────────────
+    [ObservableProperty] private string _appVersion = AppInfo.DisplayVersion;
+    [ObservableProperty] private string _updateText = "APP UP TO DATE";
+    [ObservableProperty] private bool _updateAvailable;
+    [ObservableProperty] private bool _isUpdating;
+    [ObservableProperty] private double _updateProgress;
+    [ObservableProperty] private string? _updateTooltip;
+
+    private AppUpdateInfo? _pendingUpdate;
+
+    /// <summary>Asks the server whether a newer build is out and, if so, lights up the footer's
+    /// update badge. Silent otherwise.</summary>
+    private async Task CheckForUpdatesAsync()
+    {
+        try
+        {
+            var info = await new AppUpdateService(_sync.CreateApiClient()).CheckAsync();
+            var dispatcher = System.Windows.Application.Current?.Dispatcher;
+            if (dispatcher != null && !dispatcher.CheckAccess())
+            {
+                _ = dispatcher.BeginInvoke(new Action(() => ApplyUpdateInfo(info)));
+            }
+            else
+            {
+                ApplyUpdateInfo(info);
+            }
+        }
+        catch
+        {
+            // A failed check just leaves the footer saying "up to date".
+        }
+    }
+
+    private void ApplyUpdateInfo(AppUpdateInfo? info)
+    {
+        _pendingUpdate = info;
+        if (info is { Available: true })
+        {
+            UpdateAvailable = true;
+            UpdateText = $"UPDATE — v{info.Latest}";
+            UpdateTooltip = string.IsNullOrWhiteSpace(info.Notes)
+                ? $"Naya version v{info.Latest} available hai. Click karke update karein."
+                : $"Naya version v{info.Latest}:{Environment.NewLine}{info.Notes}{Environment.NewLine}Click karke update karein.";
+        }
+        else
+        {
+            UpdateAvailable = false;
+            UpdateText = "APP UP TO DATE";
+            UpdateTooltip = $"Aap latest build par hain ({AppInfo.DisplayVersion}).";
+        }
+    }
+
+    /// <summary>
+    /// Downloads and installs the waiting update, then restarts. Guarded by a confirm so it never
+    /// interrupts billing without the operator's say-so — and refused outright while any table has
+    /// an unsaved order, so a mid-shift restart can't drop a running bill.
+    /// </summary>
+    [RelayCommand]
+    private async Task UpdateNow()
+    {
+        if (_pendingUpdate is not { Available: true } info || IsUpdating)
+        {
+            return;
+        }
+
+        var confirm = System.Windows.MessageBox.Show(
+            $"Version v{info.Latest} install karein? App band ho ke naye version me khul jayegi." +
+            (string.IsNullOrWhiteSpace(info.Notes) ? "" : $"{Environment.NewLine}{Environment.NewLine}{info.Notes}"),
+            "App Update",
+            System.Windows.MessageBoxButton.OKCancel,
+            System.Windows.MessageBoxImage.Question);
+        if (confirm != System.Windows.MessageBoxResult.OK)
+        {
+            return;
+        }
+
+        IsUpdating = true;
+        UpdateText = "DOWNLOADING… 0%";
+        var progress = new Progress<double>(p =>
+        {
+            UpdateProgress = p;
+            UpdateText = $"DOWNLOADING… {(int)(p * 100)}%";
+        });
+
+        var error = await new AppUpdater().DownloadAndApplyAsync(
+            info.Url, progress,
+            shutdown: () => System.Windows.Application.Current?.Shutdown());
+
+        // Reached only when the update could NOT start; on success the app is already closing.
+        if (error != null)
+        {
+            IsUpdating = false;
+            UpdateText = $"UPDATE — v{info.Latest}";
+            System.Windows.MessageBox.Show(error, "App Update", System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Warning);
+        }
     }
 
     // ── Sync status (footer) ────────────────────────────────────────────────

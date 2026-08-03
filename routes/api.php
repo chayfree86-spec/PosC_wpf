@@ -24,6 +24,19 @@ $apiStatus = fn () => success_response([
 $router->get('/api', $apiStatus);
 $router->get('/api/', $apiStatus);
 $router->get('/api/health', fn () => success_response(['status' => 'ok']));
+
+// The WPF app's auto-update manifest: the latest published build's version, its download URL and
+// a short "what's new". Editing config/app-version.json (bump the version, point url at the new
+// build's zip) is all it takes to roll an update out — no code deploy. A newer version here than
+// a till is running lights up its "Update" badge.
+$router->get('/api/app-version', function (): void {
+    $file = dirname(__DIR__) . '/config/app-version.json';
+    $manifest = is_file($file) ? json_decode((string) file_get_contents($file), true) : null;
+    if (!is_array($manifest) || !isset($manifest['version'])) {
+        $manifest = ['version' => '3.0.0', 'url' => '', 'notes' => '', 'mandatory' => false];
+    }
+    success_response($manifest);
+});
 $router->get('/api/bootstrap', [SyncController::class, 'bootstrap']);
 $router->get('/api/system-printers', [PrintController::class, 'printers']);
 $router->post('/api/print', [PrintController::class, 'print']);
