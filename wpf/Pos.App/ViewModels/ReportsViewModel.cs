@@ -34,6 +34,18 @@ public partial class ReportsViewModel : ObservableObject
 
     public ObservableCollection<ReportRow> Orders { get; } = new();   // current page
 
+    /// <summary>The category-wise breakdown, one group per category, each holding its items.</summary>
+    public ObservableCollection<CategorySalesGroup> CategorySales { get; } = new();
+
+    /// <summary>The full, unfiltered item rollup for the period; the category tab's filters are
+    /// applied over this so switching a dropdown never needs another fetch.</summary>
+    private IReadOnlyList<CategoryItemSale> _categoryRaw = new List<CategoryItemSale>();
+
+    /// <summary>Dropdown options for the category tab. "All" plus every category / sub-category
+    /// present in the period; the sub-category list narrows to the picked category.</summary>
+    public ObservableCollection<string> CategoryFilterOptions { get; } = new();
+    public ObservableCollection<string> SubCategoryFilterOptions { get; } = new();
+
     /// <summary>"All" plus each business on the till, for the counter filter.</summary>
     public ObservableCollection<ReportCounter> Counters { get; } = new();
 
@@ -50,6 +62,39 @@ public partial class ReportsViewModel : ObservableObject
     [ObservableProperty] private DateTime _customEnd = DateTime.Today;
     [ObservableProperty] private int _currentPage;
     [ObservableProperty] private ReportCounter? _selectedCounter;
+
+    /// <summary>Which tab of the log panel is showing: false = Order Log, true = category-wise
+    /// items. <see cref="ShowOrderLog"/> is the inverse so each panel can bind its own visibility
+    /// without an inverting converter.</summary>
+    [ObservableProperty] private bool _showCategoryView;
+
+    public bool ShowOrderLog => !ShowCategoryView;
+    partial void OnShowCategoryViewChanged(bool value) => OnPropertyChanged(nameof(ShowOrderLog));
+
+    private const string AllFilter = "All";
+
+    /// <summary>The category tab's own filters — a category, a sub-category within it, and a name
+    /// search — applied together over <see cref="_categoryRaw"/>.</summary>
+    [ObservableProperty] private string _selectedCategoryFilter = AllFilter;
+    [ObservableProperty] private string _selectedSubCategoryFilter = AllFilter;
+    [ObservableProperty] private string _categorySearch = "";
+
+    partial void OnSelectedCategoryFilterChanged(string value)
+    {
+        RebuildSubCategoryOptions();
+        RebuildCategoryGroups();
+    }
+
+    partial void OnSelectedSubCategoryFilterChanged(string value) => RebuildCategoryGroups();
+    partial void OnCategorySearchChanged(string value) => RebuildCategoryGroups();
+
+    /// <summary>Header shown above the category breakdown — how many item lines it covers.</summary>
+    public string CategoryCountText => $"{CategorySales.Count} categories";
+    public bool HasCategorySales => CategorySales.Count > 0;
+    public bool HasNoCategorySales => CategorySales.Count == 0;
+
+    [RelayCommand] private void SelectOrderLog() => ShowCategoryView = false;
+    [RelayCommand] private void SelectCategoryView() => ShowCategoryView = true;
 
     public string PeriodDisplay => $"{Fmt(StartDate)}   to   {Fmt(EndDate)}";
     public int OrderCount => _filtered.Count;
@@ -308,6 +353,9 @@ public partial class ReportsViewModel : ObservableObject
                     TotalBills = _all.Count.ToString();
                 }
 
+                // Category-wise tab: the server already rolls up every sold item with its category
+                // for the same range ("all_sold_items"), so the breakdown matches the log's totals.
+                PopulateCategorySales(ParseServerSoldItems(data));
                 loadedFromServer = true;
             }
         }
@@ -328,10 +376,180 @@ public partial class ReportsViewModel : ObservableObject
             {
                 _all.Add(new ReportRow(o, PrefixFor(o.ClientId)));
             }
+
+            // Offline / local: read the breakdown from the till's own stored line items.
+            PopulateCategorySales(_repo.GetCategoryItemSales(StartDate, EndDate, clientId: clientId));
         }
 
         ApplyFilter();
     }
+
+    /// <summary>
+    /// The server's full "every item sold in the range" rollup, tagged with each item's category —
+    /// the data behind the category-wise tab when the report came from the server. One entry per
+    /// item, already summed, so it lines up with the log's revenue.
+    /// </summary>
+    private static IReadOnlyList<CategoryItemSale> ParseServerSoldItems(JsonElement data)
+    {
+        var list = new List<CategoryItemSale>();
+        if (!data.TryGetProperty("all_sold_items", out var sold) || sold.ValueKind != JsonValueKind.Array)
+        {
+            return list;
+        }
+
+        foreach (var it in sold.EnumerateArray())
+        {
+            if (it.ValueKind != JsonValueKind.Object)
+            {
+                continue;
+            }
+            var qty = JsonLong(it, "qty");
+            list.Add(new CategoryItemSale
+            {
+                CategoryName = JsonStr(it, "category") is { Length: > 0 } c ? c : "Other",
+                SubCategoryName = JsonStr(it, "sub_category"),
+                ItemName = JsonStr(it, "name") is { Length: > 0 } n ? n : "Item",
+                Qty = qty > 0 ? qty : 1,
+                Amount = JsonDouble(it, "amount"),
+            });
+        }
+        return list;
+    }
+
+    private static string JsonStr(JsonElement e, string name) =>
+        e.TryGetProperty(name, out var v) && v.ValueKind is not (JsonValueKind.Null or JsonValueKind.Undefined)
+            ? (v.ValueKind == JsonValueKind.String ? v.GetString() ?? "" : v.ToString())
+            : "";
+
+    private static long JsonLong(JsonElement e, string name)
+    {
+        if (!e.TryGetProperty(name, out var v)) return 0;
+        if (v.ValueKind == JsonValueKind.Number) return v.TryGetInt64(out var n) ? n : (long)v.GetDouble();
+        return long.TryParse(JsonStr(e, name), NumberStyles.Any, CultureInfo.InvariantCulture, out var p) ? p : 0;
+    }
+
+    private static double JsonDouble(JsonElement e, string name)
+    {
+        if (!e.TryGetProperty(name, out var v)) return 0;
+        if (v.ValueKind == JsonValueKind.Number) return v.GetDouble();
+        return double.TryParse(JsonStr(e, name), NumberStyles.Any, CultureInfo.InvariantCulture, out var p) ? p : 0;
+    }
+
+    /// <summary>While true the filter setters don't rebuild the list — used to load raw data and
+    /// reset the dropdowns in one go, then rebuild once at the end.</summary>
+    private bool _suspendCategoryRebuild;
+
+    /// <summary>
+    /// Takes a fresh period's item rollup, refreshes the category tab's dropdown options (keeping
+    /// the user's current pick if it still exists), then draws the filtered list.
+    /// </summary>
+    private void PopulateCategorySales(IReadOnlyList<CategoryItemSale> raw)
+    {
+        _categoryRaw = raw;
+        _suspendCategoryRebuild = true;
+
+        // Category options: "All" plus each category present, biggest earner first.
+        var cats = raw
+            .GroupBy(x => CatKey(x))
+            .OrderByDescending(g => g.Sum(y => y.Amount))
+            .Select(g => g.Key)
+            .ToList();
+        CategoryFilterOptions.Clear();
+        CategoryFilterOptions.Add(AllFilter);
+        foreach (var c in cats)
+        {
+            CategoryFilterOptions.Add(c);
+        }
+        if (!CategoryFilterOptions.Contains(SelectedCategoryFilter))
+        {
+            SelectedCategoryFilter = AllFilter;
+        }
+
+        RebuildSubCategoryOptions();
+
+        _suspendCategoryRebuild = false;
+        RebuildCategoryGroups();
+    }
+
+    /// <summary>Sub-category dropdown for the currently picked category ("All" while no specific
+    /// category is chosen, since sub-categories only make sense within one).</summary>
+    private void RebuildSubCategoryOptions()
+    {
+        SubCategoryFilterOptions.Clear();
+        SubCategoryFilterOptions.Add(AllFilter);
+
+        if (SelectedCategoryFilter != AllFilter)
+        {
+            var subs = _categoryRaw
+                .Where(x => CatKey(x) == SelectedCategoryFilter && !string.IsNullOrWhiteSpace(x.SubCategoryName))
+                .Select(x => x.SubCategoryName)
+                .Distinct()
+                .OrderBy(s => s);
+            foreach (var s in subs)
+            {
+                SubCategoryFilterOptions.Add(s);
+            }
+        }
+
+        if (!SubCategoryFilterOptions.Contains(SelectedSubCategoryFilter))
+        {
+            SelectedSubCategoryFilter = AllFilter;
+        }
+    }
+
+    /// <summary>
+    /// Draws the category tab from <see cref="_categoryRaw"/> under the current filters: category,
+    /// sub-category and a name search. With no category picked the groups are the categories; pick
+    /// one and it drills in, the groups becoming that category's sub-categories.
+    /// </summary>
+    private void RebuildCategoryGroups()
+    {
+        if (_suspendCategoryRebuild)
+        {
+            return;
+        }
+
+        var q = (CategorySearch ?? "").Trim().ToLowerInvariant();
+        var allCat = SelectedCategoryFilter is null or AllFilter;
+        var allSub = SelectedSubCategoryFilter is null or AllFilter;
+
+        var filtered = _categoryRaw.Where(x =>
+            (allCat || CatKey(x) == SelectedCategoryFilter)
+            && (allSub || x.SubCategoryName == SelectedSubCategoryFilter)
+            && (q.Length == 0 || x.ItemName.ToLowerInvariant().Contains(q)));
+
+        // Group by category normally; once inside a category, group by its sub-categories.
+        Func<CategoryItemSale, string> key = allCat
+            ? CatKey
+            : x => string.IsNullOrWhiteSpace(x.SubCategoryName) ? "(No sub-category)" : x.SubCategoryName;
+
+        var groups = filtered
+            .GroupBy(key)
+            .Select(g => new CategorySalesGroup(
+                g.Key,
+                g.Sum(x => x.Qty),
+                g.Sum(x => x.Amount),
+                g.GroupBy(x => x.ItemName)
+                    .Select(itemG => new CategoryItemRow(itemG.Key, itemG.Sum(y => y.Qty), itemG.Sum(y => y.Amount)))
+                    .OrderByDescending(i => i.Qty)
+                    .ToList()))
+            .OrderByDescending(g => g.TotalAmount)
+            .ToList();
+
+        CategorySales.Clear();
+        foreach (var g in groups)
+        {
+            CategorySales.Add(g);
+        }
+        OnPropertyChanged(nameof(CategoryCountText));
+        OnPropertyChanged(nameof(HasCategorySales));
+        OnPropertyChanged(nameof(HasNoCategorySales));
+    }
+
+    /// <summary>An item's category name, with the blank/unknown case folded to "Other" so it never
+    /// splits into two groups.</summary>
+    private static string CatKey(CategoryItemSale x)
+        => string.IsNullOrWhiteSpace(x.CategoryName) ? "Other" : x.CategoryName;
 
     /// <summary>This client's bill prefix, resolved once and cached — one lookup per business
     /// even when "All" mixes several into the same page.</summary>
@@ -440,4 +658,43 @@ public sealed class ReportRow
         TableText = string.IsNullOrWhiteSpace(o.TableNumber) ? "—" : o.TableNumber!;
         TotalText = "₹" + o.TotalAmount.ToString("0.##", CultureInfo.InvariantCulture);
     }
+}
+
+/// <summary>One category on the category-wise tab: its total for the period and the items under
+/// it, biggest sellers first.</summary>
+public sealed class CategorySalesGroup
+{
+    public CategorySalesGroup(string name, long totalQty, double totalAmount, IReadOnlyList<CategoryItemRow> items)
+    {
+        CategoryName = name;
+        TotalQty = totalQty;
+        TotalAmount = totalAmount;
+        Items = items;
+    }
+
+    public string CategoryName { get; }
+    public long TotalQty { get; }
+    public double TotalAmount { get; }
+    public IReadOnlyList<CategoryItemRow> Items { get; }
+
+    public string QtyText => $"{TotalQty} qty";
+    public string AmountText => "₹" + TotalAmount.ToString("N0", CultureInfo.InvariantCulture);
+}
+
+/// <summary>One item line inside a category group.</summary>
+public sealed class CategoryItemRow
+{
+    public CategoryItemRow(string name, long qty, double amount)
+    {
+        Name = name;
+        Qty = qty;
+        Amount = amount;
+    }
+
+    public string Name { get; }
+    public long Qty { get; }
+    public double Amount { get; }
+
+    public string QtyText => $"{Qty}";
+    public string AmountText => "₹" + Amount.ToString("N0", CultureInfo.InvariantCulture);
 }

@@ -30,6 +30,27 @@
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="FontWeight" Value="Bold"/>
         </Style>
+        <!-- Tab pill for switching Order Log / Category Items -->
+        <Style x:Key="TabBtn" TargetType="Button">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Padding" Value="18,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="8" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid Margin="24">
@@ -166,15 +187,42 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- header + search -->
-                <Grid Grid.Row="0" Margin="0,0,0,12">
-                    <TextBlock Text="{Binding OrderCount, StringFormat='Order Log ({0})'}" Foreground="White" FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <Border Width="320" HorizontalAlignment="Right" Background="{StaticResource WindowBg}" CornerRadius="10" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="12,7">
+                <!-- tab strip + search -->
+                <Grid Grid.Row="0" Margin="0,0,0,14">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="📋  Order Log" Command="{Binding SelectOrderLogCommand}" Margin="0,0,8,0">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource TabBtn}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ShowOrderLog}" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource AccentFaint}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource AccentText}"/>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button Content="🍽  Category Items" Command="{Binding SelectCategoryViewCommand}">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource TabBtn}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ShowCategoryView}" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource AccentFaint}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource AccentText}"/>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </StackPanel>
+                    <!-- search (Order Log only) -->
+                    <Border Width="320" HorizontalAlignment="Right" Background="{StaticResource WindowBg}" CornerRadius="10" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="12,7"
+                            Visibility="{Binding ShowOrderLog, Converter={StaticResource BoolToVis}}">
                         <Grid>
                             <TextBlock Text="🔍  सर्च करें (Bill#, Table, Amt, Name...)" Foreground="{StaticResource TextFaint}" FontSize="12" VerticalAlignment="Center"
                                        Visibility="{Binding SearchTerm, Converter={StaticResource StringToVis}}"/>
@@ -183,68 +231,163 @@
                     </Border>
                 </Grid>
 
-                <!-- column headers -->
-                <Grid Grid.Row="1" Margin="4,0,4,8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="150"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="160"/>
-                        <ColumnDefinition Width="100"/>
-                        <ColumnDefinition Width="120"/>
-                        <ColumnDefinition Width="170"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="BILL #" Style="{StaticResource ColHead}"/>
-                    <TextBlock Grid.Column="1" Text="DATE" Style="{StaticResource ColHead}"/>
-                    <TextBlock Grid.Column="2" Text="STAFF" Style="{StaticResource ColHead}"/>
-                    <TextBlock Grid.Column="3" Text="TABLE" Style="{StaticResource ColHead}"/>
-                    <TextBlock Grid.Column="4" Text="TOTAL" Style="{StaticResource ColHead}" HorizontalAlignment="Right"/>
-                    <TextBlock Grid.Column="5" Text="ACTION" Style="{StaticResource ColHead}" HorizontalAlignment="Right"/>
+                <!-- ========================= ORDER LOG PANEL ========================= -->
+                <Grid Grid.Row="1" Visibility="{Binding ShowOrderLog, Converter={StaticResource BoolToVis}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- column headers (Staff column removed) -->
+                    <Grid Grid.Row="0" Margin="4,0,4,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="170"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="BILL #" Style="{StaticResource ColHead}"/>
+                        <TextBlock Grid.Column="1" Text="DATE" Style="{StaticResource ColHead}"/>
+                        <TextBlock Grid.Column="2" Text="TABLE" Style="{StaticResource ColHead}"/>
+                        <TextBlock Grid.Column="3" Text="TOTAL" Style="{StaticResource ColHead}" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="4" Text="ACTION" Style="{StaticResource ColHead}" HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <!-- rows -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Orders}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="4,10" BorderBrush="{StaticResource BorderSoft}" BorderThickness="0,0,0,1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="170"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding BillNoText}" Foreground="White" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding DateText}" Foreground="{StaticResource TextMuted}" FontSize="13" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding TableText}" Foreground="{StaticResource TextMuted}" FontSize="13" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding TotalText}" Foreground="{DynamicResource Accent}" FontSize="15" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                <Button Content="📒 Khata" Click="AddToLedger_Click" Tag="{Binding}" Cursor="Hand"
+                                                        Height="30" Padding="12,0" Margin="0,0,8,0" Background="{StaticResource CardBg2}" Foreground="{DynamicResource AccentText}" FontWeight="Bold" FontSize="12" BorderThickness="1" BorderBrush="{StaticResource Border}"
+                                                        ToolTip="Is bill ko customer ke khaate (udhaar) me daalein"/>
+                                                <Button Content="View" Click="ViewBill_Click" Cursor="Hand"
+                                                        Height="30" Padding="14,0" Background="{StaticResource CardBg2}" Foreground="{DynamicResource Accent}" FontWeight="Bold" FontSize="12" BorderThickness="1" BorderBrush="{StaticResource Border}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- pagination -->
+                    <Grid Grid.Row="2" Margin="0,12,0,0">
+                        <TextBlock Text="{Binding ExportMessage}" Foreground="{DynamicResource Accent}" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Content="‹ Prev" Command="{Binding PrevPageCommand}" Height="32" Padding="14,0" Cursor="Hand"
+                                    Background="{StaticResource CardBg2}" Foreground="{StaticResource TextPrimary}" FontWeight="SemiBold" FontSize="12" BorderThickness="1" BorderBrush="{StaticResource Border}"/>
+                            <TextBlock Text="{Binding PageInfo}" Foreground="{StaticResource TextMuted}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Margin="14,0"/>
+                            <Button Content="Next ›" Command="{Binding NextPageCommand}" Height="32" Padding="14,0" Cursor="Hand"
+                                    Background="{StaticResource CardBg2}" Foreground="{StaticResource TextPrimary}" FontWeight="SemiBold" FontSize="12" BorderThickness="1" BorderBrush="{StaticResource Border}"/>
+                        </StackPanel>
+                    </Grid>
                 </Grid>
 
-                <!-- rows -->
-                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding Orders}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Padding="4,10" BorderBrush="{StaticResource BorderSoft}" BorderThickness="0,0,0,1">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="150"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="160"/>
-                                            <ColumnDefinition Width="100"/>
-                                            <ColumnDefinition Width="120"/>
-                                            <ColumnDefinition Width="170"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="{Binding BillNoText}" Foreground="White" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding DateText}" Foreground="{StaticResource TextMuted}" FontSize="13" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="2" Text="{Binding StaffText}" Foreground="{StaticResource TextMuted}" FontSize="13" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <TextBlock Grid.Column="3" Text="{Binding TableText}" Foreground="{StaticResource TextMuted}" FontSize="13" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="4" Text="{Binding TotalText}" Foreground="{DynamicResource Accent}" FontSize="15" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                                        <StackPanel Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                            <Button Content="📒 Khata" Click="AddToLedger_Click" Tag="{Binding}" Cursor="Hand"
-                                                    Height="30" Padding="12,0" Margin="0,0,8,0" Background="{StaticResource CardBg2}" Foreground="{DynamicResource AccentText}" FontWeight="Bold" FontSize="12" BorderThickness="1" BorderBrush="{StaticResource Border}"
-                                                    ToolTip="Is bill ko customer ke khaate (udhaar) me daalein"/>
-                                            <Button Content="View" Click="ViewBill_Click" Cursor="Hand"
-                                                    Height="30" Padding="14,0" Background="{StaticResource CardBg2}" Foreground="{DynamicResource Accent}" FontWeight="Bold" FontSize="12" BorderThickness="1" BorderBrush="{StaticResource Border}"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                <!-- ====================== CATEGORY-WISE ITEMS PANEL ====================== -->
+                <Grid Grid.Row="1" Visibility="{Binding ShowCategoryView, Converter={StaticResource BoolToVis}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                <!-- pagination -->
-                <Grid Grid.Row="3" Margin="0,12,0,0">
-                    <TextBlock Text="{Binding ExportMessage}" Foreground="{DynamicResource Accent}" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Button Content="‹ Prev" Command="{Binding PrevPageCommand}" Height="32" Padding="14,0" Cursor="Hand"
-                                Background="{StaticResource CardBg2}" Foreground="{StaticResource TextPrimary}" FontWeight="SemiBold" FontSize="12" BorderThickness="1" BorderBrush="{StaticResource Border}"/>
-                        <TextBlock Text="{Binding PageInfo}" Foreground="{StaticResource TextMuted}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Margin="14,0"/>
-                        <Button Content="Next ›" Command="{Binding NextPageCommand}" Height="32" Padding="14,0" Cursor="Hand"
-                                Background="{StaticResource CardBg2}" Foreground="{StaticResource TextPrimary}" FontWeight="SemiBold" FontSize="12" BorderThickness="1" BorderBrush="{StaticResource Border}"/>
-                    </StackPanel>
+                    <!-- filters: category + sub-category + item search -->
+                    <Grid Grid.Row="0" Margin="0,0,0,14">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Category:" Foreground="{StaticResource TextMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox ItemsSource="{Binding CategoryFilterOptions}" SelectedItem="{Binding SelectedCategoryFilter, Mode=TwoWay}"
+                                      Width="170" Height="34" FontSize="13" Margin="0,0,16,0"/>
+                            <TextBlock Text="Sub-category:" Foreground="{StaticResource TextMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox ItemsSource="{Binding SubCategoryFilterOptions}" SelectedItem="{Binding SelectedSubCategoryFilter, Mode=TwoWay}"
+                                      Width="170" Height="34" FontSize="13"/>
+                        </StackPanel>
+                        <Border Width="280" HorizontalAlignment="Right" Background="{StaticResource WindowBg}" CornerRadius="10" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="12,7">
+                            <Grid>
+                                <TextBlock Text="🔍  item search karein..." Foreground="{StaticResource TextFaint}" FontSize="12" VerticalAlignment="Center"
+                                           Visibility="{Binding CategorySearch, Converter={StaticResource StringToVis}}"/>
+                                <TextBox Text="{Binding CategorySearch, UpdateSourceTrigger=PropertyChanged}" Foreground="White" FontSize="13" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- column headers -->
+                    <Grid Grid.Row="1" Margin="16,0,16,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="150"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="ITEM  (CATEGORY-WISE)" Style="{StaticResource ColHead}"/>
+                        <TextBlock Grid.Column="1" Text="QTY SOLD" Style="{StaticResource ColHead}" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="2" Text="AMOUNT" Style="{StaticResource ColHead}" HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <Grid>
+                            <!-- empty state -->
+                            <TextBlock Text="Is period me koi item sale nahi mili." Foreground="{StaticResource TextFaint}" FontSize="13"
+                                       HorizontalAlignment="Center" Margin="0,40,0,0"
+                                       Visibility="{Binding HasNoCategorySales, Converter={StaticResource BoolToVis}}"/>
+
+                            <ItemsControl ItemsSource="{Binding CategorySales}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0,0,0,12">
+                                            <!-- category header bar -->
+                                            <Border Background="{StaticResource CardBg2}" CornerRadius="8" Padding="12,9" Margin="0,0,0,2">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="120"/>
+                                                        <ColumnDefinition Width="150"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding CategoryName}" Foreground="{DynamicResource AccentText}" FontSize="13.5" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding QtyText}" Foreground="{StaticResource TextMuted}" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding AmountText}" Foreground="{DynamicResource Accent}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                            <!-- item rows -->
+                                            <ItemsControl ItemsSource="{Binding Items}" Margin="4,0,4,0">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Padding="8,7" BorderBrush="{StaticResource BorderSoft}" BorderThickness="0,0,0,1">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="120"/>
+                                                                    <ColumnDefinition Width="150"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{StaticResource TextPrimary}" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                                <TextBlock Grid.Column="1" Text="{Binding QtyText}" Foreground="{StaticResource TextMuted}" FontSize="13" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                                                <TextBlock Grid.Column="2" Text="{Binding AmountText}" Foreground="{StaticResource TextPrimary}" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </ScrollViewer>
                 </Grid>
             </Grid>
         </Border>

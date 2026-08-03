@@ -85,6 +85,42 @@ public sealed class ReportsRepository
     }
 
     /// <summary>
+    /// Every item sold in the period, with its category — the data behind the report's
+    /// category-wise breakdown. One row per (category, item): quantity sold and rupees taken.
+    ///
+    /// Read from the bills stored on this till, the same source the per-bill item view uses, so
+    /// what a category totals here matches what opening those bills would show. The category comes
+    /// from the item's own <c>menu_items</c> row; a line whose item is no longer in the catalog
+    /// (renamed, deleted) still counts, filed under "Other".
+    /// </summary>
+    public IReadOnlyList<CategoryItemSale> GetCategoryItemSales(string startDate, string endDate, long? clientId = null)
+    {
+        using var conn = _db.OpenConnection();
+        return conn.Query<CategoryItemSale>(
+            @"SELECT
+                  COALESCE(NULLIF(c.name, ''), 'Other')                       AS CategoryName,
+                  COALESCE(NULLIF(sc.name, ''), '')                           AS SubCategoryName,
+                  COALESCE(mi.category_id, 0)                                 AS CategoryId,
+                  COALESCE(NULLIF(oi.item_name, ''), mi.name, 'Item')         AS ItemName,
+                  SUM(CASE WHEN oi.quantity > 0 THEN oi.quantity ELSE 1 END)  AS Qty,
+                  SUM(CASE WHEN oi.total > 0 THEN oi.total
+                           ELSE oi.price * (CASE WHEN oi.quantity > 0 THEN oi.quantity ELSE 1 END) END) AS Amount
+              FROM order_items oi
+              JOIN orders o          ON o.id = oi.order_id
+              LEFT JOIN menu_items mi ON mi.id = oi.item_id
+              LEFT JOIN categories c  ON c.id = mi.category_id
+              LEFT JOIN categories sc ON sc.id = mi.sub_category_id
+              WHERE o.report_visible = 1
+                AND o.order_status IN ('settled', 'completed')
+                AND date(o.billed_at) >= @startDate
+                AND date(o.billed_at) <= @endDate
+                AND (@clientId IS NULL OR o.client_id = @clientId)
+              GROUP BY CategoryId, CategoryName, SubCategoryName, COALESCE(oi.item_id, oi.item_name)
+              ORDER BY CategoryName, Qty DESC, ItemName",
+            new { clientId, startDate, endDate }).AsList();
+    }
+
+    /// <summary>
     /// The letters in front of every bill number on this page — abbreviated from the business
     /// name, the same value <c>OrderRepository.NextBillNumber</c> stamps on the bill itself.
     ///

@@ -21,6 +21,20 @@ public sealed class PopularItem
 }
 
 /// <summary>
+/// One (category, item) line in the report's category-wise breakdown: how much of an item sold in
+/// the period and what it took, together with the category it belongs to for grouping.
+/// </summary>
+public sealed class CategoryItemSale
+{
+    public long CategoryId { get; set; }
+    public string CategoryName { get; set; } = "";
+    public string SubCategoryName { get; set; } = "";
+    public string ItemName { get; set; } = "";
+    public long Qty { get; set; }
+    public double Amount { get; set; }
+}
+
+/// <summary>
 /// One entry in the Reports page's counter filter — a business billing on this till.
 ///
 /// The page used to filter by operator; on a shared counter the more useful question is which
