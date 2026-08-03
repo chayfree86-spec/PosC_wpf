@@ -22,6 +22,7 @@ class SettingController
         if ($key === 'restaurant_profile') {
             self::syncClientName($value);
             self::syncLoginPhone($value);
+            self::syncLoginEmail($value);
         }
 
         success_response($saved, 'Setting saved.');
@@ -55,6 +56,37 @@ class SettingController
 
         if ($userId) {
             $db->prepare('UPDATE users SET phone = ? WHERE id = ?')->execute([$phone, (int) $userId]);
+        }
+    }
+
+    /**
+     * The business email on the profile is mirrored onto the client's primary user, so the
+     * account's email stays in step with what the manager typed in Settings — the same idea as
+     * syncLoginPhone, for the email field.
+     *
+     * Only a well-formed address is written, and only the client's primary (manager) user is
+     * touched; a blank or invalid value is ignored rather than wiping an email that is already
+     * there. Extra staff logins keep their own addresses.
+     */
+    private static function syncLoginEmail(mixed $value): void
+    {
+        $email = is_array($value) ? trim((string) ($value['email'] ?? '')) : '';
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
+        $db = Database::connection();
+        $primary = $db->prepare(
+            "SELECT id FROM users
+             WHERE client_id = ?
+             ORDER BY (role = 'manager') DESC, id
+             LIMIT 1"
+        );
+        $primary->execute([Client::currentId()]);
+        $userId = $primary->fetchColumn();
+
+        if ($userId) {
+            $db->prepare('UPDATE users SET email = ? WHERE id = ?')->execute([$email, (int) $userId]);
         }
     }
 
