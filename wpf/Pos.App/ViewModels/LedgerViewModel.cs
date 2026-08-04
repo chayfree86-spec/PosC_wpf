@@ -3,12 +3,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Pos.App.Helpers;
 using Pos.Core.Models;
 using Pos.Core.Repositories;
+using Pos.Core.Sync;
 
 namespace Pos.App.ViewModels;
 
 public partial class LedgerViewModel : ObservableObject
 {
     private readonly CustomerLedgerRepository _ledgerRepo;
+    private readonly SyncCoordinator _sync;
 
     [ObservableProperty] private string _searchText = "";
     [ObservableProperty] private Customer? _selectedCustomer;
@@ -23,14 +25,19 @@ public partial class LedgerViewModel : ObservableObject
 
     public int CustomerCount => Customers.Count;
 
-    public LedgerViewModel(CustomerLedgerRepository ledgerRepo)
+    public LedgerViewModel(CustomerLedgerRepository ledgerRepo, SyncCoordinator sync)
     {
         _ledgerRepo = ledgerRepo;
+        _sync = sync;
         LoadData();
     }
 
     public void LoadData()
     {
+        // Pull the server's ledger into SQLite first, so the list is every customer on the server
+        // and not just the ones this till created. Best-effort: offline, it reads the local copy.
+        _sync.RefreshLedgerNow();
+
         var keepId = SelectedCustomer?.Id;
         Customers.Clear();
         FilteredCustomers.Clear();

@@ -242,6 +242,34 @@ public sealed class SyncCoordinator : IDisposable
         }
     }
 
+    /// <summary>
+    /// Pulls the customer ledger from the server there and then — what Len-Den calls as it opens so
+    /// the khaata list is the server's current one, not whatever this till last saw. Best-effort;
+    /// false just means the screen falls back to the local copy.
+    /// </summary>
+    public bool RefreshLedgerNow()
+    {
+        if (!DirectWorthTrying)
+        {
+            return false;
+        }
+
+        try
+        {
+            var ok = Task.Run(() => new LedgerSyncService(_db).PullAsync(ShortApiClient(), _client.ClientId))
+                .GetAwaiter().GetResult();
+            if (ok)
+            {
+                _directDeadUntil = DateTime.MinValue;
+            }
+            return ok;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     /// <summary>The till's API client with a short fuse, for the calls made straight from the UI
     /// thread. The background loop keeps the longer default.</summary>
     private PosApiClient ShortApiClient() =>
@@ -327,6 +355,11 @@ public sealed class SyncCoordinator : IDisposable
                 // on a stale menu with nothing on screen to say so.
                 pullError = "Pull: " + pull.Error;
             }
+
+            // The customer ledger comes down on the same cadence, so Len-Den stays in step with
+            // khaata changes made on the dashboard or another till. Best-effort — a ledger that
+            // can't be reached just isn't refreshed this pass.
+            await new LedgerSyncService(_db).PullAsync(api, _client.ClientId, ct);
         }
 
         var flush = await queue.FlushAsync(ct);
