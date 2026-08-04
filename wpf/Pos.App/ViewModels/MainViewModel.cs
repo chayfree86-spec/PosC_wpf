@@ -814,6 +814,11 @@ public partial class MainViewModel : ObservableObject
             BillMode = "Table";
             CenterMode = "Table";
         }
+
+        // The header reads the selected table's number, but it only refreshed when BillMode
+        // flipped. Switching straight from one table to another leaves BillMode on "Table", so
+        // without this the panel kept showing the first table's name for every table after it.
+        OnPropertyChanged(nameof(BillTitle));
         RaiseTotals();
     }
 
