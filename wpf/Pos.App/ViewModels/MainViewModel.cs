@@ -310,41 +310,43 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private double _updateProgress;
     [ObservableProperty] private string? _updateTooltip;
 
-    private AppUpdateInfo? _pendingUpdate;
+    private Velopack.UpdateManager? _updateManager;
+    private Velopack.UpdateInfo? _pendingUpdate;
 
-    /// <summary>Asks the server whether a newer build is out and, if so, lights up the footer's
-    /// update badge. Silent otherwise.</summary>
+    /// <summary>
+    /// Asks the release feed whether a newer build is out and, if so, lights up the footer's update
+    /// badge. Silent otherwise, and a no-op when the app isn't a Velopack install (a dev run or a
+    /// plain copied folder) — there's nothing for the updater to replace in that case.
+    /// </summary>
     private async Task CheckForUpdatesAsync()
     {
         try
         {
-            var info = await new AppUpdateService(_sync.CreateApiClient()).CheckAsync();
-            var dispatcher = System.Windows.Application.Current?.Dispatcher;
-            if (dispatcher != null && !dispatcher.CheckAccess())
+            var mgr = new Velopack.UpdateManager(AppInfo.UpdateFeedUrl);
+            if (!mgr.IsInstalled)
             {
-                _ = dispatcher.BeginInvoke(new Action(() => ApplyUpdateInfo(info)));
+                return;
             }
-            else
-            {
-                ApplyUpdateInfo(info);
-            }
+            _updateManager = mgr;
+
+            var info = await mgr.CheckForUpdatesAsync();
+            OnUi(() => ApplyUpdateInfo(info));
         }
         catch
         {
-            // A failed check just leaves the footer saying "up to date".
+            // Offline or an unreachable feed just leaves the footer saying "up to date".
         }
     }
 
-    private void ApplyUpdateInfo(AppUpdateInfo? info)
+    private void ApplyUpdateInfo(Velopack.UpdateInfo? info)
     {
         _pendingUpdate = info;
-        if (info is { Available: true })
+        if (info != null)
         {
+            var v = info.TargetFullRelease.Version.ToString();
             UpdateAvailable = true;
-            UpdateText = $"UPDATE — v{info.Latest}";
-            UpdateTooltip = string.IsNullOrWhiteSpace(info.Notes)
-                ? $"Naya version v{info.Latest} available hai. Click karke update karein."
-                : $"Naya version v{info.Latest}:{Environment.NewLine}{info.Notes}{Environment.NewLine}Click karke update karein.";
+            UpdateText = $"UPDATE — v{v}";
+            UpdateTooltip = $"Naya version v{v} available hai. Click karke update karein.";
         }
         else
         {
@@ -355,21 +357,21 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Downloads and installs the waiting update, then restarts. Guarded by a confirm so it never
-    /// interrupts billing without the operator's say-so — and refused outright while any table has
-    /// an unsaved order, so a mid-shift restart can't drop a running bill.
+    /// Downloads and installs the waiting update, then restarts — Velopack does the file swap from
+    /// outside the process, so this never has to touch a running exe. Guarded by a confirm so it
+    /// can't interrupt billing without the operator's say-so.
     /// </summary>
     [RelayCommand]
     private async Task UpdateNow()
     {
-        if (_pendingUpdate is not { Available: true } info || IsUpdating)
+        if (_updateManager is null || _pendingUpdate is null || IsUpdating)
         {
             return;
         }
 
+        var v = _pendingUpdate.TargetFullRelease.Version.ToString();
         var confirm = System.Windows.MessageBox.Show(
-            $"Version v{info.Latest} install karein? App band ho ke naye version me khul jayegi." +
-            (string.IsNullOrWhiteSpace(info.Notes) ? "" : $"{Environment.NewLine}{Environment.NewLine}{info.Notes}"),
+            $"Version v{v} install karein? App band ho ke naye version me khul jayegi.",
             "App Update",
             System.Windows.MessageBoxButton.OKCancel,
             System.Windows.MessageBoxImage.Question);
@@ -380,23 +382,40 @@ public partial class MainViewModel : ObservableObject
 
         IsUpdating = true;
         UpdateText = "DOWNLOADING… 0%";
-        var progress = new Progress<double>(p =>
+        try
         {
-            UpdateProgress = p;
-            UpdateText = $"DOWNLOADING… {(int)(p * 100)}%";
-        });
+            await _updateManager.DownloadUpdatesAsync(_pendingUpdate, percent =>
+                OnUi(() =>
+                {
+                    UpdateProgress = percent / 100.0;
+                    UpdateText = $"DOWNLOADING… {percent}%";
+                }));
 
-        var error = await new AppUpdater().DownloadAndApplyAsync(
-            info.Url, progress,
-            shutdown: () => System.Windows.Application.Current?.Shutdown());
-
-        // Reached only when the update could NOT start; on success the app is already closing.
-        if (error != null)
+            UpdateText = "INSTALLING…";
+            // Swaps in the new version and relaunches; the process ends here.
+            _updateManager.ApplyUpdatesAndRestart(_pendingUpdate);
+        }
+        catch (Exception ex)
         {
             IsUpdating = false;
-            UpdateText = $"UPDATE — v{info.Latest}";
-            System.Windows.MessageBox.Show(error, "App Update", System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Warning);
+            UpdateText = $"UPDATE — v{v}";
+            System.Windows.MessageBox.Show("Update fail ho gaya: " + ex.Message, "App Update",
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+        }
+    }
+
+    /// <summary>Runs an action on the UI thread, whether the caller is already on it or on one of
+    /// Velopack's background callbacks.</summary>
+    private static void OnUi(Action action)
+    {
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.CheckAccess())
+        {
+            _ = dispatcher.BeginInvoke(action);
+        }
+        else
+        {
+            action();
         }
     }
 

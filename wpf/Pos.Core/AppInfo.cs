@@ -1,12 +1,13 @@
 namespace Pos.Core;
 
 /// <summary>
-/// The app's own identity — chiefly its version, kept in one place so the footer, the update
-/// check and anything else that reports "which build is this" can never disagree.
+/// The app's own identity — its version and where it looks for updates, in one place so the footer
+/// and the updater never disagree.
 ///
-/// Bump <see cref="Version"/> when cutting a release, and match it in the build's manifest on the
-/// server (see the app-version endpoint). The auto-updater compares the two: a server version
-/// higher than this one means an update is waiting.
+/// <see cref="Version"/> is bumped when cutting a release and must match the <c>--packVersion</c>
+/// passed to <c>vpk pack</c>. Velopack compares the running build against the feed at
+/// <see cref="UpdateFeedUrl"/> (a folder of release files the packer produces) and offers anything
+/// newer.
 /// </summary>
 public static class AppInfo
 {
@@ -17,50 +18,9 @@ public static class AppInfo
     public static string DisplayVersion => "v" + Version;
 
     /// <summary>
-    /// Compares two "major.minor.patch" versions. Positive when <paramref name="a"/> is newer than
-    /// <paramref name="b"/>, negative when older, zero when the same. Missing or non-numeric parts
-    /// count as 0, so "3.0" and "3.0.0" are equal and a malformed value never looks newer.
+    /// Where published releases live — the folder <c>vpk pack</c> fills with the installer, the
+    /// RELEASES index and the update packages, uploaded to the server. Publishing an update is:
+    /// build, <c>vpk pack</c>, upload this folder's contents here.
     /// </summary>
-    public static int Compare(string? a, string? b)
-    {
-        var pa = Parse(a);
-        var pb = Parse(b);
-        for (var i = 0; i < 3; i++)
-        {
-            var d = pa[i].CompareTo(pb[i]);
-            if (d != 0)
-            {
-                return d;
-            }
-        }
-        return 0;
-    }
-
-    /// <summary>True when <paramref name="latest"/> is a strictly newer version than what is
-    /// running now.</summary>
-    public static bool IsNewer(string? latest) => Compare(latest, Version) > 0;
-
-    private static int[] Parse(string? v)
-    {
-        var parts = new[] { 0, 0, 0 };
-        if (string.IsNullOrWhiteSpace(v))
-        {
-            return parts;
-        }
-
-        // Tolerate a leading "v" and any pre-release suffix ("3.0.0-beta" → 3,0,0).
-        var cleaned = v.Trim().TrimStart('v', 'V');
-        var dash = cleaned.IndexOf('-');
-        if (dash >= 0)
-        {
-            cleaned = cleaned[..dash];
-        }
-
-        var bits = cleaned.Split('.');
-        for (var i = 0; i < 3 && i < bits.Length; i++)
-        {
-            parts[i] = int.TryParse(bits[i], out var n) && n > 0 ? n : 0;
-        }
-        return parts;
-    }
+    public const string UpdateFeedUrl = "https://posapi-v2.chaychaupal.com/downloads/pos/";
 }

@@ -9,6 +9,8 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="MaterialDesignThemes" Version="5.2.1" />
+    <!-- Installer + auto-update. Version matches the vpk CLI that builds the release. -->
+    <PackageReference Include="Velopack" Version="1.2.0" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -19,7 +21,15 @@
     <UseWPF>true</UseWPF>
     <!-- Keep in step with Pos.Core AppInfo.Version (the value the footer and update check use). -->
     <Version>3.0.0</Version>
+    <!-- Custom entry point so Velopack's hook runs before anything else (see Program.cs). -->
+    <StartupObject>Pos.App.Program</StartupObject>
   </PropertyGroup>
+
+  <!-- App.xaml as a Page, not the auto-generated entry point, so Program.Main is the real one. -->
+  <ItemGroup>
+    <ApplicationDefinition Remove="App.xaml" />
+    <Page Include="App.xaml" />
+  </ItemGroup>
 
   <ItemGroup>
     <Resource Include="Fonts\*.ttf" />
