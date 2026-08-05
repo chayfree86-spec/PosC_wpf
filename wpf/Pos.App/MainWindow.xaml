@@ -992,7 +992,7 @@
                                                             </Trigger>
                                                             <DataTrigger Binding="{Binding DataContext.SelectedCartTab, RelativeSource={RelativeSource AncestorType=Window}}" Value="Old">
                                                                 <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
-                                                                <Setter TargetName="txt" Property="Foreground" Value="White"/>
+                                                                <Setter TargetName="txt" Property="Foreground" Value="{DynamicResource TextPrimary}"/>
                                                             </DataTrigger>
                                                         </ControlTemplate.Triggers>
                                                     </ControlTemplate>
@@ -1019,7 +1019,7 @@
                                                             </Trigger>
                                                             <DataTrigger Binding="{Binding DataContext.SelectedCartTab, RelativeSource={RelativeSource AncestorType=Window}}" Value="New">
                                                                 <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
-                                                                <Setter TargetName="txt" Property="Foreground" Value="White"/>
+                                                                <Setter TargetName="txt" Property="Foreground" Value="{DynamicResource TextPrimary}"/>
                                                             </DataTrigger>
                                                         </ControlTemplate.Triggers>
                                                     </ControlTemplate>
@@ -1079,7 +1079,7 @@
                                     <Border Grid.Column="0" Background="{DynamicResource WindowBg}" CornerRadius="6" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="6,3" Margin="0,0,8,0">
                                         <Grid>
                                             <TextBlock Text="₹" Foreground="{DynamicResource TextMuted}" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
-                                            <TextBox x:Name="TxtExtraPrice" GotFocus="ExtraInput_GotFocus" KeyDown="TxtExtraPrice_KeyDown" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="13" FontWeight="Bold" CaretBrush="{DynamicResource Accent}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                                            <TextBox x:Name="TxtExtraPrice" GotFocus="ExtraInput_GotFocus" KeyDown="TxtExtraPrice_KeyDown" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource TextPrimary}" FontSize="13" FontWeight="Bold" CaretBrush="{DynamicResource Accent}" Margin="12,0,0,0" VerticalAlignment="Center"/>
                                         </Grid>
                                     </Border>
                                     <!-- Remarks -->
@@ -1097,7 +1097,7 @@
                                                     </Style>
                                                 </TextBlock.Style>
                                             </TextBlock>
-                                            <TextBox x:Name="TxtExtraRemarks" GotFocus="ExtraInput_GotFocus" KeyDown="TxtExtraRemarks_KeyDown" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="13" CaretBrush="{DynamicResource Accent}" VerticalAlignment="Center"/>
+                                            <TextBox x:Name="TxtExtraRemarks" GotFocus="ExtraInput_GotFocus" KeyDown="TxtExtraRemarks_KeyDown" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource TextPrimary}" FontSize="13" CaretBrush="{DynamicResource Accent}" VerticalAlignment="Center"/>
                                         </Grid>
                                     </Border>
                                     <!-- Action Buttons -->
