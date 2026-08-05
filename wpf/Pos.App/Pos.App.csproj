@@ -23,7 +23,10 @@
     <Version>3.0.1</Version>
     <!-- Custom entry point so Velopack's hook runs before anything else (see Program.cs). -->
     <StartupObject>Pos.App.Program</StartupObject>
+    <!-- Application Icon (Light theme as default. Change to app_icon_dark.ico for Dark theme) -->
+    <ApplicationIcon>app_icon_light.ico</ApplicationIcon>
   </PropertyGroup>
+
 
   <!-- App.xaml as a Page, not the auto-generated entry point, so Program.Main is the real one. -->
   <ItemGroup>

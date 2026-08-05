@@ -37,9 +37,15 @@ rm -rf publish-vpk
 dotnet publish Pos.App/Pos.App.csproj -c Release -r win-x64 --self-contained true -o publish-vpk --nologo
 
 echo "==> Packing with Velopack (delta against previous)"
+ICON_FILE=$(sed -n 's/.*<ApplicationIcon>\(.*\)<\/ApplicationIcon>.*/\1/p' "$ROOT/wpf/Pos.App/Pos.App.csproj" | tr -d '\r')
+if [ -z "$ICON_FILE" ]; then
+    ICON_FILE="app_icon_light.ico"
+fi
+
 vpk pack --packId ChayChaupalPOS --packVersion "$VER" --packDir publish-vpk \
     --mainExe Pos.App.exe --packTitle "Chay Chaupal POS" --packAuthors "Chay Chaupal" \
-    --outputDir Releases
+    --outputDir Releases --icon "Pos.App/$ICON_FILE"
+
 
 echo "==> Updating committed feed (downloads/pos/)"
 mkdir -p "$FEED"

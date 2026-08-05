@@ -24,12 +24,20 @@ public partial class LoginWindow : Window
     private readonly AuthRepository _auth;
     private readonly AppSettingsRepository _settings;
 
+    /// <summary>The four PIN boxes, left to right, and the digit each currently holds
+    /// ('\0' = empty). Kept separately from the boxes' text so the boxes can show dots while the
+    /// real PIN is read from here.</summary>
+    private TextBox[] _pinBoxes = System.Array.Empty<TextBox>();
+    private readonly char[] _pinDigits = new char[4];
+    private bool _pinReveal;
+
     public LoginWindow()
     {
         InitializeComponent();
 
         _auth = App.Services.GetRequiredService<AuthRepository>();
         _settings = App.Services.GetRequiredService<AppSettingsRepository>();
+        _pinBoxes = new[] { Pin1, Pin2, Pin3, Pin4 };
 
         RestoreLastMobile();
     }
@@ -71,7 +79,7 @@ public partial class LoginWindow : Window
         {
             if (last.Length > 0)
             {
-                TxtPin.Focus();
+                Pin1.Focus();
             }
             else
             {
@@ -95,7 +103,7 @@ public partial class LoginWindow : Window
             // the operator is meant to read.
             ClearPin();
             ShowError(result.Error ?? "Sign in nahi ho paya.");
-            (TxtPinPlain.Visibility == Visibility.Visible ? (Control) TxtPinPlain : TxtPin).Focus();
+            Pin1.Focus();
             return;
         }
 
@@ -116,12 +124,92 @@ public partial class LoginWindow : Window
     }
 
     private string CurrentPin() =>
-        TxtPinPlain.Visibility == Visibility.Visible ? TxtPinPlain.Text : TxtPin.Password;
+        new string(_pinDigits.Where(c => c != '\0').ToArray());
 
     private void ClearPin()
     {
-        TxtPin.Clear();
-        TxtPinPlain.Clear();
+        for (var i = 0; i < _pinDigits.Length; i++)
+        {
+            _pinDigits[i] = '\0';
+            UpdatePinBox(i);
+        }
+    }
+
+    private int PinIndex(object sender) =>
+        sender is TextBox b && int.TryParse(b.Tag?.ToString(), out var i) ? i : -1;
+
+    /// <summary>Digits only, one per box, advancing as it goes; the fourth signs in.</summary>
+    private void Pin_PreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        e.Handled = true;   // the box's text is set from _pinDigits, not typed into directly
+        var i = PinIndex(sender);
+        if (i < 0 || e.Text.Length == 0 || !char.IsDigit(e.Text[^1]))
+        {
+            return;
+        }
+
+        _pinDigits[i] = e.Text[^1];
+        UpdatePinBox(i);
+        TxtError.Visibility = Visibility.Collapsed;
+
+        if (i < _pinBoxes.Length - 1)
+        {
+            _pinBoxes[i + 1].Focus();
+        }
+        else
+        {
+            // Last digit entered — sign in.
+            TrySignIn();
+        }
+    }
+
+    private void Pin_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        var i = PinIndex(sender);
+        if (i < 0)
+        {
+            return;
+        }
+
+        switch (e.Key)
+        {
+            case Key.Back:
+                e.Handled = true;
+                if (_pinDigits[i] != '\0')
+                {
+                    _pinDigits[i] = '\0';
+                    UpdatePinBox(i);
+                }
+                else if (i > 0)
+                {
+                    _pinDigits[i - 1] = '\0';
+                    UpdatePinBox(i - 1);
+                    _pinBoxes[i - 1].Focus();
+                }
+                break;
+
+            case Key.Delete:
+                e.Handled = true;
+                _pinDigits[i] = '\0';
+                UpdatePinBox(i);
+                break;
+
+            case Key.Left:
+                if (i > 0) { _pinBoxes[i - 1].Focus(); e.Handled = true; }
+                break;
+
+            case Key.Right:
+                if (i < _pinBoxes.Length - 1) { _pinBoxes[i + 1].Focus(); e.Handled = true; }
+                break;
+        }
+    }
+
+    /// <summary>Paints one box: the digit when revealed, a dot when masked, blank when empty.</summary>
+    private void UpdatePinBox(int i)
+    {
+        var d = _pinDigits[i];
+        _pinBoxes[i].Text = d == '\0' ? "" : (_pinReveal ? d.ToString() : "●");
+        _pinBoxes[i].CaretIndex = _pinBoxes[i].Text.Length;
     }
 
     private void ShowError(string message)
@@ -173,30 +261,18 @@ public partial class LoginWindow : Window
 
     private void TogglePin_Click(object sender, RoutedEventArgs e)
     {
-        var reveal = TxtPinPlain.Visibility != Visibility.Visible;
-
-        if (reveal)
+        _pinReveal = !_pinReveal;
+        for (var i = 0; i < _pinDigits.Length; i++)
         {
-            TxtPinPlain.Text = TxtPin.Password;
-            TxtPinPlain.Visibility = Visibility.Visible;
-            TxtPin.Visibility = Visibility.Collapsed;
-            TxtPinPlain.CaretIndex = TxtPinPlain.Text.Length;
-            TxtPinPlain.Focus();
-        }
-        else
-        {
-            TxtPin.Password = TxtPinPlain.Text;
-            TxtPin.Visibility = Visibility.Visible;
-            TxtPinPlain.Visibility = Visibility.Collapsed;
-            TxtPin.Focus();
+            UpdatePinBox(i);
         }
 
-        IconPinEye.Kind = reveal
+        IconPinEye.Kind = _pinReveal
             ? MaterialDesignThemes.Wpf.PackIconKind.EyeOffOutline
             : MaterialDesignThemes.Wpf.PackIconKind.EyeOutline;
     }
 
-    /// <summary>Both fields hold a number: refusing letters at the keystroke beats reporting
+    /// <summary>The mobile field holds a number: refusing letters at the keystroke beats reporting
     /// them after the operator has typed the whole thing.</summary>
     private void Digits_PreviewTextInput(object sender, TextCompositionEventArgs e) =>
         e.Handled = e.Text.Length == 0 || !e.Text.All(char.IsDigit);
@@ -209,7 +285,7 @@ public partial class LoginWindow : Window
                 // Enter on the mobile field moves on rather than submitting a blank PIN.
                 if (TxtMobile.IsKeyboardFocusWithin && CurrentPin().Length == 0)
                 {
-                    TxtPin.Focus();
+                    Pin1.Focus();
                 }
                 else
                 {

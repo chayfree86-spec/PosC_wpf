@@ -159,30 +159,55 @@ public partial class MainViewModel : ObservableObject
     /// clear/re-add churn has settled, so both the header and the filtered list land on Old the
     /// first time.
     /// </summary>
-    /// <summary>While set, every table reload snaps the tab back to Old at the end of
-    /// <see cref="OnSelectedTableChanged"/> — closing the window in which the grid's async
-    /// re-selection could flip it to New right after a KOT.</summary>
+    /// <summary>
+    /// While set, every reload of <see cref="_pinnedTableId"/> snaps the tab back to Old at the end
+    /// of <see cref="OnSelectedTableChanged"/>. It is held — not cleared on a timer — until the
+    /// operator does something that legitimately wants the New tab (adds a line, clicks New) or
+    /// opens a different table. That's what makes the post-KOT switch reliable instead of
+    /// intermittent: the grid's async re-selection can fire whenever it likes and still lands on
+    /// Old, because the pin is still up rather than already released by a racing dispatcher pass.
+    /// </summary>
     private bool _pinOldTab;
+    private long _pinnedTableId;
 
     private void ShowMergedOldOrder()
     {
         _pinOldTab = true;
+        _pinnedTableId = SelectedTable?.Id ?? 0;
         ApplyOldTab();
 
-        // ApplicationIdle runs after every render/data-bind pass — including the ListBox's own
-        // async re-selection after the table grid reloads, which can otherwise flip the tab back
-        // to New. Re-applying last (and releasing the pin) makes Old stick on the first KOT.
+        // Once more after the reload's clear/re-add churn settles, so the header re-evaluates.
         System.Windows.Application.Current?.Dispatcher.BeginInvoke(
-            new Action(() => { ApplyOldTab(); _pinOldTab = false; }),
-            System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+            new Action(ApplyOldTab), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+    }
+
+    /// <summary>Releases the "stay on Old" pin — called when the operator adds a new line, opens
+    /// the New tab, or a different table is selected.</summary>
+    private void ReleaseOldTabPin() => _pinOldTab = false;
+
+    internal static void KotLog(string msg)
+    {
+        try
+        {
+            var dir = System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ChayChaupalPOS");
+            System.IO.Directory.CreateDirectory(dir);
+            System.IO.File.AppendAllText(System.IO.Path.Combine(dir, "kot-debug.log"),
+                $"{DateTime.Now:HH:mm:ss.fff}  {msg}{Environment.NewLine}");
+        }
+        catch { }
     }
 
     private void ApplyOldTab()
     {
+        KotLog($"    ApplyOldTab: tab={SelectedCartTab}->Old, hasExisting={HasExistingOrder}, pin={_pinOldTab}");
+        // Force a genuine change. The reload's HasExistingOrder false→true collapses and re-shows
+        // the tab strip, which can leave WPF's binding cached on "New"; a same-value set (or a bare
+        // OnPropertyChanged) doesn't move it. Bouncing through "New" makes a real Old←New
+        // transition WPF has to re-read — no render happens between these two synchronous sets, so
+        // there's no visible flicker.
+        SelectedCartTab = "New";
         SelectedCartTab = "Old";
-        // Forced (not just set): the value is usually already "Old" from the reload, and without an
-        // explicit raise the tab's DataTrigger and the New/Old filter never refresh.
-        OnPropertyChanged(nameof(SelectedCartTab));
         OnPropertyChanged(nameof(IsNewTableOrder));
         OnPropertyChanged(nameof(DisplayCartItems));
         RefreshCartView();
@@ -711,6 +736,7 @@ public partial class MainViewModel : ObservableObject
         SearchText = "";
         if (HasExistingOrder)
         {
+            ReleaseOldTabPin();
             SelectedCartTab = "New";
             OnPropertyChanged(nameof(DisplayCartItems));
             RefreshCartView();
@@ -808,6 +834,7 @@ public partial class MainViewModel : ObservableObject
         // on top of the freshly reloaded saved order, doubling every line just KOT'd.
         var sameTable = oldValue != null && newValue != null && oldValue.Id == newValue.Id;
         var userSwitch = !sameTable && !_reloadingTables;
+        KotLog($"    OnSelTable ENTER: old={oldValue?.TableNumber ?? "null"}, new={newValue?.TableNumber ?? "null"}, reloading={_reloadingTables}, userSwitch={userSwitch}, tab={SelectedCartTab}, pin={_pinOldTab}, pinnedId={_pinnedTableId}");
 
         if (userSwitch)
         {
@@ -854,12 +881,21 @@ public partial class MainViewModel : ObservableObject
             CenterMode = "Table";
         }
 
-        // Just after a KOT the order is fully merged into Old; hold the tab there through the
-        // grid's reload/re-selection so it can't briefly flip back to New.
+        // Just after a KOT the pinned table's order is fully merged into Old; hold the tab there
+        // through the grid's reload/re-selection so it can't flip back to New. Opening a different
+        // table is a fresh context, so the pin is dropped there.
         if (_pinOldTab && newValue != null)
         {
-            SelectedCartTab = "Old";
+            if (newValue.Id == _pinnedTableId)
+            {
+                SelectedCartTab = "Old";
+            }
+            else
+            {
+                _pinOldTab = false;
+            }
         }
+        KotLog($"    OnSelTable EXIT: new={newValue?.TableNumber ?? "null"}, tab={SelectedCartTab}, hasExisting={HasExistingOrder}, cart={Cart.Count}, pin={_pinOldTab}");
 
         // The header reads the selected table's number, but it only refreshed when BillMode
         // flipped. Switching straight from one table to another leaves BillMode on "Table", so
@@ -891,13 +927,14 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void ShowTableView() => CenterMode = "Table";
     [RelayCommand] private void ShowMenuView() => CenterMode = "Menu";
     [RelayCommand] private void ShowOldTab() { SelectedCartTab = "Old"; OnPropertyChanged(nameof(DisplayCartItems)); RefreshCartView(); }
-    [RelayCommand] private void ShowNewTab() { SelectedCartTab = "New"; OnPropertyChanged(nameof(DisplayCartItems)); RefreshCartView(); }
+    [RelayCommand] private void ShowNewTab() { ReleaseOldTabPin(); SelectedCartTab = "New"; OnPropertyChanged(nameof(DisplayCartItems)); RefreshCartView(); }
     [RelayCommand] private void SetBillMode(string mode) => BillMode = mode;
 
     public CartLine AddAndReturnLineCustom(CartLine line)
     {
         if (HasExistingOrder)
         {
+            ReleaseOldTabPin();
             SelectedCartTab = "New";
             OnPropertyChanged(nameof(DisplayCartItems));
             RefreshCartView();
@@ -916,6 +953,7 @@ public partial class MainViewModel : ObservableObject
         SearchText = "";
         if (HasExistingOrder)
         {
+            ReleaseOldTabPin();
             SelectedCartTab = "New";
             OnPropertyChanged(nameof(DisplayCartItems));
             RefreshCartView();
@@ -942,13 +980,69 @@ public partial class MainViewModel : ObservableObject
         else { Cart.Remove(line); }
     }
 
-    [RelayCommand] private void Remove(CartLine line) => Cart.Remove(line);
+    [RelayCommand]
+    private void Remove(CartLine line)
+    {
+        // Deleting a line that belongs to a SAVED table order has to change the stored order too,
+        // not just the on-screen cart — otherwise re-opening the table reloads it from the database
+        // and the "deleted" item is back. A quick bill, or a not-yet-saved new line, only lives in
+        // the cart, so those just drop out.
+        var persist = line.IsSaved && BillMode == "Table" && SelectedTable != null && HasExistingOrder;
+        Cart.Remove(line);
+        RaiseTotals();
+        if (persist)
+        {
+            PersistSavedOrder();
+        }
+    }
 
     [RelayCommand]
     private void ClearCart()
     {
+        // On a table with a running order, "Clear All" empties the bill AND frees the table on the
+        // floor — the order is deleted from the database, so the card goes back to available
+        // instead of staying occupied with an order that only the screen had cleared.
+        if (BillMode == "Table" && SelectedTable != null && HasExistingOrder)
+        {
+            DeleteTableOrder(SelectedTable.Id);
+            return;
+        }
+
         Cart.Clear();
         ClearDiscount();
+        RaiseTotals();
+    }
+
+    /// <summary>
+    /// Writes the cart's remaining SAVED lines back as the table's order, so an edit made by
+    /// deleting a line sticks. When nothing saved is left the whole order is gone, so the table is
+    /// freed. Reloads afterwards to keep the grid amount, the card colour and the cart in step.
+    /// </summary>
+    private void PersistSavedOrder()
+    {
+        if (SelectedTable == null)
+        {
+            return;
+        }
+
+        var saved = Cart.Where(l => l.IsSaved).ToList();
+        if (saved.Count == 0)
+        {
+            DeleteTableOrder(SelectedTable.Id);
+            return;
+        }
+
+        var payload = new TableOrderPayload { TableId = SelectedTable.Id, TableStatus = "ordered" };
+        foreach (var l in saved)
+        {
+            payload.Items.Add(new OrderItemInput
+            {
+                ItemId = l.ItemId, ItemName = l.Name, Price = l.Price,
+                Quantity = Math.Max(1, l.Qty), IsParcel = l.IsParcel
+            });
+        }
+        _orders.SaveTableOrder(payload);
+        LoadTables();
         RaiseTotals();
     }
 
@@ -1035,11 +1129,14 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void SaveKot()
     {
+        KotLog($"=== SaveKot CALLED: cart={Cart.Count}, billMode={BillMode}, table={SelectedTable?.TableNumber ?? "null"}, tab={SelectedCartTab}, hasExisting={HasExistingOrder}, unsaved={Cart.Count(l => !l.IsSaved)}");
         if (Cart.Count == 0) return;
         if (BillMode == "Table" && SelectedTable != null)
         {
             var res = _orders.SaveTableOrder(BuildPayload("ordered"));
+            KotLog($"  after Save (before LoadTables): tab={SelectedCartTab}");
             LoadTables();
+            KotLog($"  after LoadTables: tab={SelectedCartTab}, hasExisting={HasExistingOrder}, cart={Cart.Count}, unsaved={Cart.Count(l => !l.IsSaved)}");
             HasExistingOrder = true;
             foreach (var l in Cart)
             {
@@ -1052,6 +1149,7 @@ public partial class MainViewModel : ObservableObject
             // Old/New filter AFTER WPF has processed that churn, or the merged order only shows in
             // the Old tab on the SECOND KOT instead of the first.
             ShowMergedOldOrder();
+            KotLog($"  SaveKot END: tab={SelectedCartTab}, hasExisting={HasExistingOrder}, cart={Cart.Count}, unsaved={Cart.Count(l => !l.IsSaved)}, pin={_pinOldTab}");
             StatusMessage($"KOT Saved — Table {SelectedTable.TableNumber}, Total: ₹{res.TotalAmount:0.##}");
         }
     }

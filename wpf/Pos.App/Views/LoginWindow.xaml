@@ -12,6 +12,38 @@
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
         KeyDown="Window_KeyDown">
 
+    <Window.Resources>
+        <!-- One digit of the PIN: a big centred box that lights up when focused. -->
+        <Style x:Key="PinBox" TargetType="TextBox">
+            <Setter Property="Width" Value="54"/>
+            <Setter Property="Height" Value="52"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+            <Setter Property="MaxLength" Value="1"/>
+            <Setter Property="FontSize" Value="22"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource Accent}"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="b" CornerRadius="10" Background="{StaticResource WindowBg}"
+                                BorderBrush="{StaticResource Border}" BorderThickness="1.5">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                <Setter TargetName="b" Property="BorderThickness" Value="2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Border CornerRadius="18" Background="{StaticResource PanelBg}"
             BorderBrush="{StaticResource Border}" BorderThickness="1.5">
         <Grid Margin="32,24,32,28">
@@ -77,43 +109,27 @@
                                VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <TextBlock Text="PIN:" Foreground="{StaticResource TextMuted}"
-                           FontSize="11" FontWeight="Bold" Margin="0,14,0,5"/>
-                <Border Background="{StaticResource WindowBg}" CornerRadius="10"
-                        BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="12,8">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <materialDesign:PackIcon Grid.Column="0" Kind="LockOutline" Width="18" Height="18"
-                                                 Foreground="{StaticResource TextFaint}"
-                                                 VerticalAlignment="Center" Margin="0,0,10,0"/>
-
-                        <!-- Masked and plain live in the same cell; the eye swaps which one is
-                             shown. A four-digit PIN mistyped behind dots is the single most
-                             likely reason someone gets stuck on this screen. -->
-                        <PasswordBox Grid.Column="1" x:Name="TxtPin" Foreground="White" FontSize="16"
-                                     Background="Transparent" BorderThickness="0" MaxLength="12"
-                                     CaretBrush="{DynamicResource Accent}"
-                                     VerticalContentAlignment="Center"
-                                     PreviewTextInput="Digits_PreviewTextInput"
-                                     PasswordChanged="Field_Changed"/>
-                        <TextBox Grid.Column="1" x:Name="TxtPinPlain" Foreground="White" FontSize="16"
-                                 Background="Transparent" BorderThickness="0" MaxLength="12"
-                                 CaretBrush="{DynamicResource Accent}"
-                                 VerticalContentAlignment="Center" Visibility="Collapsed"
-                                 PreviewTextInput="Digits_PreviewTextInput"
-                                 TextChanged="Field_Changed"/>
-
-                        <Button Grid.Column="2" x:Name="BtnTogglePin" Click="TogglePin_Click"
-                                Style="{StaticResource LinkBtn}" ToolTip="PIN dikhayein / chhupayein">
-                            <materialDesign:PackIcon x:Name="IconPinEye" Kind="EyeOutline" Width="18" Height="18"
-                                                     Foreground="{StaticResource TextFaint}" VerticalAlignment="Center"/>
-                        </Button>
-                    </Grid>
-                </Border>
+                <Grid Margin="0,14,0,5">
+                    <TextBlock Text="PIN:" Foreground="{StaticResource TextMuted}"
+                               FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <Button x:Name="BtnTogglePin" Click="TogglePin_Click" HorizontalAlignment="Right"
+                            Style="{StaticResource LinkBtn}" ToolTip="PIN dikhayein / chhupayein">
+                        <materialDesign:PackIcon x:Name="IconPinEye" Kind="EyeOutline" Width="18" Height="18"
+                                                 Foreground="{StaticResource TextFaint}" VerticalAlignment="Center"/>
+                    </Button>
+                </Grid>
+                <!-- Four single-digit boxes: type a digit and focus jumps to the next, backspace
+                     jumps back, and the fourth digit signs in. -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,0">
+                    <TextBox x:Name="Pin1" Style="{StaticResource PinBox}" Tag="0"
+                             PreviewTextInput="Pin_PreviewTextInput" PreviewKeyDown="Pin_PreviewKeyDown"/>
+                    <TextBox x:Name="Pin2" Style="{StaticResource PinBox}" Tag="1"
+                             PreviewTextInput="Pin_PreviewTextInput" PreviewKeyDown="Pin_PreviewKeyDown"/>
+                    <TextBox x:Name="Pin3" Style="{StaticResource PinBox}" Tag="2"
+                             PreviewTextInput="Pin_PreviewTextInput" PreviewKeyDown="Pin_PreviewKeyDown"/>
+                    <TextBox x:Name="Pin4" Style="{StaticResource PinBox}" Tag="3" Margin="0"
+                             PreviewTextInput="Pin_PreviewTextInput" PreviewKeyDown="Pin_PreviewKeyDown"/>
+                </StackPanel>
 
                 <!-- Kept out of the layout until there is something to say, so the button
                      doesn't jump down the screen the first time a PIN is wrong. -->
