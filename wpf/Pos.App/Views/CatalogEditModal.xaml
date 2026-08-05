@@ -4,55 +4,55 @@
         Title="Edit" Width="420" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" WindowStyle="None" ResizeMode="NoResize"
         Background="Transparent" AllowsTransparency="True">
-    <Border Background="{StaticResource PanelBg}" CornerRadius="14" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="22">
+    <Border Background="{DynamicResource PanelBg}" CornerRadius="14" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="22">
         <StackPanel>
-            <TextBlock x:Name="TitleText" Text="Edit" Foreground="White" FontSize="17" FontWeight="Bold" Margin="0,0,0,16"/>
+            <TextBlock x:Name="TitleText" Text="Edit" Foreground="{DynamicResource TextPrimary}" FontSize="17" FontWeight="Bold" Margin="0,0,0,16"/>
 
             <StackPanel x:Name="NamePanel" Margin="0,0,0,12">
-                <TextBlock x:Name="NameLabel" Text="NAME *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
-                <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
-                    <TextBox x:Name="NameBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+                <TextBlock x:Name="NameLabel" Text="NAME *" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Border Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="10,7">
+                    <TextBox x:Name="NameBox" Foreground="{DynamicResource TextPrimary}" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
             </StackPanel>
 
             <StackPanel x:Name="PricePanel" Margin="0,0,0,12">
-                <TextBlock Text="PRICE (₹) *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
-                <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
-                    <TextBox x:Name="PriceBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+                <TextBlock Text="PRICE (₹) *" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Border Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="10,7">
+                    <TextBox x:Name="PriceBox" Foreground="{DynamicResource TextPrimary}" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
             </StackPanel>
 
             <StackPanel x:Name="RatePanel" Margin="0,0,0,12">
-                <TextBlock Text="GST RATE (%) *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
-                <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
-                    <TextBox x:Name="RateBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+                <TextBlock Text="GST RATE (%) *" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Border Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="10,7">
+                    <TextBox x:Name="RateBox" Foreground="{DynamicResource TextPrimary}" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
             </StackPanel>
 
             <StackPanel x:Name="AreaPanel" Margin="0,0,0,12">
-                <TextBlock Text="DINING AREA *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <TextBlock Text="DINING AREA *" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
                 <ComboBox x:Name="AreaCombo" FontSize="14" Height="34" DisplayMemberPath="Name" SelectedValuePath="Id"/>
             </StackPanel>
 
             <StackPanel x:Name="ParentCatPanel" Margin="0,0,0,12">
-                <TextBlock Text="SELECT PARENT CATEGORY *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <TextBlock Text="SELECT PARENT CATEGORY *" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
                 <ComboBox x:Name="ParentCatCombo" FontSize="14" Height="34" DisplayMemberPath="Name" SelectedValuePath="Id"/>
             </StackPanel>
 
             <StackPanel x:Name="SortOrderPanel" Margin="0,0,0,12">
-                <TextBlock Text="SORT ORDER" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
-                <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
-                    <TextBox x:Name="SortOrderBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+                <TextBlock Text="SORT ORDER" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Border Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="10,7">
+                    <TextBox x:Name="SortOrderBox" Foreground="{DynamicResource TextPrimary}" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
             </StackPanel>
 
             <StackPanel x:Name="CategoryPanel" Margin="0,0,0,12">
-                <TextBlock Text="CATEGORY *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <TextBlock Text="CATEGORY *" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
                 <ComboBox x:Name="CategoryCombo" FontSize="14" Height="34" DisplayMemberPath="Name" SelectedValuePath="Id"/>
             </StackPanel>
 
             <StackPanel x:Name="TypePanel" Margin="0,0,0,12">
-                <TextBlock Text="TYPE" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <TextBlock Text="TYPE" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
                 <ComboBox x:Name="TypeCombo" FontSize="14" Height="34"/>
             </StackPanel>
 
@@ -61,7 +61,7 @@
                     <ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Button Grid.Column="0" Content="Cancel" Height="42" Click="Cancel_Click" Cursor="Hand"
-                        Background="{StaticResource CardBg}" Foreground="{StaticResource TextMuted}" FontWeight="SemiBold" BorderThickness="0">
+                        Background="{DynamicResource CardBg}" Foreground="{DynamicResource TextMuted}" FontWeight="SemiBold" BorderThickness="0">
                     <Button.Resources>
                         <Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style>
                     </Button.Resources>

@@ -4,11 +4,11 @@
         Title="Transaction" Width="400" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         Background="Transparent" WindowStyle="None" AllowsTransparency="True">
-    <Border CornerRadius="16" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource Border}" BorderThickness="1.5">
+    <Border CornerRadius="16" Background="{DynamicResource PanelBg}" BorderBrush="{DynamicResource Border}" BorderThickness="1.5">
         <StackPanel Margin="24">
             <!-- Header -->
             <Grid Margin="0,0,0,16">
-                <TextBlock x:Name="TxtTitle" Text="NEW TRANSACTION" Foreground="{StaticResource TextPrimary}" FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
+                <TextBlock x:Name="TxtTitle" Text="NEW TRANSACTION" Foreground="{DynamicResource TextPrimary}" FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
                 <Button Click="Close_Click" Style="{StaticResource Stepper}" Content="✕" Width="30" Height="30" HorizontalAlignment="Right" VerticalAlignment="Center"/>
             </Grid>
 
@@ -18,42 +18,42 @@
                 <Button x:Name="BtnDebit" Grid.Column="0" Content="↗  DEBIT (Borrow)" Click="Type_Click" Tag="debit" Height="40"
                         Background="#FFEF4444" Foreground="White" FontWeight="Bold" FontSize="12" BorderThickness="0"/>
                 <Button x:Name="BtnCredit" Grid.Column="2" Content="↙  CREDIT (Paid)" Click="Type_Click" Tag="credit" Height="40"
-                        Background="{StaticResource CardBg}" Foreground="{StaticResource TextMuted}" FontWeight="Bold" FontSize="12" BorderThickness="0"/>
+                        Background="{DynamicResource CardBg}" Foreground="{DynamicResource TextMuted}" FontWeight="Bold" FontSize="12" BorderThickness="0"/>
             </Grid>
 
             <!-- Date -->
-            <TextBlock Text="DATE:" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,6"/>
+            <TextBlock Text="DATE:" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,6"/>
             <DatePicker x:Name="DpDate" FontSize="14" Height="34" Margin="0,0,0,14"/>
 
             <!-- Amount -->
-            <TextBlock Text="AMOUNT (₹):" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,6"/>
-            <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1.5" Padding="8,4" Margin="0,0,0,14">
+            <TextBlock Text="AMOUNT (₹):" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,6"/>
+            <Border Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1.5" Padding="8,4" Margin="0,0,0,14">
                 <Grid>
-                    <TextBlock Text="₹" Foreground="{StaticResource TextMuted}" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBox x:Name="TxtAmount" Foreground="White" FontSize="18" FontWeight="Bold" Margin="20,0,0,0" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+                    <TextBlock Text="₹" Foreground="{DynamicResource TextMuted}" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBox x:Name="TxtAmount" Foreground="{DynamicResource TextPrimary}" FontSize="18" FontWeight="Bold" Margin="20,0,0,0" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Grid>
             </Border>
 
             <!-- Payment mode -->
-            <TextBlock Text="PAYMENT MODE:" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,6"/>
+            <TextBlock Text="PAYMENT MODE:" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,6"/>
             <Grid Margin="0,0,0,14">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                 <Button x:Name="BtnCash" Grid.Column="0" Content="CASH" Click="Mode_Click" Tag="cash" Margin="0,0,3,0" Height="32" Background="{DynamicResource Accent}" Foreground="White" FontWeight="Bold" BorderThickness="0"/>
-                <Button x:Name="BtnUpi" Grid.Column="1" Content="UPI" Click="Mode_Click" Tag="upi" Margin="3,0,3,0" Height="32" Background="{StaticResource CardBg}" Foreground="{StaticResource TextMuted}" FontWeight="Bold" BorderThickness="0"/>
-                <Button x:Name="BtnBank" Grid.Column="2" Content="BANK" Click="Mode_Click" Tag="bank" Margin="3,0,0,0" Height="32" Background="{StaticResource CardBg}" Foreground="{StaticResource TextMuted}" FontWeight="Bold" BorderThickness="0"/>
+                <Button x:Name="BtnUpi" Grid.Column="1" Content="UPI" Click="Mode_Click" Tag="upi" Margin="3,0,3,0" Height="32" Background="{DynamicResource CardBg}" Foreground="{DynamicResource TextMuted}" FontWeight="Bold" BorderThickness="0"/>
+                <Button x:Name="BtnBank" Grid.Column="2" Content="BANK" Click="Mode_Click" Tag="bank" Margin="3,0,0,0" Height="32" Background="{DynamicResource CardBg}" Foreground="{DynamicResource TextMuted}" FontWeight="Bold" BorderThickness="0"/>
             </Grid>
 
             <!-- Remarks -->
-            <TextBlock Text="REMARKS / NOTE:" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
-            <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="8,4" Margin="0,0,0,16">
-                <TextBox x:Name="TxtRemarks" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+            <TextBlock Text="REMARKS / NOTE:" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+            <Border Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="8,4" Margin="0,0,0,16">
+                <TextBox x:Name="TxtRemarks" Foreground="{DynamicResource TextPrimary}" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
             </Border>
 
             <!-- Actions -->
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
                 <Button Grid.Column="0" Content="CANCEL" Click="Close_Click" Height="42" Margin="0,0,8,0"
-                        Background="{StaticResource CardBg}" Foreground="{StaticResource TextMuted}" FontWeight="Bold" FontSize="12" BorderThickness="0"/>
+                        Background="{DynamicResource CardBg}" Foreground="{DynamicResource TextMuted}" FontWeight="Bold" FontSize="12" BorderThickness="0"/>
                 <Button x:Name="BtnSubmit" Grid.Column="1" Content="SAVE TRANSACTION" Click="Save_Click" Height="42"
                         Background="{DynamicResource AccentGrad}" Foreground="White" FontWeight="Bold" FontSize="13" BorderThickness="0"/>
             </Grid>

@@ -4,13 +4,13 @@
         Title="Message" Width="420" MinHeight="170" MaxHeight="540"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
-        Background="{StaticResource PanelBg}" WindowStyle="None" AllowsTransparency="True"
+        Background="{DynamicResource PanelBg}" WindowStyle="None" AllowsTransparency="True"
         FontFamily="{StaticResource AppFont}"
-        TextElement.Foreground="{StaticResource TextPrimary}"
+        TextElement.Foreground="{DynamicResource TextPrimary}"
         TextOptions.TextFormattingMode="Ideal"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
         KeyDown="Window_KeyDown">
-    <Border CornerRadius="16" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource Border}" BorderThickness="1.5">
+    <Border CornerRadius="16" Background="{DynamicResource PanelBg}" BorderBrush="{DynamicResource Border}" BorderThickness="1.5">
         <Grid Margin="20">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -22,7 +22,7 @@
             <Grid Grid.Row="0" Margin="0,0,0,12">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock x:Name="TxtIcon" Text="ℹ" FontSize="18" Margin="0,0,8,0" Foreground="{DynamicResource BlueLink}"/>
-                    <TextBlock x:Name="TxtTitle" Text="NOTIFICATION" Foreground="{StaticResource TextPrimary}" FontSize="13" FontWeight="Bold"/>
+                    <TextBlock x:Name="TxtTitle" Text="NOTIFICATION" Foreground="{DynamicResource TextPrimary}" FontSize="13" FontWeight="Bold"/>
                 </StackPanel>
                 <Button Click="Close_Click" Style="{StaticResource Stepper}" Content="✕" Width="26" Height="26"
                         HorizontalAlignment="Right" VerticalAlignment="Center"/>
@@ -32,7 +32,7 @@
                  and a clipped exception is no more use than no exception at all. -->
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                           Margin="0,0,0,6">
-                <TextBlock x:Name="TxtMessage" Text="Message goes here." Foreground="White" FontSize="14" FontWeight="SemiBold"
+                <TextBlock x:Name="TxtMessage" Text="Message goes here." Foreground="{DynamicResource TextPrimary}" FontSize="14" FontWeight="SemiBold"
                            TextWrapping="Wrap" HorizontalAlignment="Left" LineHeight="20"/>
             </ScrollViewer>
 
@@ -41,7 +41,7 @@
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
                 <Button x:Name="BtnCancel" Content="NO" Click="Close_Click" Height="38" MinWidth="96"
                         Margin="0,0,10,0" Visibility="Collapsed"
-                        Background="{StaticResource CardBg}" Foreground="{StaticResource TextMuted}"
+                        Background="{DynamicResource CardBg}" Foreground="{DynamicResource TextMuted}"
                         FontWeight="Bold" FontSize="12" Cursor="Hand">
                     <Button.Resources>
                         <Style TargetType="Border"><Setter Property="CornerRadius" Value="9"/></Style>

@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Merge Table" Height="440" Width="460"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
-        Background="{StaticResource PanelBg}" WindowStyle="None" AllowsTransparency="True">
-    <Border CornerRadius="16" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource Border}" BorderThickness="1.5">
+        Background="{DynamicResource PanelBg}" WindowStyle="None" AllowsTransparency="True">
+    <Border CornerRadius="16" Background="{DynamicResource PanelBg}" BorderBrush="{DynamicResource Border}" BorderThickness="1.5">
         <Grid Margin="24">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -16,25 +16,25 @@
             <Grid Grid.Row="0" Margin="0,0,0,16">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="🔀" FontSize="18" Margin="0,0,8,0" Foreground="{DynamicResource Accent}"/>
-                    <TextBlock x:Name="TxtTitle" Text="MERGE TABLES INTO ACTIVE ORDER" Foreground="{StaticResource TextPrimary}" FontSize="15" FontWeight="Bold"/>
+                    <TextBlock x:Name="TxtTitle" Text="MERGE TABLES INTO ACTIVE ORDER" Foreground="{DynamicResource TextPrimary}" FontSize="15" FontWeight="Bold"/>
                 </StackPanel>
                 <Button Click="Close_Click" Style="{StaticResource Stepper}" Content="✕" Width="30" Height="30"
                         HorizontalAlignment="Right" VerticalAlignment="Center"/>
             </Grid>
 
             <!-- Tables Selection List -->
-            <Border Grid.Row="1" Background="{StaticResource CardBg}" CornerRadius="12" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="14">
+            <Border Grid.Row="1" Background="{DynamicResource CardBg}" CornerRadius="12" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="14">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Text="SELECT OCCUPIED TABLE TO MERGE (ऑर्डर जोड़ने के लिए टेबल चुनें):" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,10"/>
-                    <Border Grid.Row="1" Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,6" Margin="0,0,0,10">
+                    <TextBlock Text="SELECT OCCUPIED TABLE TO MERGE (ऑर्डर जोड़ने के लिए टेबल चुनें):" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <Border Grid.Row="1" Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="10,6" Margin="0,0,0,10">
                         <Grid>
-                            <TextBlock x:Name="SearchPlaceholder" Text="🔍  टेबल सर्च करें (T-5, F-2…)" Foreground="{StaticResource TextFaint}" FontSize="12" VerticalAlignment="Center" IsHitTestVisible="False"/>
-                            <TextBox x:Name="TxtSearch" TextChanged="Search_TextChanged" PreviewKeyDown="Search_KeyDown" Foreground="White" FontSize="13" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+                            <TextBlock x:Name="SearchPlaceholder" Text="🔍  टेबल सर्च करें (T-5, F-2…)" Foreground="{DynamicResource TextFaint}" FontSize="12" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                            <TextBox x:Name="TxtSearch" TextChanged="Search_TextChanged" PreviewKeyDown="Search_KeyDown" Foreground="{DynamicResource TextPrimary}" FontSize="13" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                         </Grid>
                     </Border>
                     <ListBox x:Name="LstOccupiedTables" Grid.Row="2" Background="Transparent" BorderThickness="0"
@@ -56,8 +56,8 @@
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="ListBoxItem">
-                                            <Border x:Name="b" CornerRadius="10" Background="{StaticResource CardBg2}" 
-                                                    BorderBrush="{StaticResource Border}" BorderThickness="1.2" 
+                                            <Border x:Name="b" CornerRadius="10" Background="{DynamicResource CardBg2}" 
+                                                    BorderBrush="{DynamicResource Border}" BorderThickness="1.2" 
                                                     Padding="10,8" Cursor="Hand" SnapsToDevicePixels="True">
                                                 <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                                             </Border>
@@ -82,7 +82,7 @@
                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                         <Ellipse Width="6" Height="6" Fill="#FFEAB308" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding TableNumber}" Foreground="White" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding TableNumber}" Foreground="{DynamicResource TextPrimary}" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
                                     </StackPanel>
                                     <TextBlock Text="{Binding Amount, StringFormat='₹{0:0.##}'}" Foreground="{DynamicResource Accent}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                                 </StackPanel>
@@ -100,7 +100,7 @@
                 </Grid.ColumnDefinitions>
 
                 <Button Grid.Column="0" Content="CANCEL" Click="Close_Click" Height="42" Margin="0,0,8,0"
-                        Background="{StaticResource CardBg}" Foreground="{StaticResource TextMuted}" FontWeight="Bold" FontSize="12">
+                        Background="{DynamicResource CardBg}" Foreground="{DynamicResource TextMuted}" FontWeight="Bold" FontSize="12">
                     <Button.Resources>
                         <Style TargetType="Border"><Setter Property="CornerRadius" Value="10"/></Style>
                     </Button.Resources>

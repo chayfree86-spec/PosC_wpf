@@ -11,7 +11,7 @@
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -34,14 +34,14 @@
             <Setter Property="Padding" Value="10,0"/>
             <Setter Property="Margin" Value="0,0,6,6"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Background" Value="{StaticResource CardBg}"/>
+            <Setter Property="Background" Value="{DynamicResource CardBg}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="b" CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="b" CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -53,31 +53,31 @@
         </Style>
     </Window.Resources>
 
-    <Border Background="{StaticResource PanelBg}" CornerRadius="14" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="22">
+    <Border Background="{DynamicResource PanelBg}" CornerRadius="14" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="22">
         <StackPanel>
             <Grid Margin="0,0,0,16">
-                <TextBlock x:Name="TitleText" Text="Create Menu Item" Foreground="White" FontSize="17" FontWeight="Bold"/>
+                <TextBlock x:Name="TitleText" Text="Create Menu Item" Foreground="{DynamicResource TextPrimary}" FontSize="17" FontWeight="Bold"/>
                 <Button Content="✕" Width="26" Height="26" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0"
-                        Foreground="{StaticResource TextMuted}" Click="Cancel_Click" Cursor="Hand"/>
+                        Foreground="{DynamicResource TextMuted}" Click="Cancel_Click" Cursor="Hand"/>
             </Grid>
 
             <!-- Category + Sub Category -->
             <Grid Margin="0,0,0,12">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="14"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="CATEGORY *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                    <TextBlock Text="CATEGORY *" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
                     <ComboBox x:Name="CategoryCombo" FontSize="13" Height="34" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="CategoryCombo_SelectionChanged"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2">
-                    <TextBlock Text="SUB CATEGORY" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                    <TextBlock Text="SUB CATEGORY" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
                     <ComboBox x:Name="SubCategoryCombo" FontSize="13" Height="34" DisplayMemberPath="Name" SelectedValuePath="Id"/>
                 </StackPanel>
             </Grid>
 
             <!-- Item name label + Hindi/English toggle -->
             <Grid Margin="0,0,0,4">
-                <TextBlock Text="ITEM NAME *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
-                <Border Background="{StaticResource CardBg2}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="2" HorizontalAlignment="Right">
+                <TextBlock Text="ITEM NAME *" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                <Border Background="{DynamicResource CardBg2}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="2" HorizontalAlignment="Right">
                     <StackPanel Orientation="Horizontal">
                         <ToggleButton x:Name="HindiToggle" Content="HINDI" IsChecked="True" Style="{StaticResource LangToggle}" Click="HindiToggle_Click"/>
                         <ToggleButton x:Name="EnglishToggle" Content="ENGLISH" Style="{StaticResource LangToggle}" Click="EnglishToggle_Click" Margin="4,0,0,0"/>
@@ -85,18 +85,18 @@
                 </Border>
             </Grid>
             <Grid Margin="0,6,0,0">
-                <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
-                    <TextBox x:Name="NameBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"
+                <Border Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="10,7">
+                    <TextBox x:Name="NameBox" Foreground="{DynamicResource TextPrimary}" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"
                              TextChanged="NameBox_TextChanged" PreviewKeyDown="NameBox_PreviewKeyDown"/>
                 </Border>
-                <TextBlock x:Name="NamePlaceholder" Text="Type in English for Hindi" Foreground="{StaticResource TextFaint}" FontSize="14"
+                <TextBlock x:Name="NamePlaceholder" Text="Type in English for Hindi" Foreground="{DynamicResource TextFaint}" FontSize="14"
                            Margin="12,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
             </Grid>
 
             <!-- Hindi transliteration suggestions -->
-            <Border x:Name="SuggestionsPanel" Background="{StaticResource CardBg2}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,8,0,0">
+            <Border x:Name="SuggestionsPanel" Background="{DynamicResource CardBg2}" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,8,0,0">
                 <StackPanel>
-                    <TextBlock Text="HINDI TRANSLITERATION" Foreground="{StaticResource TextFaint}" FontSize="9" FontWeight="Bold" Margin="0,0,0,6"/>
+                    <TextBlock Text="HINDI TRANSLITERATION" Foreground="{DynamicResource TextFaint}" FontSize="9" FontWeight="Bold" Margin="0,0,0,6"/>
                     <ItemsControl x:Name="SuggestionsList">
                         <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
@@ -105,7 +105,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <TextBlock x:Name="NoSuggestionsText" Text="Type to see suggestions..." Foreground="{StaticResource TextFaint}" FontSize="11" FontStyle="Italic"/>
+                    <TextBlock x:Name="NoSuggestionsText" Text="Type to see suggestions..." Foreground="{DynamicResource TextFaint}" FontSize="11" FontStyle="Italic"/>
                 </StackPanel>
             </Border>
 
@@ -113,15 +113,15 @@
             <Grid Margin="0,14,0,0">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="14"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="ITEM PRICE (₹) *" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
-                    <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
-                        <TextBox x:Name="PriceBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+                    <TextBlock Text="ITEM PRICE (₹) *" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                    <Border Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="10,7">
+                        <TextBox x:Name="PriceBox" Foreground="{DynamicResource TextPrimary}" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                     </Border>
                 </StackPanel>
                 <StackPanel Grid.Column="2">
-                    <TextBlock Text="ITEM CODE" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
-                    <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,7">
-                        <TextBox x:Name="CodeBox" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+                    <TextBlock Text="ITEM CODE" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                    <Border Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="10,7">
+                        <TextBox x:Name="CodeBox" Foreground="{DynamicResource TextPrimary}" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                     </Border>
                 </StackPanel>
             </Grid>
@@ -133,10 +133,10 @@
                     <TextBlock Text="LAST ADDED ITEM" Foreground="{DynamicResource Accent}" FontSize="9" FontWeight="Bold" Margin="0,0,0,4"/>
                     <Grid>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock x:Name="LastAddedName" Foreground="White" FontSize="13" FontWeight="Bold"/>
-                            <TextBlock x:Name="LastAddedCode" Foreground="{StaticResource TextFaint}" FontSize="10" FontFamily="Consolas" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="LastAddedName" Foreground="{DynamicResource TextPrimary}" FontSize="13" FontWeight="Bold"/>
+                            <TextBlock x:Name="LastAddedCode" Foreground="{DynamicResource TextFaint}" FontSize="10" FontFamily="Consolas" Margin="8,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
-                        <TextBlock x:Name="LastAddedPrice" Foreground="White" FontSize="13" FontWeight="Bold" FontFamily="Consolas" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="LastAddedPrice" Foreground="{DynamicResource TextPrimary}" FontSize="13" FontWeight="Bold" FontFamily="Consolas" HorizontalAlignment="Right"/>
                     </Grid>
                 </StackPanel>
             </Border>
@@ -144,7 +144,7 @@
             <Grid Margin="0,16,0,0">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                 <Button Grid.Column="0" Content="Cancel" Height="42" Click="Cancel_Click" Cursor="Hand"
-                        Background="{StaticResource CardBg}" Foreground="{StaticResource TextMuted}" FontWeight="SemiBold" BorderThickness="0">
+                        Background="{DynamicResource CardBg}" Foreground="{DynamicResource TextMuted}" FontWeight="SemiBold" BorderThickness="0">
                     <Button.Resources>
                         <Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style>
                     </Button.Resources>

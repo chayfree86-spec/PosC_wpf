@@ -70,7 +70,14 @@ public sealed class StatusToCardBgConverter : IValueConverter
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         var status = (value as string)?.ToLowerInvariant() ?? "";
-        if (TableStatuses.IsFree(status)) return FreeBg;
+        if (TableStatuses.IsFree(status))
+        {
+            if (Application.Current?.Resources != null && Application.Current.Resources.Contains("CardBg"))
+            {
+                return Application.Current.Resources["CardBg"] as Brush ?? FreeBg;
+            }
+            return FreeBg;
+        }
         if (TableStatuses.IsRunning(status)) return OccupiedBg;
         return CompletedBg; // completed
     }
@@ -89,7 +96,14 @@ public sealed class StatusToBorderBrushConverter : IValueConverter
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         var status = (value as string)?.ToLowerInvariant() ?? "";
-        if (TableStatuses.IsFree(status)) return FreeBorder;
+        if (TableStatuses.IsFree(status))
+        {
+            if (Application.Current?.Resources != null && Application.Current.Resources.Contains("Border"))
+            {
+                return Application.Current.Resources["Border"] as Brush ?? FreeBorder;
+            }
+            return FreeBorder;
+        }
         if (TableStatuses.IsRunning(status)) return OccupiedBorder;
         return CompletedBorder; // completed
     }
@@ -194,6 +208,29 @@ public sealed class StatusToTimeBrushConverter : IValueConverter
         if (TableStatuses.IsRunning(status)) return DarkBlueBrush;
         if (TableStatuses.IsFree(status)) return DefaultBrush;
         return DarkRedBrush; // completed
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Table status → Title text color (white for occupied/completed, dynamic TextPrimary for free).</summary>
+public sealed class StatusToTitleForegroundConverter : IValueConverter
+{
+    private static readonly Brush WhiteBrush = Brushes.White;
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var status = (value as string)?.ToLowerInvariant() ?? "";
+        if (TableStatuses.IsFree(status))
+        {
+            if (Application.Current?.Resources != null && Application.Current.Resources.Contains("TextPrimary"))
+            {
+                return Application.Current.Resources["TextPrimary"] as Brush ?? WhiteBrush;
+            }
+            return WhiteBrush;
+        }
+        return WhiteBrush;
     }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

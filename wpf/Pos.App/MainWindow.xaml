@@ -10,11 +10,12 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         Title="{Binding ClientName, StringFormat={}{0} POS}" Height="800" Width="1366"
+        Icon="{DynamicResource AppIcon}"
         MinWidth="1120" MinHeight="680"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
-        Background="{StaticResource WindowBg}"
-        TextElement.Foreground="{StaticResource TextPrimary}"
+        Background="{DynamicResource WindowBg}"
+        TextElement.Foreground="{DynamicResource TextPrimary}"
         TextOptions.TextFormattingMode="Ideal"
         FontFamily="{StaticResource AppFont}"
         Loaded="Window_Loaded" Activated="Window_Activated" KeyDown="Window_KeyDown" Closing="Window_Closing">
@@ -28,17 +29,17 @@
         <ContextMenu x:Key="TableContextMenu">
             <MenuItem Header="Change Table" Click="TableContext_ChangeTable_Click">
                 <MenuItem.Icon>
-                    <materialDesign:PackIcon Kind="SwapHorizontal" Width="16" Height="16" Foreground="{StaticResource TextMuted}"/>
+                    <materialDesign:PackIcon Kind="SwapHorizontal" Width="16" Height="16" Foreground="{DynamicResource TextMuted}"/>
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Merge Table" Click="TableContext_MergeTable_Click">
                 <MenuItem.Icon>
-                    <materialDesign:PackIcon Kind="CallMerge" Width="16" Height="16" Foreground="{StaticResource TextMuted}"/>
+                    <materialDesign:PackIcon Kind="CallMerge" Width="16" Height="16" Foreground="{DynamicResource TextMuted}"/>
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Split Table" Click="TableContext_SplitTable_Click">
                 <MenuItem.Icon>
-                    <materialDesign:PackIcon Kind="CallSplit" Width="16" Height="16" Foreground="{StaticResource TextMuted}"/>
+                    <materialDesign:PackIcon Kind="CallSplit" Width="16" Height="16" Foreground="{DynamicResource TextMuted}"/>
                 </MenuItem.Icon>
             </MenuItem>
             <Separator/>
@@ -47,9 +48,9 @@
                     <materialDesign:PackIcon Kind="CreditCardOutline" Width="16" Height="16" Foreground="{DynamicResource AccentText}"/>
                 </MenuItem.Icon>
             </MenuItem>
-            <MenuItem Header="Delete Bill" Click="TableContext_DeleteBill_Click" Foreground="{StaticResource ErrorRed}" Tag="danger">
+            <MenuItem Header="Delete Bill" Click="TableContext_DeleteBill_Click" Foreground="{DynamicResource ErrorRed}" Tag="danger">
                 <MenuItem.Icon>
-                    <materialDesign:PackIcon Kind="TrashCanOutline" Width="16" Height="16" Foreground="{StaticResource ErrorRed}"/>
+                    <materialDesign:PackIcon Kind="TrashCanOutline" Width="16" Height="16" Foreground="{DynamicResource ErrorRed}"/>
                 </MenuItem.Icon>
             </MenuItem>
         </ContextMenu>
@@ -64,8 +65,8 @@
         </Grid.ColumnDefinitions>
 
         <!-- ================= SIDEBAR ================= -->
-        <Border Grid.Column="0" Background="{StaticResource SidebarBg}"
-                BorderBrush="{StaticResource BorderSoft}" BorderThickness="0,0,1.5,0">
+        <Border Grid.Column="0" Background="{DynamicResource SidebarBg}"
+                BorderBrush="{DynamicResource BorderSoft}" BorderThickness="0,0,1.5,0">
             <DockPanel x:Name="SidebarDockPanel" Margin="16,20">
                 <!-- logo -->
                 <Grid x:Name="SidebarHeaderGrid" DockPanel.Dock="Top" Margin="0,0,0,26">
@@ -80,17 +81,17 @@
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <StackPanel x:Name="SidebarExpandedHeader" Margin="12,0,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding ClientName}" Foreground="{StaticResource TextPrimary}" FontWeight="Bold" FontSize="15"/>
-                            <TextBlock Text="POS SYSTEM" Foreground="{StaticResource TextFaint}" FontSize="10" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding ClientName}" Foreground="{DynamicResource TextPrimary}" FontWeight="Bold" FontSize="15"/>
+                            <TextBlock Text="POS SYSTEM" Foreground="{DynamicResource TextFaint}" FontSize="10" FontWeight="SemiBold"/>
                         </StackPanel>
                     </StackPanel>
 
                     <Button x:Name="BtnToggleSidebar" Click="BtnToggleSidebar_Click" Style="{StaticResource LinkBtn}"
                             Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center" ToolTip="Toggle Sidebar">
-                        <Border Width="26" Height="26" CornerRadius="7" Background="{StaticResource CardBg}"
-                                BorderBrush="{StaticResource Border}" BorderThickness="1">
+                        <Border Width="26" Height="26" CornerRadius="7" Background="{DynamicResource CardBg}"
+                                BorderBrush="{DynamicResource Border}" BorderThickness="1">
                             <TextBlock x:Name="TxtSidebarToggleIcon" Text="&#xE76B;" FontFamily="Segoe MDL2 Assets" FontSize="10"
-                                       Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </Button>
                 </Grid>
@@ -129,7 +130,7 @@
                             <TextBlock Tag="NavText" Text="Settings" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Border Height="1" Background="{StaticResource BorderSoft}" Margin="0,14"/>
+                    <Border Height="1" Background="{DynamicResource BorderSoft}" Margin="0,14"/>
 
                     <!-- Who is on the till. The counter changes hands mid-shift, and the
                          logout button below says nothing about whom it is logging out. -->
@@ -143,8 +144,8 @@
                     <Grid x:Name="SidebarFooterGrid">
                         <Button x:Name="BtnLogout" Click="Logout_Click" ToolTip="Logout"
                                 Height="40" Cursor="Hand" BorderThickness="1"
-                                BorderBrush="{StaticResource BorderSoft}" Background="Transparent"
-                                Foreground="{StaticResource TextMuted}">
+                                BorderBrush="{DynamicResource BorderSoft}" Background="Transparent"
+                                Foreground="{DynamicResource TextMuted}">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="Bd" CornerRadius="10" Background="{TemplateBinding Background}"
@@ -265,8 +266,8 @@
         <!-- ================= CENTER ================= -->
         <!-- Collapsed while a full-page screen (Settings/Reports/Ledger/QR/Notes) is active so the
              whole Orders visual tree isn't laid out and rendered underneath the overlay. -->
-        <Border Grid.Column="1" Background="{StaticResource PanelBg}"
-                BorderBrush="{StaticResource Border}" BorderThickness="1.5"
+        <Border Grid.Column="1" Background="{DynamicResource PanelBg}"
+                BorderBrush="{DynamicResource Border}" BorderThickness="1.5"
                 CornerRadius="16" Margin="12,12,6,12"
                 Visibility="{Binding ActiveScreen, Converter={StaticResource ModeToVis}, ConverterParameter=Orders}">
             <!-- Bottom padding matches the footer row's own top margin (14) so the status
@@ -288,13 +289,13 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="Orders" Foreground="{StaticResource TextPrimary}" FontSize="22" FontWeight="Bold"/>
+                        <TextBlock Text="Orders" Foreground="{DynamicResource TextPrimary}" FontSize="22" FontWeight="Bold"/>
                         <Button Command="{Binding ShowTableViewCommand}" Style="{StaticResource LinkBtn}" Margin="24,0,0,0">
                             <StackPanel>
                                 <TextBlock Text="Table" FontSize="15" FontWeight="Bold">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding CenterMode}" Value="Table">
                                                     <Setter Property="Foreground" Value="{DynamicResource Accent}"/>
@@ -312,7 +313,7 @@
                                 <TextBlock Text="Menu" FontSize="15" FontWeight="Bold">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding CenterMode}" Value="Menu">
                                                     <Setter Property="Foreground" Value="{DynamicResource Accent}"/>
@@ -327,12 +328,42 @@
                         </Button>
                     </StackPanel>
 
-                    <TextBox Grid.Column="1" x:Name="SearchInput" Style="{StaticResource SearchBox}" Tag="Search food item or code..." Height="46"
-                             MaxWidth="420" MinWidth="240" Margin="16,0,0,0"
-                             HorizontalAlignment="Right" VerticalContentAlignment="Center"
-                             PreviewKeyDown="SearchInput_PreviewKeyDown"
-                             LostKeyboardFocus="SearchInput_LostKeyboardFocus"
-                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button x:Name="BtnThemeToggle" Click="BtnThemeToggle_Click" Margin="16,0,0,0"
+                                Width="46" Height="46" Cursor="Hand" ToolTip="Toggle Light/Dark Theme"
+                                Tag="WeatherNight">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource LinkBtn}">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="Bd" CornerRadius="12" Background="{DynamicResource CardBg2}"
+                                                        BorderBrush="{DynamicResource Border}" BorderThickness="1.5">
+                                                    <materialDesign:PackIcon Kind="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Tag}" 
+                                                                              Width="20" Height="20" 
+                                                                              Foreground="{DynamicResource TextPrimary}" 
+                                                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <TextBox x:Name="SearchInput" Style="{StaticResource SearchBox}" Tag="Search food item or code..." Height="46"
+                                 MaxWidth="420" MinWidth="240" Margin="12,0,0,0"
+                                 VerticalContentAlignment="Center"
+                                 PreviewKeyDown="SearchInput_PreviewKeyDown"
+                                 LostKeyboardFocus="SearchInput_LostKeyboardFocus"
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+
+
 
                 </Grid>
 
@@ -361,8 +392,8 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="Bold"/>
-                                    <Border Background="{StaticResource CardBg}" CornerRadius="9" Margin="8,0,0,0" Padding="7,1" MinWidth="20">
-                                        <TextBlock Text="{Binding Count}" Foreground="{StaticResource TextMuted}" FontSize="11"
+                                    <Border Background="{DynamicResource CardBg}" CornerRadius="9" Margin="8,0,0,0" Padding="7,1" MinWidth="20">
+                                        <TextBlock Text="{Binding Count}" Foreground="{DynamicResource TextMuted}" FontSize="11"
                                                    FontWeight="Bold" HorizontalAlignment="Center"/>
                                     </Border>
                                 </StackPanel>
@@ -375,7 +406,7 @@
                 </Grid>
 
                 <!-- CATEGORIES bar (Menu mode) -->
-                <Border Grid.Row="1" Background="{StaticResource CardBg2}" BorderBrush="{StaticResource BorderSoft}"
+                <Border Grid.Row="1" Background="{DynamicResource CardBg2}" BorderBrush="{DynamicResource BorderSoft}"
                         BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,0,0,12"
                         Visibility="{Binding CenterMode, Converter={StaticResource ModeToVis}, ConverterParameter=Menu}">
                     <Grid>
@@ -384,7 +415,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Text="CATEGORIES" Foreground="{StaticResource TextFaint}"
+                        <TextBlock Grid.Row="0" Text="CATEGORIES" Foreground="{DynamicResource TextFaint}"
                                    FontSize="10" FontWeight="Bold" Margin="2,0,0,8"/>
 
                         <Grid Grid.Row="1">
@@ -412,9 +443,9 @@
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="ListBoxItem">
-                                                    <Border x:Name="b" CornerRadius="8" Background="{StaticResource CardBg}"
-                                                            BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="12,7">
-                                                        <TextBlock x:Name="t" Text="{Binding DisplayText}" Foreground="{StaticResource TextMuted}"
+                                                    <Border x:Name="b" CornerRadius="8" Background="{DynamicResource CardBg}"
+                                                            BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="12,7">
+                                                        <TextBlock x:Name="t" Text="{Binding DisplayText}" Foreground="{DynamicResource TextMuted}"
                                                                    FontSize="12" FontWeight="Bold"/>
                                                     </Border>
                                                     <ControlTemplate.Triggers>
@@ -441,7 +472,7 @@
                 </Border>
 
                 <!-- TABLE GRID (Table mode) -->
-                <ListBox Grid.Row="2" ItemsSource="{Binding Tables}" SelectedItem="{Binding SelectedTable}"
+                <ListBox x:Name="TablesListBox" Grid.Row="2" ItemsSource="{Binding Tables}" SelectedItem="{Binding SelectedTable}"
                          Background="Transparent" BorderThickness="0" Padding="0,0,8,0" ItemContainerStyle="{StaticResource TableCard}"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          ScrollViewer.VerticalScrollBarVisibility="Disabled"
@@ -474,7 +505,7 @@
 
                                     <!-- Table Number / Name with Status Dot on Right -->
                                     <Grid Grid.Row="0" VerticalAlignment="Top">
-                                        <TextBlock Text="{Binding TableNumber}" Foreground="{StaticResource TextPrimary}"
+                                        <TextBlock Text="{Binding TableNumber}" Foreground="{Binding Status, Converter={StaticResource StatusToTitleForeground}}"
                                                    FontSize="12.5" FontWeight="Bold" TextWrapping="NoWrap"
                                                    TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,14,0"/>
                                         <Ellipse Width="9" Height="9" Fill="{Binding Status, Converter={StaticResource StatusToDotBrush}}"
@@ -509,7 +540,7 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- LEFT COLUMN: MENU ITEMS LIST -->
-                    <Border Grid.Column="0" Background="{StaticResource CardBg2}" BorderBrush="{StaticResource BorderSoft}"
+                    <Border Grid.Column="0" Background="{DynamicResource CardBg2}" BorderBrush="{DynamicResource BorderSoft}"
                             BorderThickness="1" CornerRadius="12" Padding="12,12">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -517,7 +548,7 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Text="MENU ITEMS" Foreground="{StaticResource TextFaint}"
+                            <TextBlock Grid.Row="0" Text="MENU ITEMS" Foreground="{DynamicResource TextFaint}"
                                        FontSize="10" FontWeight="Bold" Margin="2,0,0,8"/>
 
                             <ItemsControl Grid.Row="1" ItemsSource="{Binding VisibleItems}"
@@ -548,12 +579,12 @@
                                                 <Button.Style>
                                                     <Style TargetType="Button">
                                                         <Setter Property="Cursor" Value="Hand"/>
-                                                        <Setter Property="Background" Value="{StaticResource CardBg}"/>
+                                                        <Setter Property="Background" Value="{DynamicResource CardBg}"/>
                                                         <Setter Property="Template">
                                                             <Setter.Value>
                                                                 <ControlTemplate TargetType="Button">
                                                                     <Border x:Name="b" CornerRadius="10" Background="{TemplateBinding Background}"
-                                                                            BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="12,10">
+                                                                            BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="12,10">
                                                                         <Grid>
                                                                             <Grid.ColumnDefinitions>
                                                                                 <ColumnDefinition Width="*"/>
@@ -561,17 +592,17 @@
                                                                                 <ColumnDefinition Width="Auto"/>
                                                                             </Grid.ColumnDefinitions>
 
-                                                                            <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{StaticResource TextPrimary}"
+                                                                            <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{DynamicResource TextPrimary}"
                                                                                        FontSize="13.5" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
 
-                                                                            <Border Grid.Column="1" Background="{StaticResource CardBg2}" CornerRadius="6"
+                                                                            <Border Grid.Column="1" Background="{DynamicResource CardBg2}" CornerRadius="6"
                                                                                     Padding="8,2" Margin="8,0" VerticalAlignment="Center">
-                                                                                <TextBlock Text="{Binding Code}" Foreground="{StaticResource TextMuted}"
+                                                                                <TextBlock Text="{Binding Code}" Foreground="{DynamicResource TextMuted}"
                                                                                            FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
                                                                             </Border>
 
                                                                             <TextBlock Grid.Column="2" Text="{Binding Price, StringFormat='₹{0:0.##}'}"
-                                                                                       Foreground="{StaticResource TextPrimary}" FontSize="14" FontWeight="Bold"
+                                                                                       Foreground="{DynamicResource TextPrimary}" FontSize="14" FontWeight="Bold"
                                                                                        VerticalAlignment="Center"/>
                                                                         </Grid>
                                                                     </Border>
@@ -594,7 +625,7 @@
                     </Border>
 
                     <!-- RIGHT COLUMN: MOST SELLING ITEMS -->
-                    <Border Grid.Column="2" Background="{StaticResource CardBg2}" BorderBrush="{StaticResource BorderSoft}"
+                    <Border Grid.Column="2" Background="{DynamicResource CardBg2}" BorderBrush="{DynamicResource BorderSoft}"
                             BorderThickness="1" CornerRadius="12" Padding="16,14">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -613,13 +644,13 @@
                                     <ItemsControl ItemsSource="{Binding PopularItems}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1" CornerRadius="10" Padding="12,10" Margin="0,0,0,8">
+                                                <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="1" CornerRadius="10" Padding="12,10" Margin="0,0,0,8">
                                                     <Grid>
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="*"/>
                                                             <ColumnDefinition Width="Auto"/>
                                                         </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{StaticResource TextPrimary}" FontSize="13.5" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,10,0"/>
+                                                        <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{DynamicResource TextPrimary}" FontSize="13.5" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,10,0"/>
                                                         <Border Grid.Column="1" Background="{DynamicResource AccentFaint}" BorderBrush="{DynamicResource Accent}" BorderThickness="1" CornerRadius="6" Padding="8,3" VerticalAlignment="Center">
                                                             <TextBlock Text="{Binding QtyText}" Foreground="{DynamicResource AccentText}" FontSize="11" FontWeight="Bold"/>
                                                         </Border>
@@ -643,10 +674,10 @@
                                         </Style>
                                     </StackPanel.Style>
                                     <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="36"
-                                               Foreground="{StaticResource TextFaint}" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="No Sales Data Yet" Foreground="{StaticResource TextPrimary}"
+                                               Foreground="{DynamicResource TextFaint}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="No Sales Data Yet" Foreground="{DynamicResource TextPrimary}"
                                                FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,12,0,4"/>
-                                    <TextBlock Text="Popular items appear here after sales" Foreground="{StaticResource TextFaint}"
+                                    <TextBlock Text="Popular items appear here after sales" Foreground="{DynamicResource TextFaint}"
                                                FontSize="11.5" HorizontalAlignment="Center"/>
                                 </StackPanel>
                             </Grid>
@@ -657,8 +688,8 @@
                 <!-- footer -->
                 <Grid Grid.Row="3" Margin="0,14,0,0">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="{StaticResource CardBg}" CornerRadius="6" Padding="8,3">
-                            <TextBlock Text="{Binding AppVersion}" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold"/>
+                        <Border Background="{DynamicResource CardBg}" CornerRadius="6" Padding="8,3">
+                            <TextBlock Text="{Binding AppVersion}" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold"/>
                         </Border>
                         <!-- Update badge: green + "UP TO DATE" normally; amber + clickable
                              "UPDATE — vX" when the server offers a newer build. Disabled (plain
@@ -682,7 +713,7 @@
                                 <TextBlock Text="{Binding UpdateText}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding UpdateAvailable}" Value="True">
                                                     <Setter Property="Foreground" Value="#FFF59E0B"/>
@@ -694,7 +725,7 @@
                             </StackPanel>
                         </Button>
 
-                        <Border Width="1" Height="14" Background="{StaticResource BorderSoft}" Margin="12,0" VerticalAlignment="Center"/>
+                        <Border Width="1" Height="14" Background="{DynamicResource BorderSoft}" Margin="12,0" VerticalAlignment="Center"/>
 
                         <!-- Sync ki haalat: hara = sab bheja ja chuka, peela = katar me hai,
                              laal = server se baat nahi ho rahi. Click karne par turant koshish. -->
@@ -704,7 +735,7 @@
                                 <Ellipse Width="7" Height="7" Margin="0,0,6,0" VerticalAlignment="Center">
                                     <Ellipse.Style>
                                         <Style TargetType="Ellipse">
-                                            <Setter Property="Fill" Value="{StaticResource TextFaint}"/>
+                                            <Setter Property="Fill" Value="{DynamicResource TextFaint}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding SyncState}" Value="ok">
                                                     <Setter Property="Fill" Value="{DynamicResource AccentText}"/>
@@ -713,7 +744,7 @@
                                                     <Setter Property="Fill" Value="#FFF59E0B"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding SyncState}" Value="offline">
-                                                    <Setter Property="Fill" Value="{StaticResource ErrorRed}"/>
+                                                    <Setter Property="Fill" Value="{DynamicResource ErrorRed}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -725,9 +756,9 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <Button Content="CHANGE TABLE" Click="ChangeTable_Click" Style="{StaticResource LinkBtn}"/>
-                        <TextBlock Text="|" Foreground="{StaticResource TextFaint}" Margin="8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="|" Foreground="{DynamicResource TextFaint}" Margin="8,0" VerticalAlignment="Center"/>
                         <Button Content="MERGE TABLE" Click="MergeTable_Click" Style="{StaticResource LinkBtn}"/>
-                        <TextBlock Text="|" Foreground="{StaticResource TextFaint}" Margin="8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="|" Foreground="{DynamicResource TextFaint}" Margin="8,0" VerticalAlignment="Center"/>
                         <Button Content="SPLIT TABLE" Click="SplitTable_Click" Style="{StaticResource LinkBtn}"/>
                     </StackPanel>
                 </Grid>
@@ -741,7 +772,7 @@
                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-12,0,0"
                         Visibility="{Binding IsSearchPopupOpen, Converter={StaticResource BoolToVis}}">
                     <Border Width="{Binding ActualWidth, ElementName=SearchInput}" MaxHeight="320"
-                            Background="{StaticResource CardBg}" BorderBrush="{DynamicResource Accent}" BorderThickness="1.5"
+                            Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Accent}" BorderThickness="1.5"
                             CornerRadius="12" Padding="4">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="16" ShadowDepth="4" Opacity="0.5" Color="Black"/>
@@ -774,7 +805,7 @@
                                                         <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentDim}"/>
                                                     </Trigger>
                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="b" Property="Background" Value="{StaticResource CardBg2}"/>
+                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource CardBg2}"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
@@ -784,20 +815,28 @@
                             </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid>
+                                    <Grid x:Name="RootGrid">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{StaticResource TextPrimary}"
+                                        <TextBlock x:Name="TxtName" Grid.Column="0" Text="{Binding Name}" Foreground="{DynamicResource TextPrimary}"
                                                    FontSize="13.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                        <Border Grid.Column="1" Background="{DynamicResource AccentFaint}" CornerRadius="5" Padding="6,2" Margin="8,0" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Code}" Foreground="{DynamicResource Accent}" FontSize="11" FontWeight="Bold"/>
+                                        <Border x:Name="BrdCode" Grid.Column="1" Background="{DynamicResource AccentFaint}" CornerRadius="5" Padding="6,2" Margin="8,0" VerticalAlignment="Center">
+                                            <TextBlock x:Name="TxtCode" Text="{Binding Code}" Foreground="{DynamicResource Accent}" FontSize="11" FontWeight="Bold"/>
                                         </Border>
-                                        <TextBlock Grid.Column="2" Text="{Binding Price, StringFormat='₹{0:0.##}'}"
-                                                   Foreground="{StaticResource TextPrimary}" FontSize="13.5" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="TxtPrice" Grid.Column="2" Text="{Binding Price, StringFormat='₹{0:0.##}'}"
+                                                   Foreground="{DynamicResource TextPrimary}" FontSize="13.5" FontWeight="Bold" VerticalAlignment="Center"/>
                                     </Grid>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding Path=IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                            <Setter TargetName="TxtName" Property="Foreground" Value="White"/>
+                                            <Setter TargetName="TxtPrice" Property="Foreground" Value="White"/>
+                                            <Setter TargetName="TxtCode" Property="Foreground" Value="White"/>
+                                            <Setter TargetName="BrdCode" Property="Background" Value="#33FFFFFF"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
@@ -813,8 +852,8 @@
                       Visibility="{Binding ActiveScreen, Converter={StaticResource ModeToVis}, ConverterParameter=Orders}"/>
 
         <!-- ================= RIGHT: BILL ================= -->
-        <Border Grid.Column="3" Background="{StaticResource PanelBg}"
-                BorderBrush="{StaticResource Border}" BorderThickness="1.5"
+        <Border Grid.Column="3" Background="{DynamicResource PanelBg}"
+                BorderBrush="{DynamicResource Border}" BorderThickness="1.5"
                 CornerRadius="16" Margin="6,12,12,12"
                 Visibility="{Binding ActiveScreen, Converter={StaticResource ModeToVis}, ConverterParameter=Orders}">
             <Grid Margin="12,12,12,8">
@@ -827,7 +866,7 @@
 
                 <!-- header -->
                 <Grid Grid.Row="0" Margin="0,0,0,10">
-                    <TextBlock Text="{Binding BillTitle}" Foreground="{StaticResource TextPrimary}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding BillTitle}" Foreground="{DynamicResource TextPrimary}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
                     <Border Background="{DynamicResource AccentFaint}" CornerRadius="8" Padding="8,2" HorizontalAlignment="Right">
                         <TextBlock Text="{Binding DraftLabel}" Foreground="{DynamicResource Accent}" FontSize="11" FontWeight="Bold"/>
                     </Border>
@@ -846,7 +885,7 @@
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource ActionBtn}">
                                 <Setter Property="Height" Value="32"/><Setter Property="FontSize" Value="11"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding BillMode}" Value="Quick">
                                         <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
@@ -870,7 +909,7 @@
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource ActionBtn}">
                                 <Setter Property="Height" Value="32"/><Setter Property="FontSize" Value="11"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding BillMode}" Value="Table">
                                         <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
@@ -894,7 +933,7 @@
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource ActionBtn}">
                                 <Setter Property="Height" Value="32"/><Setter Property="FontSize" Value="11"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding BillMode}" Value="QR">
                                         <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
@@ -918,7 +957,7 @@
 
                 <!-- cart -->
                 <Grid Grid.Row="2">
-                    <TextBlock Text="CART IS EMPTY" Foreground="{StaticResource TextFaint}" FontSize="13" FontWeight="SemiBold"
+                    <TextBlock Text="CART IS EMPTY" Foreground="{DynamicResource TextFaint}" FontSize="13" FontWeight="SemiBold"
                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                Visibility="{Binding IsCartPanelVisible, Converter={StaticResource CountToVis}, ConverterParameter=invert}"/>
                     <Grid Visibility="{Binding IsCartPanelVisible, Converter={StaticResource CountToVis}}">
@@ -929,7 +968,7 @@
                         <!-- Cart Header with Clear All button -->
                         <Grid Grid.Row="0" Margin="0,0,0,6">
                             <!-- Standard Title (Visible when HasExistingOrder is False) -->
-                            <TextBlock Text="ORDER ITEMS" Foreground="{StaticResource TextFaint}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"
+                            <TextBlock Text="ORDER ITEMS" Foreground="{DynamicResource TextFaint}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"
                                        Visibility="{Binding HasExistingOrder, Converter={StaticResource CountToVis}, ConverterParameter=invert}"/>
 
                             <!-- Tabs (Visible when HasExistingOrder is True) -->
@@ -944,7 +983,7 @@
                                                 <Setter.Value>
                                                     <ControlTemplate TargetType="Button">
                                                         <Border x:Name="b" BorderThickness="0,0,0,2.5" BorderBrush="Transparent" Padding="4,2,4,4">
-                                                            <TextBlock x:Name="txt" Text="{TemplateBinding Content}" Foreground="{StaticResource TextMuted}"
+                                                            <TextBlock x:Name="txt" Text="{TemplateBinding Content}" Foreground="{DynamicResource TextMuted}"
                                                                         FontSize="11" FontWeight="Bold"/>
                                                         </Border>
                                                         <ControlTemplate.Triggers>
@@ -971,7 +1010,7 @@
                                                 <Setter.Value>
                                                     <ControlTemplate TargetType="Button">
                                                         <Border x:Name="b" BorderThickness="0,0,0,2.5" BorderBrush="Transparent" Padding="4,2,4,4">
-                                                            <TextBlock x:Name="txt" Text="{TemplateBinding Content}" Foreground="{StaticResource TextMuted}"
+                                                            <TextBlock x:Name="txt" Text="{TemplateBinding Content}" Foreground="{DynamicResource TextMuted}"
                                                                         FontSize="11" FontWeight="Bold"/>
                                                         </Border>
                                                         <ControlTemplate.Triggers>
@@ -999,7 +1038,7 @@
                                              other links. The icon and label must not set Foreground
                                              themselves: a local value outranks the template trigger,
                                              so the hover colour would never reach them. -->
-                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="Button">
@@ -1013,7 +1052,7 @@
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsMouseOver" Value="True">
                                                             <Setter TargetName="b" Property="Background" Value="#26EF4444"/>
-                                                            <Setter Property="Foreground" Value="{StaticResource ErrorRed}"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource ErrorRed}"/>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
                                                 </ControlTemplate>
@@ -1025,7 +1064,7 @@
                         </Grid>
 
                         <!-- Inline Extra Form -->
-                        <Border Grid.Row="1" Background="{StaticResource CardBg2}" BorderBrush="{DynamicResource Accent}" BorderThickness="1.5"
+                        <Border Grid.Row="1" Background="{DynamicResource CardBg2}" BorderBrush="{DynamicResource Accent}" BorderThickness="1.5"
                                 CornerRadius="12" Padding="14,10" Margin="0,0,0,12"
                                 Visibility="{Binding IsAddingExtra, Converter={StaticResource CountToVis}}">
                             <StackPanel>
@@ -1037,16 +1076,16 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <!-- Price -->
-                                    <Border Grid.Column="0" Background="{StaticResource WindowBg}" CornerRadius="6" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="6,3" Margin="0,0,8,0">
+                                    <Border Grid.Column="0" Background="{DynamicResource WindowBg}" CornerRadius="6" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="6,3" Margin="0,0,8,0">
                                         <Grid>
-                                            <TextBlock Text="₹" Foreground="{StaticResource TextMuted}" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                                            <TextBlock Text="₹" Foreground="{DynamicResource TextMuted}" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
                                             <TextBox x:Name="TxtExtraPrice" GotFocus="ExtraInput_GotFocus" KeyDown="TxtExtraPrice_KeyDown" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="13" FontWeight="Bold" CaretBrush="{DynamicResource Accent}" Margin="12,0,0,0" VerticalAlignment="Center"/>
                                         </Grid>
                                     </Border>
                                     <!-- Remarks -->
-                                    <Border Grid.Column="1" Background="{StaticResource WindowBg}" CornerRadius="6" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="6,3">
+                                    <Border Grid.Column="1" Background="{DynamicResource WindowBg}" CornerRadius="6" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="6,3">
                                         <Grid>
-                                            <TextBlock Text="Remarks (e.g. Extra Charge)" Foreground="{StaticResource TextFaint}" FontSize="12" VerticalAlignment="Center" Margin="2,0,0,0" IsHitTestVisible="False">
+                                            <TextBlock Text="Remarks (e.g. Extra Charge)" Foreground="{DynamicResource TextFaint}" FontSize="12" VerticalAlignment="Center" Margin="2,0,0,0" IsHitTestVisible="False">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -1075,7 +1114,7 @@
                                 <GroupStyle>
                                     <GroupStyle.HeaderTemplate>
                                         <DataTemplate>
-                                            <Border Background="{StaticResource WindowBg}" Padding="8,4" CornerRadius="6" Margin="0,8,0,4" HorizontalAlignment="Left">
+                                            <Border Background="{DynamicResource WindowBg}" Padding="8,4" CornerRadius="6" Margin="0,8,0,4" HorizontalAlignment="Left">
                                                 <TextBlock x:Name="HeaderTxt" FontSize="11" FontWeight="Bold"/>
                                             </Border>
                                             <DataTemplate.Triggers>
@@ -1085,7 +1124,7 @@
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding Name}" Value="False">
                                                     <Setter TargetName="HeaderTxt" Property="Text" Value="DINE-IN ITEMS"/>
-                                                    <Setter TargetName="HeaderTxt" Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                                    <Setter TargetName="HeaderTxt" Property="Foreground" Value="{DynamicResource TextMuted}"/>
                                                 </DataTrigger>
                                             </DataTemplate.Triggers>
                                         </DataTemplate>
@@ -1144,7 +1183,7 @@
                                                             <ControlTemplate TargetType="Button">
                                                                 <Border x:Name="b" Width="26" Height="26" CornerRadius="6" Background="Transparent">
                                                                     <TextBlock x:Name="ic" Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="12"
-                                                                               Foreground="{StaticResource TextFaint}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                               Foreground="{DynamicResource TextFaint}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                                 </Border>
                                                                 <ControlTemplate.Triggers>
                                                                     <Trigger Property="IsMouseOver" Value="True">
@@ -1162,7 +1201,7 @@
                                         <!-- Item Name & Editable Unit Price -->
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                                <TextBlock Text="{Binding Name}" Foreground="{StaticResource TextPrimary}" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                                 <Border Background="{DynamicResource AccentFaint}" CornerRadius="4" BorderBrush="{DynamicResource Accent}" BorderThickness="1" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center"
                                                         Visibility="{Binding IsParcel, Converter={StaticResource CountToVis}}">
                                                     <StackPanel Orientation="Horizontal">
@@ -1173,7 +1212,7 @@
                                             </StackPanel>
                                             <Border Background="Transparent" CornerRadius="4" BorderBrush="Transparent" BorderThickness="0" Padding="0" Margin="0,2,0,0" HorizontalAlignment="Left" Cursor="IBeam">
                                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <TextBlock Text="₹" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,2,0"/>
+                                                    <TextBlock Text="₹" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,2,0"/>
                                                     <TextBox x:Name="PriceInput" Style="{StaticResource PriceCellEditBox}"
                                                              GotFocus="PriceInput_GotFocus" KeyDown="PriceInput_KeyDown"
                                                              PreviewMouseLeftButtonDown="CellEditor_PreviewMouseLeftButtonDown"
@@ -1195,7 +1234,7 @@
                                             <Button Style="{StaticResource Stepper}" Content="+" Width="24" Height="24" FontSize="12"
                                                     Command="{Binding DataContext.IncrementCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
                                             <TextBlock Text="{Binding LineTotal, StringFormat='₹{0:0.##}'}" MinWidth="60" TextAlignment="Right"
-                                                       Foreground="{StaticResource TextPrimary}" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                                       Foreground="{DynamicResource TextPrimary}" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                         </StackPanel>
                                     </Grid>
                                 </DataTemplate>
@@ -1206,7 +1245,7 @@
 
                 <!-- footer -->
                 <StackPanel Grid.Row="3">
-                    <Border Height="1" Background="{StaticResource BorderSoft}" Margin="0,6,0,8"/>
+                    <Border Height="1" Background="{DynamicResource BorderSoft}" Margin="0,6,0,8"/>
 
                     <!-- 1. Top Action Links Row with Perfectly Equal Spacing -->
                     <Grid Margin="0,0,0,8">
@@ -1247,7 +1286,7 @@
                     </Grid>
 
                     <!-- 2. Distinct Totals Card Container -->
-                    <Border Background="{StaticResource CardBg2}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1.2"
+                    <Border Background="{DynamicResource CardBg2}" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="1.2"
                             CornerRadius="12" Padding="12,8" Margin="0,0,0,8">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -1265,11 +1304,11 @@
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="Button">
                                                     <Border x:Name="b" CornerRadius="8" Background="Transparent"
-                                                            BorderBrush="{StaticResource BorderSoft}" BorderThickness="1.2" Padding="10,6">
+                                                            BorderBrush="{DynamicResource BorderSoft}" BorderThickness="1.2" Padding="10,6">
                                                         <StackPanel Orientation="Horizontal">
-                                                            <TextBlock Text="% DISCOUNT" Foreground="{StaticResource TextPrimary}"
+                                                            <TextBlock Text="% DISCOUNT" Foreground="{DynamicResource TextPrimary}"
                                                                        FontSize="11" FontWeight="Bold"/>
-                                                            <TextBlock Foreground="{StaticResource ErrorRed}" FontSize="11" FontWeight="Bold"
+                                                            <TextBlock Foreground="{DynamicResource ErrorRed}" FontSize="11" FontWeight="Bold"
                                                                        Margin="6,0,0,0"
                                                                        Visibility="{Binding HasDiscount, Converter={StaticResource BoolToVis}}">
                                                                 <Run Text="{Binding DiscountLabel, Mode=OneWay}"/><Run Text="  −₹"/><Run Text="{Binding DiscountAmount, Mode=OneWay, StringFormat={}{0:0.##}}"/>
@@ -1293,16 +1332,16 @@
                             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                                 <!-- QTY -->
                                 <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
-                                    <TextBlock Text="QTY" Foreground="{StaticResource TextFaint}" FontSize="10" FontWeight="Bold" HorizontalAlignment="Right"/>
-                                    <TextBlock Text="{Binding TotalQty}" Foreground="{StaticResource TextPrimary}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Right" Margin="0,1,0,0"/>
+                                    <TextBlock Text="QTY" Foreground="{DynamicResource TextFaint}" FontSize="10" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                    <TextBlock Text="{Binding TotalQty}" Foreground="{DynamicResource TextPrimary}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Right" Margin="0,1,0,0"/>
                                 </StackPanel>
 
                                 <!-- Divider -->
-                                <Border Width="1" Height="26" Background="{StaticResource BorderSoft}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <Border Width="1" Height="26" Background="{DynamicResource BorderSoft}" VerticalAlignment="Center" Margin="0,0,12,0"/>
 
                                 <!-- GRAND TOTAL -->
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="GRAND TOTAL" Foreground="{StaticResource TextFaint}" FontSize="10" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                    <TextBlock Text="GRAND TOTAL" Foreground="{DynamicResource TextFaint}" FontSize="10" FontWeight="Bold" HorizontalAlignment="Right"/>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,1,0,0">
                                         <TextBlock Text="₹" Foreground="{DynamicResource Accent}" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,3,0"/>
                                         <TextBlock Text="{Binding GrandTotal, StringFormat='{}{0:0.##}'}" Foreground="{DynamicResource Accent}" FontSize="21" FontWeight="Bold" VerticalAlignment="Center"/>
@@ -1334,11 +1373,11 @@
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="Button">
-                                                <Border x:Name="b" CornerRadius="8" Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1" RenderTransformOrigin="0.5,0.5">
+                                                <Border x:Name="b" CornerRadius="8" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="1" RenderTransformOrigin="0.5,0.5">
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
                                                         <materialDesign:PackIcon Kind="ContentSaveOutline" Width="14" Height="14" Foreground="{Binding ElementName=t1, Path=Foreground}" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                                        <TextBlock x:Name="t1" Text="SAVE KOT" Foreground="{StaticResource TextMuted}" FontSize="11.5" FontWeight="Bold" VerticalAlignment="Center"/>
-                                                        <TextBlock x:Name="t2" Text="[F2]" Foreground="{StaticResource TextFaint}" FontSize="9.5" FontWeight="Bold" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                                        <TextBlock x:Name="t1" Text="SAVE KOT" Foreground="{DynamicResource TextMuted}" FontSize="11.5" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        <TextBlock x:Name="t2" Text="[F2]" Foreground="{DynamicResource TextFaint}" FontSize="9.5" FontWeight="Bold" VerticalAlignment="Center" Margin="6,0,0,0"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
@@ -1360,11 +1399,11 @@
                                                         </Setter>
                                                     </Trigger>
                                                     <Trigger Property="IsEnabled" Value="False">
-                                                        <Setter TargetName="b" Property="Background" Value="#141414"/>
-                                                        <Setter TargetName="b" Property="BorderBrush" Value="#222222"/>
+                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource BorderSoft}"/>
+                                                        <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Border}"/>
                                                         <Setter TargetName="b" Property="Opacity" Value="0.4"/>
-                                                        <Setter TargetName="t1" Property="Foreground" Value="#555555"/>
-                                                        <Setter TargetName="t2" Property="Foreground" Value="#3D3D3D"/>
+                                                        <Setter TargetName="t1" Property="Foreground" Value="{DynamicResource TextFaint}"/>
+                                                        <Setter TargetName="t2" Property="Foreground" Value="{DynamicResource TextFaint}"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
@@ -1399,10 +1438,11 @@
                                                         </Setter>
                                                     </Trigger>
                                                     <Trigger Property="IsEnabled" Value="False">
-                                                        <Setter TargetName="b" Property="Background" Value="#141414"/>
+                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource BorderSoft}"/>
+                                                        <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Border}"/>
                                                         <Setter TargetName="b" Property="Opacity" Value="0.4"/>
-                                                        <Setter TargetName="t1" Property="Foreground" Value="#555555"/>
-                                                        <Setter TargetName="t2" Property="Foreground" Value="#3D3D3D"/>
+                                                        <Setter TargetName="t1" Property="Foreground" Value="{DynamicResource TextFaint}"/>
+                                                        <Setter TargetName="t2" Property="Foreground" Value="{DynamicResource TextFaint}"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
@@ -1440,10 +1480,10 @@
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="Button">
-                                                <Border x:Name="b" CornerRadius="8" Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1.2" RenderTransformOrigin="0.5,0.5">
+                                                <Border x:Name="b" CornerRadius="8" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="1.2" RenderTransformOrigin="0.5,0.5">
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                                        <TextBlock x:Name="t1" Text="PRINT KOT" Foreground="{StaticResource TextMuted}" FontSize="11.5" FontWeight="Bold" VerticalAlignment="Center"/>
-                                                        <TextBlock x:Name="t2" Text="[F3]" Foreground="{StaticResource TextFaint}" FontSize="9.5" FontWeight="Bold" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                                        <TextBlock x:Name="t1" Text="PRINT KOT" Foreground="{DynamicResource TextMuted}" FontSize="11.5" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        <TextBlock x:Name="t2" Text="[F3]" Foreground="{DynamicResource TextFaint}" FontSize="9.5" FontWeight="Bold" VerticalAlignment="Center" Margin="6,0,0,0"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
@@ -1465,11 +1505,11 @@
                                                         </Setter>
                                                     </Trigger>
                                                     <Trigger Property="IsEnabled" Value="False">
-                                                        <Setter TargetName="b" Property="Background" Value="#141414"/>
-                                                        <Setter TargetName="b" Property="BorderBrush" Value="#222222"/>
+                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource BorderSoft}"/>
+                                                        <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Border}"/>
                                                         <Setter TargetName="b" Property="Opacity" Value="0.4"/>
-                                                        <Setter TargetName="t1" Property="Foreground" Value="#555555"/>
-                                                        <Setter TargetName="t2" Property="Foreground" Value="#3D3D3D"/>
+                                                        <Setter TargetName="t1" Property="Foreground" Value="{DynamicResource TextFaint}"/>
+                                                        <Setter TargetName="t2" Property="Foreground" Value="{DynamicResource TextFaint}"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
@@ -1486,10 +1526,10 @@
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="Button">
-                                                <Border x:Name="b" CornerRadius="8" Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1.2" RenderTransformOrigin="0.5,0.5">
+                                                <Border x:Name="b" CornerRadius="8" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="1.2" RenderTransformOrigin="0.5,0.5">
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                                        <TextBlock x:Name="t1" Text="PRINT BILL" Foreground="{StaticResource TextMuted}" FontSize="11.5" FontWeight="Bold" VerticalAlignment="Center"/>
-                                                        <TextBlock x:Name="t2" Text="[F4]" Foreground="{StaticResource TextFaint}" FontSize="9.5" FontWeight="Bold" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                                        <TextBlock x:Name="t1" Text="PRINT BILL" Foreground="{DynamicResource TextMuted}" FontSize="11.5" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        <TextBlock x:Name="t2" Text="[F4]" Foreground="{DynamicResource TextFaint}" FontSize="9.5" FontWeight="Bold" VerticalAlignment="Center" Margin="6,0,0,0"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
@@ -1511,11 +1551,11 @@
                                                         </Setter>
                                                     </Trigger>
                                                     <Trigger Property="IsEnabled" Value="False">
-                                                        <Setter TargetName="b" Property="Background" Value="#141414"/>
-                                                        <Setter TargetName="b" Property="BorderBrush" Value="#222222"/>
+                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource BorderSoft}"/>
+                                                        <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Border}"/>
                                                         <Setter TargetName="b" Property="Opacity" Value="0.4"/>
-                                                        <Setter TargetName="t1" Property="Foreground" Value="#555555"/>
-                                                        <Setter TargetName="t2" Property="Foreground" Value="#3D3D3D"/>
+                                                        <Setter TargetName="t1" Property="Foreground" Value="{DynamicResource TextFaint}"/>
+                                                        <Setter TargetName="t2" Property="Foreground" Value="{DynamicResource TextFaint}"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
@@ -1561,10 +1601,10 @@
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="Button">
-                                                <Border x:Name="b" CornerRadius="8" Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1.2" RenderTransformOrigin="0.5,0.5">
+                                                <Border x:Name="b" CornerRadius="8" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="1.2" RenderTransformOrigin="0.5,0.5">
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                                        <TextBlock x:Name="t1" Text="SETTLE BILL" Foreground="{StaticResource TextMuted}" FontSize="11.5" FontWeight="Bold" VerticalAlignment="Center"/>
-                                                        <TextBlock x:Name="t2" Text="[F5]" Foreground="{StaticResource TextFaint}" FontSize="9.5" FontWeight="Bold" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                                        <TextBlock x:Name="t1" Text="SETTLE BILL" Foreground="{DynamicResource TextMuted}" FontSize="11.5" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        <TextBlock x:Name="t2" Text="[F5]" Foreground="{DynamicResource TextFaint}" FontSize="9.5" FontWeight="Bold" VerticalAlignment="Center" Margin="6,0,0,0"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
@@ -1586,11 +1626,11 @@
                                                         </Setter>
                                                     </Trigger>
                                                     <Trigger Property="IsEnabled" Value="False">
-                                                        <Setter TargetName="b" Property="Background" Value="#141414"/>
-                                                        <Setter TargetName="b" Property="BorderBrush" Value="#222222"/>
+                                                        <Setter TargetName="b" Property="Background" Value="{DynamicResource BorderSoft}"/>
+                                                        <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Border}"/>
                                                         <Setter TargetName="b" Property="Opacity" Value="0.4"/>
-                                                        <Setter TargetName="t1" Property="Foreground" Value="#555555"/>
-                                                        <Setter TargetName="t2" Property="Foreground" Value="#3D3D3D"/>
+                                                        <Setter TargetName="t1" Property="Foreground" Value="{DynamicResource TextFaint}"/>
+                                                        <Setter TargetName="t2" Property="Foreground" Value="{DynamicResource TextFaint}"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
@@ -1605,7 +1645,7 @@
         </Border>
 
         <!-- ================= LEDGER VIEW (full page — hides order panel) ================= -->
-        <Grid Grid.Column="1" Grid.ColumnSpan="3" Background="{StaticResource WindowBg}"
+        <Grid Grid.Column="1" Grid.ColumnSpan="3" Background="{DynamicResource WindowBg}"
               Visibility="{Binding ActiveScreen, Converter={StaticResource ModeToVis}, ConverterParameter=Ledger}">
             <ContentControl DataContext="{Binding Ledger}"
                             HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
@@ -1613,7 +1653,7 @@
         </Grid>
 
         <!-- ================= SETTINGS VIEW (full page — hides order panel) ================= -->
-        <Grid Grid.Column="1" Grid.ColumnSpan="3" Background="{StaticResource WindowBg}"
+        <Grid Grid.Column="1" Grid.ColumnSpan="3" Background="{DynamicResource WindowBg}"
               Visibility="{Binding ActiveScreen, Converter={StaticResource ModeToVis}, ConverterParameter=Settings}">
             <ContentControl DataContext="{Binding Settings}"
                             HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
@@ -1621,7 +1661,7 @@
         </Grid>
 
         <!-- ================= REPORTS VIEW (full page — hides order panel) ================= -->
-        <Grid Grid.Column="1" Grid.ColumnSpan="3" Background="{StaticResource WindowBg}"
+        <Grid Grid.Column="1" Grid.ColumnSpan="3" Background="{DynamicResource WindowBg}"
               Visibility="{Binding ActiveScreen, Converter={StaticResource ModeToVis}, ConverterParameter=Reports}">
             <ContentControl DataContext="{Binding Reports}"
                             HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
@@ -1629,7 +1669,7 @@
         </Grid>
 
         <!-- ================= QR ORDER VIEW ================= -->
-        <Grid Grid.Column="1" Grid.ColumnSpan="3" Background="{StaticResource WindowBg}"
+        <Grid Grid.Column="1" Grid.ColumnSpan="3" Background="{DynamicResource WindowBg}"
               Visibility="{Binding ActiveScreen, Converter={StaticResource ModeToVis}, ConverterParameter=QR}">
             <ContentControl DataContext="{Binding Qr}"
                             HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
@@ -1637,7 +1677,7 @@
         </Grid>
 
         <!-- ================= NOTES VIEW ================= -->
-        <Grid Grid.Column="1" Grid.ColumnSpan="3" Background="{StaticResource WindowBg}"
+        <Grid Grid.Column="1" Grid.ColumnSpan="3" Background="{DynamicResource WindowBg}"
               Visibility="{Binding ActiveScreen, Converter={StaticResource ModeToVis}, ConverterParameter=Notes}">
             <ContentControl DataContext="{Binding Notes}"
                             HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"

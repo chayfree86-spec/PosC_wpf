@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Parcel Quantity" Height="220" Width="360"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
-        Background="{StaticResource PanelBg}" WindowStyle="None" AllowsTransparency="True">
-    <Border CornerRadius="16" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource Border}" BorderThickness="1.5">
+        Background="{DynamicResource PanelBg}" WindowStyle="None" AllowsTransparency="True">
+    <Border CornerRadius="16" Background="{DynamicResource PanelBg}" BorderBrush="{DynamicResource Border}" BorderThickness="1.5">
         <Grid Margin="24">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -16,7 +16,7 @@
             <Grid Grid.Row="0" Margin="0,0,0,16">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="⬡" FontSize="18" Margin="0,0,8,0" Foreground="{DynamicResource BlueLink}"/>
-                    <TextBlock Text="PARCEL QUANTITY" Foreground="{StaticResource TextPrimary}" FontSize="15" FontWeight="Bold"/>
+                    <TextBlock Text="PARCEL QUANTITY" Foreground="{DynamicResource TextPrimary}" FontSize="15" FontWeight="Bold"/>
                 </StackPanel>
                 <Button Click="Close_Click" Style="{StaticResource Stepper}" Content="✕" Width="30" Height="30"
                         HorizontalAlignment="Right" VerticalAlignment="Center"/>
@@ -24,9 +24,9 @@
 
             <!-- Form -->
             <StackPanel Grid.Row="1" VerticalAlignment="Center">
-                <TextBlock x:Name="TxtPrompt" Text="QUANTITY TO PARCEL (मात्रा चुनें):" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,6"/>
-                <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Accent}" BorderThickness="1.5" Padding="8,4">
-                    <TextBox x:Name="TxtQty" Foreground="White" FontSize="18" FontWeight="Bold"
+                <TextBlock x:Name="TxtPrompt" Text="QUANTITY TO PARCEL (मात्रा चुनें):" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,6"/>
+                <Border Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Accent}" BorderThickness="1.5" Padding="8,4">
+                    <TextBox x:Name="TxtQty" Foreground="{DynamicResource TextPrimary}" FontSize="18" FontWeight="Bold"
                              Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}" KeyDown="TxtQty_KeyDown"/>
                 </Border>
             </StackPanel>
@@ -39,7 +39,7 @@
                 </Grid.ColumnDefinitions>
 
                 <Button Grid.Column="0" Content="CANCEL" Click="Close_Click" Height="42" Margin="0,0,8,0"
-                        Background="{StaticResource CardBg}" Foreground="{StaticResource TextMuted}" FontWeight="Bold" FontSize="12">
+                        Background="{DynamicResource CardBg}" Foreground="{DynamicResource TextMuted}" FontWeight="Bold" FontSize="12">
                     <Button.Resources>
                         <Style TargetType="Border"><Setter Property="CornerRadius" Value="10"/></Style>
                     </Button.Resources>

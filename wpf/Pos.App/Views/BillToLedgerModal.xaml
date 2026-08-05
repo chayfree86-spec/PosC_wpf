@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Add to Khata" Height="560" Width="420"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
-        Background="{StaticResource PanelBg}" WindowStyle="None" AllowsTransparency="True">
-    <Border CornerRadius="16" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource Border}" BorderThickness="1.5">
+        Background="{DynamicResource PanelBg}" WindowStyle="None" AllowsTransparency="True">
+    <Border CornerRadius="16" Background="{DynamicResource PanelBg}" BorderBrush="{DynamicResource Border}" BorderThickness="1.5">
         <Grid Margin="24">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -19,31 +19,31 @@
             <Grid Grid.Row="0" Margin="0,0,0,14">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="📒" FontSize="18" Margin="0,0,8,0"/>
-                    <TextBlock Text="ADD BILL TO KHATA" Foreground="{StaticResource TextPrimary}" FontSize="15" FontWeight="Bold"/>
+                    <TextBlock Text="ADD BILL TO KHATA" Foreground="{DynamicResource TextPrimary}" FontSize="15" FontWeight="Bold"/>
                 </StackPanel>
                 <Button Click="Close_Click" Style="{StaticResource Stepper}" Content="✕" Width="30" Height="30"
                         HorizontalAlignment="Right" VerticalAlignment="Center"/>
             </Grid>
 
             <!-- Amount banner -->
-            <Border Grid.Row="1" Background="{StaticResource WindowBg}" CornerRadius="10" BorderBrush="{DynamicResource Accent}" BorderThickness="1.2" Padding="14,10" Margin="0,0,0,14">
+            <Border Grid.Row="1" Background="{DynamicResource WindowBg}" CornerRadius="10" BorderBrush="{DynamicResource Accent}" BorderThickness="1.2" Padding="14,10" Margin="0,0,0,14">
                 <Grid>
-                    <TextBlock Text="Bill Amount (Udhaar)" Foreground="{StaticResource TextMuted}" FontSize="12" VerticalAlignment="Center"/>
+                    <TextBlock Text="Bill Amount (Udhaar)" Foreground="{DynamicResource TextMuted}" FontSize="12" VerticalAlignment="Center"/>
                     <TextBlock x:Name="TxtAmount" Foreground="{DynamicResource AccentText}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                 </Grid>
             </Border>
 
             <!-- Search existing -->
             <StackPanel Grid.Row="2">
-                <TextBlock Text="EXISTING CUSTOMER CHUNEIN:" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
-                <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="8,4" Margin="0,0,0,8">
-                    <TextBox x:Name="TxtSearch" TextChanged="Search_Changed" Foreground="White" FontSize="14"
+                <TextBlock Text="EXISTING CUSTOMER CHUNEIN:" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Border Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="8,4" Margin="0,0,0,8">
+                    <TextBox x:Name="TxtSearch" TextChanged="Search_Changed" Foreground="{DynamicResource TextPrimary}" FontSize="14"
                              Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
             </StackPanel>
 
             <!-- Customer list -->
-            <Border Grid.Row="3" Background="{StaticResource WindowBg}" CornerRadius="10" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="4">
+            <Border Grid.Row="3" Background="{DynamicResource WindowBg}" CornerRadius="10" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="4">
                 <ListBox x:Name="CustomerList" Background="Transparent" BorderThickness="0"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="Customer_Selected">
                     <ListBox.ItemContainerStyle>
@@ -58,7 +58,7 @@
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="b" Property="Background" Value="{StaticResource CardBg2}"/>
+                                                <Setter TargetName="b" Property="Background" Value="{DynamicResource CardBg2}"/>
                                             </Trigger>
                                             <Trigger Property="IsSelected" Value="True">
                                                 <Setter TargetName="b" Property="Background" Value="{DynamicResource AccentFaint}"/>
@@ -74,10 +74,10 @@
                         <DataTemplate>
                             <Grid>
                                 <StackPanel>
-                                    <TextBlock Text="{Binding Name}" Foreground="{StaticResource TextPrimary}" FontSize="13.5" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding PhoneDisplay}" Foreground="{StaticResource TextFaint}" FontSize="11"/>
+                                    <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimary}" FontSize="13.5" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding PhoneDisplay}" Foreground="{DynamicResource TextFaint}" FontSize="11"/>
                                 </StackPanel>
-                                <TextBlock Text="{Binding FormattedBalance}" Foreground="{StaticResource TextMuted}" FontSize="12" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding FormattedBalance}" Foreground="{DynamicResource TextMuted}" FontSize="12" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -86,23 +86,23 @@
 
             <!-- New customer -->
             <StackPanel Grid.Row="4" Margin="0,12,0,0">
-                <TextBlock Text="— YA NAYA CUSTOMER —" Foreground="{StaticResource TextFaint}" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                <TextBlock Text="— YA NAYA CUSTOMER —" Foreground="{DynamicResource TextFaint}" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="8"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Border Grid.Column="0" Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="8,4">
+                    <Border Grid.Column="0" Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="8,4">
                         <Grid>
-                            <TextBlock x:Name="PhName" Text="Naam" Foreground="{StaticResource TextFaint}" FontSize="13" VerticalAlignment="Center" IsHitTestVisible="False"/>
-                            <TextBox x:Name="TxtName" TextChanged="NewField_Changed" Foreground="White" FontSize="13" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+                            <TextBlock x:Name="PhName" Text="Naam" Foreground="{DynamicResource TextFaint}" FontSize="13" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                            <TextBox x:Name="TxtName" TextChanged="NewField_Changed" Foreground="{DynamicResource TextPrimary}" FontSize="13" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                         </Grid>
                     </Border>
-                    <Border Grid.Column="2" Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="8,4">
+                    <Border Grid.Column="2" Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="8,4">
                         <Grid>
-                            <TextBlock x:Name="PhMobile" Text="Mobile" Foreground="{StaticResource TextFaint}" FontSize="13" VerticalAlignment="Center" IsHitTestVisible="False"/>
-                            <TextBox x:Name="TxtMobile" TextChanged="NewField_Changed" Foreground="White" FontSize="13" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+                            <TextBlock x:Name="PhMobile" Text="Mobile" Foreground="{DynamicResource TextFaint}" FontSize="13" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                            <TextBox x:Name="TxtMobile" TextChanged="NewField_Changed" Foreground="{DynamicResource TextPrimary}" FontSize="13" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                         </Grid>
                     </Border>
                 </Grid>
@@ -115,7 +115,7 @@
                     <ColumnDefinition Width="2*"/>
                 </Grid.ColumnDefinitions>
                 <Button Grid.Column="0" Content="CANCEL" Click="Close_Click" Height="42" Margin="0,0,8,0"
-                        Background="{StaticResource CardBg}" Foreground="{StaticResource TextMuted}" FontWeight="Bold" FontSize="12">
+                        Background="{DynamicResource CardBg}" Foreground="{DynamicResource TextMuted}" FontWeight="Bold" FontSize="12">
                     <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="10"/></Style></Button.Resources>
                 </Button>
                 <Button Grid.Column="1" Content="ADD TO KHATA" Click="Save_Click" Height="42"

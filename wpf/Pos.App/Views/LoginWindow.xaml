@@ -3,11 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Sign In" Height="560" Width="420"
+        Icon="{DynamicResource AppIcon}"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ShowInTaskbar="True"
         FontFamily="{StaticResource AppFont}"
-        TextElement.Foreground="{StaticResource TextPrimary}"
+        TextElement.Foreground="{DynamicResource TextPrimary}"
         TextOptions.TextFormattingMode="Ideal"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
         KeyDown="Window_KeyDown">
@@ -21,15 +22,15 @@
             <Setter Property="MaxLength" Value="1"/>
             <Setter Property="FontSize" Value="22"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
             <Setter Property="CaretBrush" Value="{DynamicResource Accent}"/>
             <Setter Property="TextAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
-                        <Border x:Name="b" CornerRadius="10" Background="{StaticResource WindowBg}"
-                                BorderBrush="{StaticResource Border}" BorderThickness="1.5">
+                        <Border x:Name="b" CornerRadius="10" Background="{DynamicResource WindowBg}"
+                                BorderBrush="{DynamicResource Border}" BorderThickness="1.5">
                             <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -44,8 +45,8 @@
         </Style>
     </Window.Resources>
 
-    <Border CornerRadius="18" Background="{StaticResource PanelBg}"
-            BorderBrush="{StaticResource Border}" BorderThickness="1.5">
+    <Border CornerRadius="18" Background="{DynamicResource PanelBg}"
+            BorderBrush="{DynamicResource Border}" BorderThickness="1.5">
         <Grid Margin="32,24,32,28">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -66,31 +67,28 @@
                  Chay Chaupal manager was greeted by the Daal Roti logo every morning. Which
                  business the shift belongs to appears under the number instead, once it is typed. -->
             <StackPanel Grid.Row="1" HorizontalAlignment="Center" Margin="0,10,0,26">
-                <Border Background="{DynamicResource AccentGrad}" CornerRadius="16" Width="60" Height="60">
-                    <TextBlock Text="POS" Foreground="White" FontWeight="Bold" FontSize="17"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-                <TextBlock Text="POS Billing" Foreground="{StaticResource TextPrimary}"
+                <Image Source="{DynamicResource LoginLogo}" Width="60" Height="60"/>
+                <TextBlock Text="POS Billing" Foreground="{DynamicResource TextPrimary}"
                            FontSize="19" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,14,0,0"/>
-                <TextBlock Text="SIGN IN TO CONTINUE" Foreground="{StaticResource TextFaint}"
+                <TextBlock Text="SIGN IN TO CONTINUE" Foreground="{DynamicResource TextFaint}"
                            FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,3,0,0"/>
             </StackPanel>
 
             <!-- Credentials -->
             <StackPanel Grid.Row="2" VerticalAlignment="Top">
-                <TextBlock Text="MOBILE NUMBER:" Foreground="{StaticResource TextMuted}"
+                <TextBlock Text="MOBILE NUMBER:" Foreground="{DynamicResource TextMuted}"
                            FontSize="11" FontWeight="Bold" Margin="0,0,0,5"/>
-                <Border Background="{StaticResource WindowBg}" CornerRadius="10"
-                        BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="12,8">
+                <Border Background="{DynamicResource WindowBg}" CornerRadius="10"
+                        BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="12,8">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <materialDesign:PackIcon Grid.Column="0" Kind="CellphoneBasic" Width="18" Height="18"
-                                                 Foreground="{StaticResource TextFaint}"
+                                                 Foreground="{DynamicResource TextFaint}"
                                                  VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <TextBox Grid.Column="1" x:Name="TxtMobile" Foreground="White" FontSize="16"
+                        <TextBox Grid.Column="1" x:Name="TxtMobile" Foreground="{DynamicResource TextPrimary}" FontSize="16"
                                  Background="Transparent" BorderThickness="0" MaxLength="15"
                                  CaretBrush="{DynamicResource Accent}"
                                  VerticalContentAlignment="Center"
@@ -110,12 +108,12 @@
                 </StackPanel>
 
                 <Grid Margin="0,14,0,5">
-                    <TextBlock Text="PIN:" Foreground="{StaticResource TextMuted}"
+                    <TextBlock Text="PIN:" Foreground="{DynamicResource TextMuted}"
                                FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
                     <Button x:Name="BtnTogglePin" Click="TogglePin_Click" HorizontalAlignment="Right"
                             Style="{StaticResource LinkBtn}" ToolTip="PIN dikhayein / chhupayein">
                         <materialDesign:PackIcon x:Name="IconPinEye" Kind="EyeOutline" Width="18" Height="18"
-                                                 Foreground="{StaticResource TextFaint}" VerticalAlignment="Center"/>
+                                                 Foreground="{DynamicResource TextFaint}" VerticalAlignment="Center"/>
                     </Button>
                 </Grid>
                 <!-- Four single-digit boxes: type a digit and focus jumps to the next, backspace
@@ -133,7 +131,7 @@
 
                 <!-- Kept out of the layout until there is something to say, so the button
                      doesn't jump down the screen the first time a PIN is wrong. -->
-                <TextBlock x:Name="TxtError" Foreground="{StaticResource ErrorRed}" FontSize="12"
+                <TextBlock x:Name="TxtError" Foreground="{DynamicResource ErrorRed}" FontSize="12"
                            FontWeight="SemiBold" TextWrapping="Wrap" Margin="2,12,0,0"
                            Visibility="Collapsed"/>
             </StackPanel>
@@ -148,7 +146,7 @@
                     </Button.Resources>
                 </Button>
                 <TextBlock Text="PIN admin dashboard se set hota hai. Naya staff add kiya ho to pehle sync karein."
-                           Foreground="{StaticResource TextFaint}" FontSize="10" TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextFaint}" FontSize="10" TextWrapping="Wrap"
                            TextAlignment="Center" Margin="0,14,0,0"/>
             </StackPanel>
         </Grid>

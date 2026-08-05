@@ -21,6 +21,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContextChanged += MainWindow_DataContextChanged;
+        BtnThemeToggle.Tag = ThemeService.IsDark ? "WeatherNight" : "WeatherSunny";
     }
 
     /// <summary>The window handle exists from here on, which is what DWM needs to recolour
@@ -400,10 +401,29 @@ public partial class MainWindow : Window
 
     private bool _isSidebarCollapsed = false;
 
+    private void BtnThemeToggle_Click(object sender, RoutedEventArgs e)
+    {
+        bool newIsDark = !ThemeService.IsDark;
+        ThemeService.SetThemeMode(newIsDark);
+        BtnThemeToggle.Tag = newIsDark ? "WeatherNight" : "WeatherSunny";
+
+        // Refresh the tables listbox so the converters re-run with the new theme colors
+        TablesListBox?.Items.Refresh();
+
+        // Save theme setting so it is remembered
+        try
+        {
+            var appSettings = App.Services.GetRequiredService<AppSettingsRepository>();
+            appSettings.SetJson("pos_theme_mode", newIsDark ? "dark" : "light");
+        }
+        catch { }
+    }
+
     private void BtnToggleSidebar_Click(object sender, RoutedEventArgs e)
     {
         SetSidebarCollapsed(!_isSidebarCollapsed, saveSetting: true);
     }
+
 
     private void SetSidebarCollapsed(bool collapsed, bool saveSetting = false)
     {

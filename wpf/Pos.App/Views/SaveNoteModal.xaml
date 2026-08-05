@@ -1,4 +1,4 @@
-<Window x:Class="Pos.App.Views.SaveNoteModal"
+﻿<Window x:Class="Pos.App.Views.SaveNoteModal"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -8,7 +8,7 @@
         AllowsTransparency="True"
         Background="Transparent">
 
-    <Border Background="{StaticResource CardBg2}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1.5" CornerRadius="16" Padding="20">
+    <Border Background="{DynamicResource CardBg2}" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="1.5" CornerRadius="16" Padding="20">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -23,41 +23,41 @@
                         <materialDesign:PackIcon Kind="NotebookEditOutline" Width="20" Height="20" Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock x:Name="TxtHeaderTitle" Text="Save Order to Note" Foreground="{StaticResource TextPrimary}" FontSize="18" FontWeight="Bold"/>
-                        <TextBlock x:Name="TxtHeaderSubtitle" Text="Save quick order for later editing or table transfer" Foreground="{StaticResource TextFaint}" FontSize="11" Margin="0,2,0,0"/>
+                        <TextBlock x:Name="TxtHeaderTitle" Text="Save Order to Note" Foreground="{DynamicResource TextPrimary}" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock x:Name="TxtHeaderSubtitle" Text="Save quick order for later editing or table transfer" Foreground="{DynamicResource TextFaint}" FontSize="11" Margin="0,2,0,0"/>
                     </StackPanel>
                 </StackPanel>
                 <Button Click="BtnClose_Click" Style="{StaticResource LinkBtn}" HorizontalAlignment="Right" VerticalAlignment="Top" Padding="4">
-                    <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="{StaticResource TextMuted}"/>
+                    <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="{DynamicResource TextMuted}"/>
                 </Button>
             </Grid>
 
             <!-- Form -->
             <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,2,0,14">
                 <!-- Customer Name -->
-                <TextBlock Text="CUSTOMER NAME (OPTIONAL)" Foreground="{StaticResource TextFaint}" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
-                <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1.2" CornerRadius="8" Padding="12,9" Margin="0,0,0,12">
+                <TextBlock Text="CUSTOMER NAME (OPTIONAL)" Foreground="{DynamicResource TextFaint}" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="1.2" CornerRadius="8" Padding="12,9" Margin="0,0,0,12">
                     <Grid>
-                        <TextBlock x:Name="PlaceholderName" Text="e.g. Rahul Sharma" Foreground="{StaticResource TextFaint}" FontSize="12.5" VerticalAlignment="Center" IsHitTestVisible="False"/>
-                        <TextBox x:Name="TxtName" TextChanged="TxtName_TextChanged" KeyDown="TxtName_KeyDown" Foreground="{StaticResource TextPrimary}" FontSize="12.5" Background="Transparent" BorderThickness="0"/>
+                        <TextBlock x:Name="PlaceholderName" Text="e.g. Rahul Sharma" Foreground="{DynamicResource TextFaint}" FontSize="12.5" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                        <TextBox x:Name="TxtName" TextChanged="TxtName_TextChanged" KeyDown="TxtName_KeyDown" Foreground="{DynamicResource TextPrimary}" FontSize="12.5" Background="Transparent" BorderThickness="0"/>
                     </Grid>
                 </Border>
 
                 <!-- Customer Mobile -->
-                <TextBlock Text="MOBILE NUMBER (OPTIONAL)" Foreground="{StaticResource TextFaint}" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
-                <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1.2" CornerRadius="8" Padding="12,9" Margin="0,0,0,12">
+                <TextBlock Text="MOBILE NUMBER (OPTIONAL)" Foreground="{DynamicResource TextFaint}" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="1.2" CornerRadius="8" Padding="12,9" Margin="0,0,0,12">
                     <Grid>
-                        <TextBlock x:Name="PlaceholderMobile" Text="e.g. 9876543210" Foreground="{StaticResource TextFaint}" FontSize="12.5" VerticalAlignment="Center" IsHitTestVisible="False"/>
-                        <TextBox x:Name="TxtMobile" TextChanged="TxtMobile_TextChanged" KeyDown="TxtMobile_KeyDown" PreviewTextInput="TxtMobile_PreviewTextInput" MaxLength="10" Foreground="{StaticResource TextPrimary}" FontSize="12.5" Background="Transparent" BorderThickness="0"/>
+                        <TextBlock x:Name="PlaceholderMobile" Text="e.g. 9876543210" Foreground="{DynamicResource TextFaint}" FontSize="12.5" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                        <TextBox x:Name="TxtMobile" TextChanged="TxtMobile_TextChanged" KeyDown="TxtMobile_KeyDown" PreviewTextInput="TxtMobile_PreviewTextInput" MaxLength="10" Foreground="{DynamicResource TextPrimary}" FontSize="12.5" Background="Transparent" BorderThickness="0"/>
                     </Grid>
                 </Border>
 
                 <!-- Serving Time -->
-                <TextBlock Text="SERVING / TARGET TIME" Foreground="{StaticResource TextFaint}" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
-                <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1.2" CornerRadius="8" Padding="12,9">
+                <TextBlock Text="SERVING / TARGET TIME" Foreground="{DynamicResource TextFaint}" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="1.2" CornerRadius="8" Padding="12,9">
                     <Grid>
-                        <TextBlock x:Name="PlaceholderTime" Text="e.g. 08:30 PM" Foreground="{StaticResource TextFaint}" FontSize="12.5" VerticalAlignment="Center" IsHitTestVisible="False"/>
-                        <TextBox x:Name="TxtTime" TextChanged="TxtTime_TextChanged" KeyDown="TxtTime_KeyDown" Foreground="{StaticResource TextPrimary}" FontSize="12.5" Background="Transparent" BorderThickness="0"/>
+                        <TextBlock x:Name="PlaceholderTime" Text="e.g. 08:30 PM" Foreground="{DynamicResource TextFaint}" FontSize="12.5" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                        <TextBox x:Name="TxtTime" TextChanged="TxtTime_TextChanged" KeyDown="TxtTime_KeyDown" Foreground="{DynamicResource TextPrimary}" FontSize="12.5" Background="Transparent" BorderThickness="0"/>
                     </Grid>
                 </Border>
             </StackPanel>
@@ -77,12 +77,12 @@
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="Button">
-                                        <Border x:Name="b" CornerRadius="10" Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderSoft}" BorderThickness="1">
-                                            <TextBlock Text="CANCEL" Foreground="{StaticResource TextMuted}" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Border x:Name="b" CornerRadius="10" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="1">
+                                            <TextBlock Text="CANCEL" Foreground="{DynamicResource TextMuted}" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource TextMuted}"/>
+                                                <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource TextMuted}"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>

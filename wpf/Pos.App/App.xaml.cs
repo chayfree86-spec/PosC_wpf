@@ -140,6 +140,10 @@ public partial class App : Application
         // SQLite and queued; this just stops it waiting for the next scheduled pass.
         appSettings.SettingQueued += sync.NudgePush;
 
+        // Load and apply the saved theme mode setting (default is dark theme)
+        string? savedTheme = appSettings.GetJson<string>("pos_theme_mode");
+        ThemeService.SetThemeMode(savedTheme != "light");
+
         // Bring the staff list up to date from the server BEFORE the login screen opens, so a PIN
         // or user changed on the server works on the very next start rather than only after a
         // background pass. Time-boxed and best-effort: if the line is down this returns quickly and

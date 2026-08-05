@@ -36,6 +36,10 @@
 
   <ItemGroup>
     <Resource Include="Fonts\*.ttf" />
+    <Resource Include="login_logo_light.png" />
+    <Resource Include="login_logo_dark.png" />
+    <Resource Include="app_icon_light.ico" />
+    <Resource Include="app_icon_dark.ico" />
   </ItemGroup>
 
   <!-- Point Release builds at the live server. deploy.env is copied into the build/publish

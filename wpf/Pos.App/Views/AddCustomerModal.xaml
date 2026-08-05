@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Add Customer" Height="440" Width="400"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
-        Background="{StaticResource PanelBg}" WindowStyle="None" AllowsTransparency="True">
-    <Border CornerRadius="16" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource Border}" BorderThickness="1.5">
+        Background="{DynamicResource PanelBg}" WindowStyle="None" AllowsTransparency="True">
+    <Border CornerRadius="16" Background="{DynamicResource PanelBg}" BorderBrush="{DynamicResource Border}" BorderThickness="1.5">
         <Grid Margin="24">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -16,7 +16,7 @@
             <Grid Grid.Row="0" Margin="0,0,0,16">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="👤" FontSize="18" Margin="0,0,8,0"/>
-                    <TextBlock x:Name="TxtTitle" Text="ADD NEW CUSTOMER" Foreground="{StaticResource TextPrimary}" FontSize="15" FontWeight="Bold"/>
+                    <TextBlock x:Name="TxtTitle" Text="ADD NEW CUSTOMER" Foreground="{DynamicResource TextPrimary}" FontSize="15" FontWeight="Bold"/>
                 </StackPanel>
                 <Button Click="Close_Click" Style="{StaticResource Stepper}" Content="✕" Width="30" Height="30"
                         HorizontalAlignment="Right" VerticalAlignment="Center"/>
@@ -24,24 +24,24 @@
 
             <!-- Form -->
             <StackPanel Grid.Row="1" VerticalAlignment="Center">
-                <TextBlock Text="CUSTOMER NAME:" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
-                <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="8,4" Margin="0,0,0,10">
-                    <TextBox x:Name="TxtName" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+                <TextBlock Text="CUSTOMER NAME:" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Border Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="8,4" Margin="0,0,0,10">
+                    <TextBox x:Name="TxtName" Foreground="{DynamicResource TextPrimary}" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
 
-                <TextBlock Text="MOBILE NUMBER:" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
-                <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="8,4" Margin="0,0,0,10">
-                    <TextBox x:Name="TxtPhone" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+                <TextBlock Text="MOBILE NUMBER:" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Border Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="8,4" Margin="0,0,0,10">
+                    <TextBox x:Name="TxtPhone" Foreground="{DynamicResource TextPrimary}" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
 
-                <TextBlock Text="ADDRESS:" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
-                <Border Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="8,4" Margin="0,0,0,10">
-                    <TextBox x:Name="TxtAddress" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+                <TextBlock Text="ADDRESS:" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Border Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="8,4" Margin="0,0,0,10">
+                    <TextBox x:Name="TxtAddress" Foreground="{DynamicResource TextPrimary}" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
 
-                <TextBlock x:Name="OpeningLabel" Text="OPENING BALANCE (₹):" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
-                <Border x:Name="OpeningBorder" Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="8,4">
-                    <TextBox x:Name="TxtBalance" Text="0" Foreground="White" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+                <TextBlock x:Name="OpeningLabel" Text="OPENING BALANCE (₹):" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Border x:Name="OpeningBorder" Background="{DynamicResource WindowBg}" CornerRadius="8" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="8,4">
+                    <TextBox x:Name="TxtBalance" Text="0" Foreground="{DynamicResource TextPrimary}" FontSize="14" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
                 </Border>
             </StackPanel>
 
@@ -53,7 +53,7 @@
                 </Grid.ColumnDefinitions>
 
                 <Button Grid.Column="0" Content="CANCEL" Click="Close_Click" Height="42" Margin="0,0,8,0"
-                        Background="{StaticResource CardBg}" Foreground="{StaticResource TextMuted}" FontWeight="Bold" FontSize="12">
+                        Background="{DynamicResource CardBg}" Foreground="{DynamicResource TextMuted}" FontWeight="Bold" FontSize="12">
                     <Button.Resources>
                         <Style TargetType="Border"><Setter Property="CornerRadius" Value="10"/></Style>
                     </Button.Resources>

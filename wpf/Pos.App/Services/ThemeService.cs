@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Pos.App.Services;
 
@@ -78,6 +79,76 @@ public static class ThemeService
         }
     }
 
+    private static bool _isDark = true;
+    private static string? _activeAccentHex = Default;
+
+    public static bool IsDark => _isDark;
+
+    public static void SetThemeMode(bool isDark)
+    {
+        _isDark = isDark;
+        var res = Application.Current?.Resources;
+        if (res is null) return;
+
+        if (isDark)
+        {
+            res["WindowBg"] = Brush(Color.FromRgb(0x0A, 0x0A, 0x0A));
+            res["SidebarBg"] = Brush(Color.FromRgb(0x12, 0x12, 0x12));
+            res["PanelBg"] = Brush(Color.FromRgb(0x12, 0x12, 0x12));
+            res["CardBg"] = Brush(Color.FromRgb(0x1E, 0x1E, 0x1E));
+            res["CardBg2"] = Brush(Color.FromRgb(0x17, 0x17, 0x17));
+            res["Border"] = Brush(Color.FromRgb(0x2D, 0x2D, 0x2D));
+            res["BorderSoft"] = Brush(Color.FromRgb(0x20, 0x20, 0x20));
+            res["TextPrimary"] = Brush(Color.FromRgb(0xE6, 0xEA, 0xF2));
+            res["TextMuted"] = Brush(Color.FromRgb(0x9C, 0xA3, 0xAF));
+            res["TextFaint"] = Brush(Color.FromRgb(0x6B, 0x72, 0x80));
+            res["ErrorRed"] = Brush(Color.FromRgb(0xEF, 0x44, 0x44));
+        }
+        else
+        {
+            res["WindowBg"] = Brush(Color.FromRgb(0xF3, 0xF4, 0xF6)); // Light grey (gray-100)
+            res["SidebarBg"] = Brush(Color.FromRgb(0xFF, 0xFF, 0xFF)); // White
+            res["PanelBg"] = Brush(Color.FromRgb(0xFF, 0xFF, 0xFF)); // White
+            res["CardBg"] = Brush(Color.FromRgb(0xFF, 0xFF, 0xFF)); // White
+            res["CardBg2"] = Brush(Color.FromRgb(0xF9, 0xFA, 0xFB)); // Very light grey (gray-50)
+            res["Border"] = Brush(Color.FromRgb(0xE5, 0xE7, 0xEB)); // Gray border (gray-200)
+            res["BorderSoft"] = Brush(Color.FromRgb(0xF3, 0xF4, 0xF6)); // Soft gray border (gray-100)
+            res["TextPrimary"] = Brush(Color.FromRgb(0x11, 0x18, 0x27)); // Dark grey/black text (gray-900)
+            res["TextMuted"] = Brush(Color.FromRgb(0x4B, 0x55, 0x63)); // Gray text (gray-600)
+            res["TextFaint"] = Brush(Color.FromRgb(0x9C, 0xA3, 0xAF)); // Faint text (gray-400)
+            res["ErrorRed"] = Brush(Color.FromRgb(0xD9, 0x30, 0x25)); // Darker red for light mode readability
+        }
+
+        // Set the AppIcon based on light/dark mode (using PNG for crisp taskbar scaling)
+        try
+        {
+            string iconUri = isDark
+                ? "pack://application:,,,/Pos.App;component/login_logo_dark.png"
+                : "pack://application:,,,/Pos.App;component/login_logo_light.png";
+            res["AppIcon"] = new BitmapImage(new Uri(iconUri));
+        }
+        catch
+        {
+            // Safe fallback
+        }
+
+        // Set the LoginLogo based on light/dark mode
+        try
+        {
+            string logoUri = isDark
+                ? "pack://application:,,,/Pos.App;component/login_logo_dark.png"
+                : "pack://application:,,,/Pos.App;component/login_logo_light.png";
+            res["LoginLogo"] = new BitmapImage(new Uri(logoUri));
+        }
+        catch
+        {
+            // Safe fallback
+        }
+
+        // Re-apply the accent using current mode logic
+        Apply(_activeAccentHex);
+    }
+
     /// <summary>
     /// Repaints the accent family from <paramref name="hex"/>. Silently no-ops if the colour
     /// can't be parsed or the resources aren't up yet — a bad theme value must never stop the
@@ -101,32 +172,56 @@ public static class ThemeService
             return;
         }
 
+        _activeAccentHex = hex;
+
+        // Selected table card border: white in dark mode, accent base color in light mode.
+        res["SelectedTableBorder"] = _isDark ? Brush(Colors.White) : Brush(baseColor);
+
         // The main highlight, and its literal duplicate.
         res["Accent"] = Brush(baseColor);
         res["Green"] = Brush(baseColor);
 
         // A darker shade for pressed/secondary accents, and the 10%-alpha wash used behind
         // hovered rows and cards.
-        res["AccentDim"] = Brush(Scale(baseColor, 0.75));
-        res["AccentFaint"] = Brush(WithAlpha(baseColor, 0x1A));
+        res["AccentDim"] = Brush(_isDark ? Scale(baseColor, 0.75) : Scale(baseColor, 0.85));
+        res["AccentFaint"] = Brush(WithAlpha(baseColor, _isDark ? (byte)0x1A : (byte)0x12));
 
         var (h, s, _) = ToHsl(baseColor);
 
-        // Badge/label text: the base is too dark to read small on the near-black background, so
-        // this is the same hue lifted to a bright, legible lightness. BlueLink is the same green
-        // in the shipped theme, so it moves with it.
-        var text = FromHsl(h, Math.Min(s, 0.75), 0.62);
-        res["AccentText"] = Brush(text);
-        res["BlueLink"] = Brush(text);
+        if (_isDark)
+        {
+            // Badge/label text: the base is too dark to read small on the near-black background, so
+            // this is the same hue lifted to a bright, legible lightness. BlueLink is the same green
+            // in the shipped theme, so it moves with it.
+            var text = FromHsl(h, Math.Min(s, 0.75), 0.62);
+            res["AccentText"] = Brush(text);
+            res["BlueLink"] = Brush(text);
 
-        // The solid tint behind a highlighted menu row, where a 10%-alpha wash would vanish.
-        var tint = FromHsl(h, Math.Min(s, 0.55), 0.16);
-        res["GreenBg"] = Brush(tint);
-        res["MenuHighlight"] = Brush(tint);
+            // The solid tint behind a highlighted menu row, where a 10%-alpha wash would vanish.
+            var tint = FromHsl(h, Math.Min(s, 0.55), 0.16);
+            res["GreenBg"] = Brush(tint);
+            res["MenuHighlight"] = Brush(tint);
 
-        // The active sidebar item's gradient: a touch lighter into a touch darker than the base.
-        res["AccentGrad"] = Gradient(Lighten(baseColor, 0.18), Scale(baseColor, 0.85));
+            // The active sidebar item's gradient: a touch lighter into a touch darker than the base.
+            res["AccentGrad"] = Gradient(Lighten(baseColor, 0.18), Scale(baseColor, 0.85));
+        }
+        else
+        {
+            // Badge/label text: darker for light theme readability.
+            var text = FromHsl(h, Math.Min(s, 0.75), 0.35);
+            res["AccentText"] = Brush(text);
+            res["BlueLink"] = Brush(text);
+
+            // The solid tint behind a highlighted menu row: very light green tint for light theme
+            var tint = FromHsl(h, Math.Min(s, 0.55), 0.94);
+            res["GreenBg"] = Brush(tint);
+            res["MenuHighlight"] = Brush(tint);
+
+            // Gradient: start is baseColor, end is slightly darker
+            res["AccentGrad"] = Gradient(baseColor, Scale(baseColor, 0.88));
+        }
     }
+
 
     private static SolidColorBrush Brush(Color c)
     {
