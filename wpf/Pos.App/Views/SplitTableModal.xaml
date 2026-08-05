@@ -82,8 +82,12 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock Text="TARGET FREE TABLE (लक्ष्य टेबल):" Foreground="{StaticResource TextMuted}" FontSize="10" FontWeight="Bold"/>
-                        <ComboBox x:Name="CmbTargetTables" DisplayMemberPath="TableNumber" Height="34" Margin="0,4,12,0"/>
+                        <TextBlock Text="TARGET FREE TABLE (टेबल सर्च करें/चुनें):" Foreground="{StaticResource TextMuted}" FontSize="10" FontWeight="Bold"/>
+                        <!-- Editable + text-search so the operator can type a table number to jump
+                             straight to it instead of scrolling the whole list. -->
+                        <ComboBox x:Name="CmbTargetTables" DisplayMemberPath="TableNumber"
+                                  IsEditable="True" IsTextSearchEnabled="True" StaysOpenOnEdit="True"
+                                  TextSearch.TextPath="TableNumber" Height="34" Margin="0,4,12,0"/>
                     </StackPanel>
                 </Grid>
             </Border>

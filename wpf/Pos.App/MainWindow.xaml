@@ -6,9 +6,11 @@
         xmlns:local="clr-namespace:Pos.App"
         xmlns:helpers="clr-namespace:Pos.App.Helpers"
         xmlns:views="clr-namespace:Pos.App.Views"
+        xmlns:controls="clr-namespace:Pos.App.Controls"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         Title="{Binding ClientName, StringFormat={}{0} POS}" Height="800" Width="1366"
+        MinWidth="1120" MinHeight="680"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
         Background="{StaticResource WindowBg}"
@@ -442,7 +444,7 @@
                 <ListBox Grid.Row="2" ItemsSource="{Binding Tables}" SelectedItem="{Binding SelectedTable}"
                          Background="Transparent" BorderThickness="0" Padding="0,0,8,0" ItemContainerStyle="{StaticResource TableCard}"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         ScrollViewer.VerticalScrollBarVisibility="Disabled"
                          ScrollViewer.CanContentScroll="False"
                          HorizontalContentAlignment="Stretch"
                          KeyboardNavigation.DirectionalNavigation="None"
@@ -452,14 +454,18 @@
                          Visibility="{Binding CenterMode, Converter={StaticResource ModeToVis}, ConverterParameter=Table}">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <UniformGrid Columns="5" HorizontalAlignment="Stretch"/>
+                            <!-- Scrolling is off, so the grid gets the exact area and sizes every
+                                 card to fit — all tables show at once at any window size. It picks
+                                 columns to keep cards a readable width AND to keep the rows short
+                                 enough to fit the height. -->
+                            <controls:AdaptiveUniformGrid MinColumnWidth="150" MinRowHeight="66"/>
                         </ItemsPanelTemplate>
                     </ListBox.ItemsPanel>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <!-- The context menu lives on the ListBox (one instance for all cards)
                                  rather than being rebuilt per card; see TablesListBox_ContextMenuOpening. -->
-                            <Border Padding="10,6" HorizontalAlignment="Stretch" Background="Transparent">
+                            <Border Padding="9,5" HorizontalAlignment="Stretch" Background="Transparent">
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
@@ -470,23 +476,24 @@
                                     <Grid Grid.Row="0" VerticalAlignment="Top">
                                         <TextBlock Text="{Binding TableNumber}" Foreground="{StaticResource TextPrimary}"
                                                    FontSize="12.5" FontWeight="Bold" TextWrapping="NoWrap"
-                                                   TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                                   TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,14,0"/>
                                         <Ellipse Width="9" Height="9" Fill="{Binding Status, Converter={StaticResource StatusToDotBrush}}"
                                                  HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                     </Grid>
 
-                                    <!-- Running Bill Amount & Order Time (if active) -->
-                                    <StackPanel Grid.Row="1" VerticalAlignment="Bottom" Margin="0">
-                                        <!-- Amount in BOLD -->
+                                    <!-- Running bill amount + elapsed time. Amount and time sit on one
+                                         baseline so they still both show when a packed grid makes the
+                                         cards short. -->
+                                    <Grid Grid.Row="1" VerticalAlignment="Bottom"
+                                          Visibility="{Binding Amount, Converter={StaticResource CountToVis}}">
                                         <TextBlock Text="{Binding Amount, StringFormat='₹{0:0.##}'}"
-                                                   Foreground="White" FontSize="15" FontWeight="Bold"
-                                                   Visibility="{Binding Amount, Converter={StaticResource CountToVis}}"/>
-
-                                        <!-- Order Elapsed Time in Small Size -->
+                                                   Foreground="White" FontSize="14" FontWeight="Bold"
+                                                   HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
                                         <TextBlock Text="{Binding FormattedTime}"
-                                                   Foreground="{Binding Status, Converter={StaticResource StatusToTimeBrush}}" FontSize="10" FontWeight="Normal" Margin="0,1,0,0"
-                                                   Visibility="{Binding Amount, Converter={StaticResource CountToVis}}"/>
-                                    </StackPanel>
+                                                   Foreground="{Binding Status, Converter={StaticResource StatusToTimeBrush}}"
+                                                   FontSize="9.5" FontWeight="Normal" TextTrimming="CharacterEllipsis"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="6,0,0,1"/>
+                                    </Grid>
                                 </Grid>
                             </Border>
                         </DataTemplate>

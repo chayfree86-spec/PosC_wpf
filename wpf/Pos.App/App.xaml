@@ -200,9 +200,11 @@
 
             <!-- ===== Table card (ListBoxItem) ===== -->
             <Style x:Key="TableCard" TargetType="ListBoxItem">
-                <Setter Property="Margin" Value="4"/>
+                <Setter Property="Margin" Value="3"/>
                 <Setter Property="Cursor" Value="Hand"/>
-                <Setter Property="Height" Value="84"/>
+                <!-- No fixed size: the AdaptiveUniformGrid stretches each card to fill its cell, so
+                     every table fits on screen without scrolling — the card shrinks to whatever the
+                     grid needs and its content stays anchored (number top, amount/time bottom). -->
                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                 <Setter Property="VerticalContentAlignment" Value="Stretch"/>
                 <Setter Property="FocusVisualStyle" Value="{x:Null}"/>

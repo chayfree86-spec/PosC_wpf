@@ -704,7 +704,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        var occupiedTables = vm.Tables.Where(t => t.Status == "occupied" && t.Id != vm.SelectedTable.Id).ToList();
+        // Any table with a running bill, not just the literal "occupied" status — a table with a
+        // saved order is "ordered", so checking == "occupied" found none and merge never worked.
+        var occupiedTables = vm.Tables.Where(t => !IsTableFree(t) && t.Id != vm.SelectedTable.Id).ToList();
         if (occupiedTables.Count == 0)
         {
             Views.ThemeMessageBox.Show(this, "No other occupied tables available to merge.", "Merge Table", "warning");

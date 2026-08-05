@@ -150,6 +150,45 @@ public partial class MainViewModel : ObservableObject
     private void RefreshCartView() => _cartView?.Refresh();
 
     /// <summary>
+    /// After a KOT/bill reloads the table order, snaps the cart to the Old tab and re-filters.
+    ///
+    /// Applied twice on purpose. The reload has already set the tab to "Old", so a plain re-set is
+    /// a no-op that fires no change and the tab header (a DataTrigger on SelectedCartTab) never
+    /// re-evaluates — which is why it only switched on the SECOND KOT. So it forces the
+    /// notifications even when the value is unchanged, once now and once more after the reload's
+    /// clear/re-add churn has settled, so both the header and the filtered list land on Old the
+    /// first time.
+    /// </summary>
+    /// <summary>While set, every table reload snaps the tab back to Old at the end of
+    /// <see cref="OnSelectedTableChanged"/> — closing the window in which the grid's async
+    /// re-selection could flip it to New right after a KOT.</summary>
+    private bool _pinOldTab;
+
+    private void ShowMergedOldOrder()
+    {
+        _pinOldTab = true;
+        ApplyOldTab();
+
+        // ApplicationIdle runs after every render/data-bind pass — including the ListBox's own
+        // async re-selection after the table grid reloads, which can otherwise flip the tab back
+        // to New. Re-applying last (and releasing the pin) makes Old stick on the first KOT.
+        System.Windows.Application.Current?.Dispatcher.BeginInvoke(
+            new Action(() => { ApplyOldTab(); _pinOldTab = false; }),
+            System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+    }
+
+    private void ApplyOldTab()
+    {
+        SelectedCartTab = "Old";
+        // Forced (not just set): the value is usually already "Old" from the reload, and without an
+        // explicit raise the tab's DataTrigger and the New/Old filter never refresh.
+        OnPropertyChanged(nameof(SelectedCartTab));
+        OnPropertyChanged(nameof(IsNewTableOrder));
+        OnPropertyChanged(nameof(DisplayCartItems));
+        RefreshCartView();
+    }
+
+    /// <summary>
     /// The shop's name in the sidebar, from the saved profile — not a constant. Renaming the
     /// shop in Settings used to change the bill but leave the sidebar reading the old name.
     /// </summary>
@@ -815,6 +854,13 @@ public partial class MainViewModel : ObservableObject
             CenterMode = "Table";
         }
 
+        // Just after a KOT the order is fully merged into Old; hold the tab there through the
+        // grid's reload/re-selection so it can't briefly flip back to New.
+        if (_pinOldTab && newValue != null)
+        {
+            SelectedCartTab = "Old";
+        }
+
         // The header reads the selected table's number, but it only refreshed when BillMode
         // flipped. Switching straight from one table to another leaves BillMode on "Table", so
         // without this the panel kept showing the first table's name for every table after it.
@@ -946,6 +992,10 @@ public partial class MainViewModel : ObservableObject
             MergeSavedLines();
             SelectedCartTab = "Old";
             RaiseTotals();
+            // The reload above clears and re-adds the cart in one synchronous batch; re-apply the
+            // Old/New filter AFTER WPF has processed that churn, or the merged order only shows in
+            // the Old tab on the SECOND KOT instead of the first.
+            ShowMergedOldOrder();
             StatusMessage($"KOT — Table {SelectedTable.TableNumber}, Total: ₹{res.TotalAmount:0.##}");
         }
         else
@@ -998,6 +1048,10 @@ public partial class MainViewModel : ObservableObject
             MergeSavedLines();
             SelectedCartTab = "Old";
             RaiseTotals();
+            // The reload above clears and re-adds the cart in one synchronous batch; re-apply the
+            // Old/New filter AFTER WPF has processed that churn, or the merged order only shows in
+            // the Old tab on the SECOND KOT instead of the first.
+            ShowMergedOldOrder();
             StatusMessage($"KOT Saved — Table {SelectedTable.TableNumber}, Total: ₹{res.TotalAmount:0.##}");
         }
     }
@@ -1034,6 +1088,10 @@ public partial class MainViewModel : ObservableObject
             MergeSavedLines();
             SelectedCartTab = "Old";
             RaiseTotals();
+            // The reload above clears and re-adds the cart in one synchronous batch; re-apply the
+            // Old/New filter AFTER WPF has processed that churn, or the merged order only shows in
+            // the Old tab on the SECOND KOT instead of the first.
+            ShowMergedOldOrder();
             StatusMessage($"Bill — Table {SelectedTable.TableNumber}, Bill {res.FormattedBillNumber}");
         }
         else

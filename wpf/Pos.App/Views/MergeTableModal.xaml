@@ -27,10 +27,17 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <TextBlock Text="SELECT OCCUPIED TABLE TO MERGE (ऑर्डर जोड़ने के लिए टेबल चुनें):" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,10"/>
-                    <ListBox x:Name="LstOccupiedTables" Grid.Row="1" Background="Transparent" BorderThickness="0"
+                    <Border Grid.Row="1" Background="{StaticResource WindowBg}" CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="10,6" Margin="0,0,0,10">
+                        <Grid>
+                            <TextBlock x:Name="SearchPlaceholder" Text="🔍  टेबल सर्च करें (T-5, F-2…)" Foreground="{StaticResource TextFaint}" FontSize="12" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                            <TextBox x:Name="TxtSearch" TextChanged="Search_TextChanged" PreviewKeyDown="Search_KeyDown" Foreground="White" FontSize="13" Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource Accent}"/>
+                        </Grid>
+                    </Border>
+                    <ListBox x:Name="LstOccupiedTables" Grid.Row="2" Background="Transparent" BorderThickness="0"
                              ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
