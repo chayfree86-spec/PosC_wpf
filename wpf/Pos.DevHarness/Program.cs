@@ -57,6 +57,52 @@ if (args.Contains("--sync"))
     return;
 }
 
+if (args.Contains("--inspect"))
+{
+    var paths = new[]
+    {
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ChayChaupalPOS", "sqlite"),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "chay-chaupal-pos-electron", "sqlite")
+    };
+    
+    foreach (var sqliteDir in paths)
+    {
+        Console.WriteLine($"\nInspecting SQLite Directory: {sqliteDir}");
+        if (Directory.Exists(sqliteDir))
+        {
+            var files = Directory.GetFiles(sqliteDir, "*.sqlite3");
+            foreach (var file in files)
+            {
+                Console.WriteLine($"---------------------------------------");
+                Console.WriteLine($"File: {file} ({new FileInfo(file).Length} bytes)");
+                try
+                {
+                    var inspectDb = new DatabaseService(file);
+                    using var conn = inspectDb.OpenConnection();
+                    
+                    var countTotal = conn.ExecuteScalar<long>("SELECT COUNT(*) FROM orders");
+                    Console.WriteLine($"  Total orders: {countTotal}");
+                    
+                    var count = conn.ExecuteScalar<long>("SELECT COUNT(*) FROM orders WHERE uuid = 'beba8fbd-dcf8-4095-9890-cded45b8cf65'");
+                    Console.WriteLine($"  Matches for UUID 'beba8fbd-dcf8-4095-9890-cded45b8cf65': {count}");
+                    
+                    if (count > 0)
+                    {
+                        var o = conn.QueryFirst<dynamic>("SELECT id, client_id, bill_number, billed_at, total_amount, order_status FROM orders WHERE uuid = 'beba8fbd-dcf8-4095-9890-cded45b8cf65'");
+                        Console.WriteLine($"    Found: ID: {o.id}, Client: {o.client_id}, Bill#: {o.bill_number}, BilledAt: {o.billed_at}, Total: {o.total_amount}, Status: {o.order_status}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"  Error reading database: {ex.Message}");
+                }
+            }
+        }
+    }
+    return;
+}
+
+
 
 // Dev-only harness: exercise the full MVP order flow against a throwaway DB.
 DapperConfig.Init();

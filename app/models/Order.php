@@ -82,7 +82,7 @@ class Order
                 "UPDATE orders
                  SET is_kot_only = 0,
                      report_visible = 1,
-                     billed_at = COALESCE(updated_at, created_at)
+                     billed_at = COALESCE(created_at, updated_at)
                  WHERE billed_at IS NULL
                    AND report_visible = 0
                    AND is_kot_only = 1

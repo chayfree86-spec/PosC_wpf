@@ -43,7 +43,8 @@ public sealed class DatabaseService
         {
             documents = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         }
-        return Path.Combine(documents, "ChayChaupalPOS", "sqlite", "pos.sqlite3");
+        var filename = DotEnv.Get("DB_SQLITE_FILE") ?? "pos_wpf.sqlite3";
+        return Path.Combine(documents, "ChayChaupalPOS", "sqlite", filename);
     }
 
     /// <summary>
