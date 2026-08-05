@@ -105,7 +105,7 @@ public sealed class SyncCoordinator : IDisposable
     /// </summary>
     public void NudgePush() => _ = Task.Run(async () =>
     {
-        try { await RunPassAsync(force: false, CancellationToken.None); }
+        try { await RunPassAsync(force: true, CancellationToken.None); }
         catch { /* the scheduled loop will retry */ }
     });
 
@@ -362,7 +362,7 @@ public sealed class SyncCoordinator : IDisposable
             await new LedgerSyncService(_db).PullAsync(api, _client.ClientId, ct);
         }
 
-        var flush = await queue.FlushAsync(ct);
+        var flush = await queue.FlushAsync(force, ct);
         var ok = flush.Failed == 0;
 
         return Publish(new SyncStatus(

@@ -50,9 +50,11 @@ vpk pack --packId ChayChaupalPOS --packVersion "$VER" --packDir publish-vpk \
 echo "==> Updating committed feed (downloads/pos/)"
 mkdir -p "$FEED"
 rm -f "$FEED"/*.nupkg
+rm -f "$FEED"/*.exe
 cp "Releases/ChayChaupalPOS-$VER-full.nupkg" "$FEED/"
 # A delta only exists from the second release onward.
 cp "Releases/ChayChaupalPOS-$VER-delta.nupkg" "$FEED/" 2>/dev/null || true
+cp "Releases/ChayChaupalPOS-win-Setup.exe" "$FEED/"
 cp Releases/RELEASES Releases/releases.win.json Releases/assets.win.json "$FEED/"
 
 echo ""

@@ -35,12 +35,13 @@ public sealed class CatalogRepository
     /// The local copies still carry the column from when this till served a single brand. It
     /// is NOT NULL, so new rows keep writing the original value; nothing reads it back.
     /// </summary>
-    private const long SharedCatalogClientId = 1;
+    private readonly ClientContext _client;
 
-    public CatalogRepository(DatabaseService db, SyncCoordinator sync)
+    public CatalogRepository(DatabaseService db, SyncCoordinator sync, ClientContext client)
     {
         _db = db;
         _sync = sync;
+        _client = client;
         DapperConfig.Init();
     }
 
@@ -66,7 +67,7 @@ public sealed class CatalogRepository
         var id = CreateOnServer("/dining-areas", new { name = a.Name, sort_order = a.SortOrder });
         conn.Execute(
             "INSERT INTO dining_areas (id, client_id, name, sort_order) VALUES (@id, @clientId, @Name, @SortOrder)",
-            new { id, clientId = SharedCatalogClientId, a.Name, a.SortOrder });
+            new { id, clientId = _client.ClientId, a.Name, a.SortOrder });
         return id;
     }
 
@@ -105,7 +106,7 @@ public sealed class CatalogRepository
         conn.Execute(
             @"INSERT INTO restaurant_tables (id, client_id, table_number, area_id, table_status)
               VALUES (@id, @clientId, @TableNumber, @AreaId, 'available')",
-            new { id, clientId = SharedCatalogClientId, t.TableNumber, t.AreaId });
+            new { id, clientId = _client.ClientId, t.TableNumber, t.AreaId });
         return id;
     }
 
@@ -139,7 +140,7 @@ public sealed class CatalogRepository
         var id = CreateOnServer("/categories", new { name = c.Name, parent_id = c.ParentId, sort_order = c.SortOrder });
         conn.Execute(
             "INSERT INTO categories (id, client_id, name, parent_id, sort_order) VALUES (@id, @clientId, @Name, @ParentId, @SortOrder)",
-            new { id, clientId = SharedCatalogClientId, c.Name, c.ParentId, c.SortOrder });
+            new { id, clientId = _client.ClientId, c.Name, c.ParentId, c.SortOrder });
         return id;
     }
 
@@ -173,7 +174,7 @@ public sealed class CatalogRepository
         var id = CreateOnServer("/gst-rates", new { name = g.Name, rate_percent = g.Rate });
         conn.Execute(
             "INSERT INTO gst_rates (id, client_id, name, rate) VALUES (@id, @clientId, @Name, @Rate)",
-            new { id, clientId = SharedCatalogClientId, g.Name, g.Rate });
+            new { id, clientId = _client.ClientId, g.Name, g.Rate });
         return id;
     }
 
@@ -224,7 +225,7 @@ public sealed class CatalogRepository
         conn.Execute(
             @"INSERT INTO menu_items (id, client_id, category_id, sub_category_id, name, code, price, type, is_available, is_parcel)
               VALUES (@id, @clientId, @CategoryId, @SubCategoryId, @Name, @Code, @Price, @Type, @IsAvailable, @IsParcel)",
-            new { id, clientId = SharedCatalogClientId, m.CategoryId, m.SubCategoryId, m.Name, m.Code, m.Price, m.Type, m.IsAvailable, m.IsParcel });
+            new { id, clientId = _client.ClientId, m.CategoryId, m.SubCategoryId, m.Name, m.Code, m.Price, m.Type, m.IsAvailable, m.IsParcel });
         return id;
     }
 

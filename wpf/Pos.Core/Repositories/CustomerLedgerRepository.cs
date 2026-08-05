@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using Pos.Core.Data;
 using Pos.Core.Models;
 using Pos.Core.Sync;
@@ -28,6 +28,9 @@ public sealed class CustomerLedgerRepository
         _sync = sync;
         _client = client;
     }
+
+    public long ClientId => _client.ClientId;
+
 
     public IEnumerable<Customer> GetCustomers(long? clientId = null)
     {

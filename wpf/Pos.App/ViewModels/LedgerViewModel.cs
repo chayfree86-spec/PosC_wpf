@@ -97,7 +97,7 @@ public partial class LedgerViewModel : ObservableObject
     {
         var cust = new Customer
         {
-            ClientId = 1, Name = name, Phone = phone, Address = address, Balance = openingBalance,
+            ClientId = _ledgerRepo.ClientId, Name = name, Phone = phone, Address = address, Balance = openingBalance,
             CreatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
         };
         var id = _ledgerRepo.SaveCustomer(cust);
@@ -106,7 +106,7 @@ public partial class LedgerViewModel : ObservableObject
         {
             _ledgerRepo.AddLedgerEntry(new LedgerEntry
             {
-                ClientId = 1, CustomerId = id,
+                ClientId = _ledgerRepo.ClientId, CustomerId = id,
                 Type = openingBalance > 0 ? "gave" : "got",
                 Amount = Math.Abs(openingBalance), PaymentMode = "cash", Remarks = "Opening balance",
                 CreatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
@@ -137,7 +137,7 @@ public partial class LedgerViewModel : ObservableObject
         if (SelectedCustomer == null) return;
         _ledgerRepo.AddLedgerEntry(new LedgerEntry
         {
-            ClientId = 1, CustomerId = SelectedCustomer.Id, Type = type, Amount = amount,
+            ClientId = _ledgerRepo.ClientId, CustomerId = SelectedCustomer.Id, Type = type, Amount = amount,
             PaymentMode = mode, Remarks = remarks, CreatedAt = date.ToString("yyyy-MM-dd HH:mm:ss")
         });
         LoadData();

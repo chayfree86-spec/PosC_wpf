@@ -37,7 +37,7 @@ public sealed class SyncQueueService
             "SELECT COUNT(*) FROM sync_queue WHERE status IN ('pending', 'failed')");
     }
 
-    public async Task<SyncFlushResult> FlushAsync(CancellationToken ct = default)
+    public async Task<SyncFlushResult> FlushAsync(bool force = false, CancellationToken ct = default)
     {
         List<QueueRow> rows;
         using (var conn = _db.OpenConnection())
@@ -61,13 +61,16 @@ public sealed class SyncQueueService
                                     AND newer.id > sync_queue.id)");
 
             // next_attempt_at is IST, so it has to be compared against IST — not UTC.
-            rows = conn.Query<QueueRow>(
-                @"SELECT id, entity_type, entity_id, operation, payload_json, attempts
-                  FROM sync_queue
-                  WHERE status IN ('pending', 'failed')
-                    AND datetime(next_attempt_at) <= datetime('now', '+330 minutes')
-                  ORDER BY id
-                  LIMIT @BatchSize", new { BatchSize }).AsList();
+            var sql = @"SELECT id, entity_type, entity_id, operation, payload_json, attempts
+                        FROM sync_queue
+                        WHERE status IN ('pending', 'failed')";
+            if (!force)
+            {
+                sql += " AND datetime(next_attempt_at) <= datetime('now', '+330 minutes')";
+            }
+            sql += " ORDER BY id LIMIT @BatchSize";
+
+            rows = conn.Query<QueueRow>(sql, new { BatchSize }).AsList();
         }
 
         var sent = 0;
@@ -77,6 +80,12 @@ public sealed class SyncQueueService
         foreach (var row in rows)
         {
             ct.ThrowIfCancellationRequested();
+            var rowClientId = GetRowClientId(row);
+            if (rowClientId.HasValue && rowClientId.Value != _api.ClientId)
+            {
+                continue;
+            }
+
             try
             {
                 if (RouteFor(row.EntityType, row.Operation, row.EntityId) is not { } route)
@@ -272,9 +281,48 @@ public sealed class SyncQueueService
 
         var patch = JsonNode.Parse(row.PayloadJson ?? "{}") as JsonObject ?? new JsonObject();
         var customerLocalId = (long?)(patch["customer_id"]?.GetValue<long>()) ?? 0;
-        var customerServerId = ServerIdOf("customers", customerLocalId)
-            ?? throw new InvalidOperationException(
+        var customerServerId = ServerIdOf("customers", customerLocalId);
+        if (customerServerId == null)
+        {
+            // Self-healing: Check if customer is in the queue to be synced
+            bool isQueued;
+            using (var conn = _db.OpenConnection())
+            {
+                isQueued = conn.ExecuteScalar<int>(
+                    @"SELECT COUNT(*) FROM sync_queue
+                       WHERE entity_type = 'customer'
+                         AND entity_id = @entityId
+                         AND status IN ('pending', 'failed')",
+                    new { entityId = customerLocalId.ToString() }) > 0;
+            }
+
+            if (!isQueued)
+            {
+                // Retrieve customer data from local database
+                using (var conn = _db.OpenConnection())
+                {
+                    var cust = conn.QueryFirstOrDefault(
+                        "SELECT name, coalesce(phone, mobile, '') as phone, address FROM customers WHERE id = @id",
+                        new { id = customerLocalId });
+                    if (cust != null)
+                    {
+                        var payload = System.Text.Json.JsonSerializer.Serialize(new
+                        {
+                            name = cust.name,
+                            mobile = cust.phone,
+                            address = cust.address
+                        });
+                        conn.Execute(
+                            @"INSERT INTO sync_queue (entity_type, entity_id, operation, payload_json, status)
+                              VALUES ('customer', @entityId, 'upsert', @payload, 'pending')",
+                            new { entityId = customerLocalId.ToString(), payload });
+                    }
+                }
+            }
+
+            throw new InvalidOperationException(
                 $"Customer {customerLocalId} abhi server par nahi pahuncha — entry baad me bhejenge.");
+        }
 
         patch["uuid"] = LocalUuid("ledger_entries", localId);
         patch.Remove("customer_id");
@@ -453,6 +501,29 @@ public sealed class SyncQueueService
               VALUES (@id, 'warn', @error, datetime('now', '+330 minutes'))",
             new { id = row.Id, error }, tx);
         tx.Commit();
+    }
+
+    private long? GetRowClientId(QueueRow row)
+    {
+        if (!long.TryParse(row.EntityId, out var id))
+        {
+            return null;
+        }
+
+        using var conn = _db.OpenConnection();
+        if (row.EntityType == "customer")
+        {
+            return conn.ExecuteScalar<long?>("SELECT client_id FROM customers WHERE id = @id", new { id });
+        }
+        if (row.EntityType == "ledger_entry")
+        {
+            return conn.ExecuteScalar<long?>("SELECT client_id FROM ledger_entries WHERE id = @id", new { id });
+        }
+        if (row.EntityType == "order")
+        {
+            return conn.ExecuteScalar<long?>("SELECT client_id FROM orders WHERE id = @id", new { id });
+        }
+        return null;
     }
 
     private sealed class QueueRow

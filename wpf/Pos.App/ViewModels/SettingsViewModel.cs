@@ -146,10 +146,14 @@ public partial class SettingsViewModel : ObservableObject
 
     partial void OnMenuFilterSubcategoryIdChanged(long value) => MenuItemRowsView.Refresh();
 
+    private readonly ClientContext _client;
+    public long ClientId => _client.ClientId;
+
     public SettingsViewModel(AppSettingsRepository settings, CatalogRepository catalog, ClientContext client)
     {
         _settings = settings;
         _catalog = catalog;
+        _client = client;
 
         foreach (var p in ThemeService.Presets)
         {

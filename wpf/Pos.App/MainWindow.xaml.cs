@@ -375,6 +375,18 @@ public partial class MainWindow : Window
 
     public void RefocusSearchInput()
     {
+        if (IsLeftMouseDown())
+        {
+            MouseButtonEventHandler? handler = null;
+            handler = (s, e) =>
+            {
+                RemoveHandler(MouseLeftButtonUpEvent, handler);
+                RefocusSearchInput();
+            };
+            AddHandler(MouseLeftButtonUpEvent, handler, handledEventsToo: true);
+            return;
+        }
+
         Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, new Action(() =>
         {
             // Opening a context menu moves focus to the menu and re-activates the window,
@@ -979,6 +991,14 @@ public partial class MainWindow : Window
             notesRepo.DeleteNote(note.Id);
             vm.Notes.LoadQuickNotes();
             vm.HasSavedNotes = vm.Notes.HasQuickNotes;
+        }
+    }
+
+    private void SaveKot_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+        {
+            vm.SaveKot();
         }
     }
 

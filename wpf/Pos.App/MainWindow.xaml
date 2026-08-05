@@ -489,7 +489,7 @@
                                  card to fit — all tables show at once at any window size. It picks
                                  columns to keep cards a readable width AND to keep the rows short
                                  enough to fit the height. -->
-                            <controls:AdaptiveUniformGrid MinColumnWidth="150" MinRowHeight="66"/>
+                            <controls:AdaptiveUniformGrid MinColumnWidth="150" MinRowHeight="66" VerticalAlignment="Top"/>
                         </ItemsPanelTemplate>
                     </ListBox.ItemsPanel>
                     <ListBox.ItemTemplate>
@@ -1366,7 +1366,7 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/><ColumnDefinition Width="8"/><ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Command="{Binding SaveKotCommand}" IsEnabled="{Binding HasItems}" Height="36">
+                        <Button Grid.Column="0" Click="SaveKot_Click" IsEnabled="{Binding HasItems}" Height="36">
                             <Button.Style>
                                 <Style TargetType="Button">
                                     <Setter Property="Cursor" Value="Hand"/>

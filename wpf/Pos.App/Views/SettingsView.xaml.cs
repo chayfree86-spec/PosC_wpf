@@ -60,7 +60,7 @@ public partial class SettingsView : UserControl
         if (Vm is null) return;
         var dlg = new CatalogEditModal("category", "Add Category", sortOrder: Vm.Categories.Count + 1) { Owner = Window.GetWindow(this) };
         if (dlg.ShowDialog() == true)
-            TrySave(() => Vm.SaveCategory(new Category { ClientId = 1, Name = dlg.ItemName, SortOrder = dlg.SortOrderValue }));
+            TrySave(() => Vm.SaveCategory(new Category { ClientId = Vm.ClientId, Name = dlg.ItemName, SortOrder = dlg.SortOrderValue }));
     }
 
     private void EditCategory_Click(object sender, RoutedEventArgs e)
@@ -83,7 +83,7 @@ public partial class SettingsView : UserControl
         }
         var dlg = new CatalogEditModal("subcategory", "Add Subcategory", parentCategories: parents) { Owner = Window.GetWindow(this) };
         if (dlg.ShowDialog() == true)
-            TrySave(() => Vm.SaveCategory(new Category { ClientId = 1, Name = dlg.ItemName, ParentId = dlg.ParentCategoryId, SortOrder = Vm.Categories.Count + 1 }));
+            TrySave(() => Vm.SaveCategory(new Category { ClientId = Vm.ClientId, Name = dlg.ItemName, ParentId = dlg.ParentCategoryId, SortOrder = Vm.Categories.Count + 1 }));
     }
 
     private void DeleteCategoryRow_Click(object sender, RoutedEventArgs e)
@@ -104,7 +104,7 @@ public partial class SettingsView : UserControl
         if (Vm is null) return;
         var dlg = new CatalogEditModal("area", "Add Dining Area") { Owner = Window.GetWindow(this) };
         if (dlg.ShowDialog() == true)
-            TrySave(() => Vm.SaveArea(new DiningArea { ClientId = 1, Name = dlg.ItemName }));
+            TrySave(() => Vm.SaveArea(new DiningArea { ClientId = Vm.ClientId, Name = dlg.ItemName }));
     }
 
     private void EditArea_Click(object sender, RoutedEventArgs e)
@@ -121,7 +121,7 @@ public partial class SettingsView : UserControl
         if (Vm is null) return;
         var dlg = new CatalogEditModal("table", "Add Table", areas: Vm.Areas) { Owner = Window.GetWindow(this) };
         if (dlg.ShowDialog() == true)
-            TrySave(() => Vm.SaveTable(new TableEdit { ClientId = 1, TableNumber = dlg.ItemName, AreaId = dlg.AreaId }));
+            TrySave(() => Vm.SaveTable(new TableEdit { ClientId = Vm.ClientId, TableNumber = dlg.ItemName, AreaId = dlg.AreaId }));
     }
 
     private void EditTable_Click(object sender, RoutedEventArgs e)
@@ -138,7 +138,7 @@ public partial class SettingsView : UserControl
         if (Vm is null) return;
         var dlg = new CatalogEditModal("gst", "Add GST Rate") { Owner = Window.GetWindow(this) };
         if (dlg.ShowDialog() == true)
-            TrySave(() => Vm.SaveGstRate(new GstRate { ClientId = 1, Name = dlg.ItemName, Rate = dlg.RateValue }));
+            TrySave(() => Vm.SaveGstRate(new GstRate { ClientId = Vm.ClientId, Name = dlg.ItemName, Rate = dlg.RateValue }));
     }
 
     private void EditGst_Click(object sender, RoutedEventArgs e)
@@ -153,7 +153,7 @@ public partial class SettingsView : UserControl
     private void AddMenu_Click(object sender, RoutedEventArgs e)
     {
         if (Vm is null) return;
-        var dlg = new MenuItemModal("Create Menu Item", Vm.Categories, Vm.SaveMenuItem, isEdit: false)
+        var dlg = new MenuItemModal("Create Menu Item", Vm.Categories, Vm.SaveMenuItem, isEdit: false, existingClientId: Vm.ClientId)
             { Owner = Window.GetWindow(this) };
         dlg.ShowDialog();
     }
