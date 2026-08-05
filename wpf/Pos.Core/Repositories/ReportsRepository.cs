@@ -35,9 +35,9 @@ public sealed class ReportsRepository
     {
         using var conn = _db.OpenConnection();
         return conn.QueryFirst<ReportSummary>(
-            @"SELECT COALESCE(SUM(total_amount), 0)     AS total_sales,
+            @"SELECT COALESCE(SUM(total_amount), 0.0)     AS total_sales,
                      COUNT(*)                            AS total_orders,
-                     COALESCE(SUM(discount_amount), 0)   AS total_discounts
+                     COALESCE(SUM(discount_amount), 0.0)   AS total_discounts
               FROM orders
               WHERE report_visible = 1
                 AND order_status IN ('settled', 'completed')

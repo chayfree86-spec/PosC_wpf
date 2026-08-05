@@ -46,9 +46,9 @@ public sealed class CustomerLedgerRepository
                      SELECT SUM(CASE
                                   WHEN le.type IN ('gave','debit') THEN le.amount
                                   WHEN le.type IN ('got','credit','payment') THEN -le.amount
-                                  ELSE 0 END)
+                                  ELSE 0.0 END)
                      FROM ledger_entries le WHERE le.customer_id = c.id
-                   ), 0) AS balance,
+                   ), 0.0) AS balance,
                    c.created_at
             FROM customers c
             WHERE coalesce(c.client_id, 1) = @clientId
