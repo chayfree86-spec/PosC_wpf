@@ -31,30 +31,51 @@ public sealed class TableRepository
         clientId ??= _client.ClientId;
         using var conn = _db.OpenConnection();
         return conn.Query<TableView>(
-            @"SELECT rt.id, rt.client_id, rt.table_number, rt.area_id,
-                     CASE WHEN COALESCE(ts.table_status, 'available') != 'available'
+            @"WITH raw_states AS (
+                  SELECT rt.id, rt.client_id, rt.table_number, rt.area_id,
+                         COALESCE(ts.table_status, rt.table_status, 'available') AS raw_status,
+                         COALESCE(ts.current_amount, 0) AS raw_amount,
+                         ts.order_timestamp AS raw_timestamp,
+                         da.name AS area_name
+                  FROM restaurant_tables rt
+                  LEFT JOIN table_client_states ts ON ts.table_id = rt.id AND ts.client_id = @clientId
+                  LEFT JOIN dining_areas da ON da.id = rt.area_id
+                  WHERE rt.is_active = 1
+              )
+              SELECT id, client_id, table_number, area_id,
+                     CASE WHEN raw_status != 'available'
                            AND NOT EXISTS (
                              SELECT 1 FROM orders o
-                             WHERE o.table_id = ts.table_id
-                               AND o.client_id = ts.client_id
+                             WHERE o.table_id = id
+                               AND o.client_id = @clientId
                                AND o.order_status NOT IN ('cancelled', 'settled')
                            )
                           THEN 'available'
-                          ELSE COALESCE(ts.table_status, rt.table_status, 'available')
+                          ELSE raw_status
                      END AS status,
-                     CAST(CASE WHEN COALESCE(ts.table_status, 'available') = 'available' THEN 0 ELSE COALESCE(ts.current_amount, 0) END AS REAL) AS amount,
-                     CASE WHEN COALESCE(ts.table_status, 'available') = 'available' THEN NULL ELSE ts.order_timestamp END AS order_timestamp,
-                     da.name AS area_name
-              -- The tables themselves belong to the counter, so every business sees all of
-              -- them. What each business sees them DOING is its own: the state join stays
-              -- scoped, which is how T-1 can be occupied for Daal Roti and free for Chay
-              -- Chaupal at the same moment. Filtering the tables here as well is what left
-              -- the second brand staring at an empty floor plan.
-              FROM restaurant_tables rt
-              LEFT JOIN table_client_states ts ON ts.table_id = rt.id AND ts.client_id = @clientId
-              LEFT JOIN dining_areas da ON da.id = rt.area_id
-              WHERE rt.is_active = 1
-              ORDER BY rt.id",
+                     CAST(CASE WHEN raw_status != 'available'
+                           AND NOT EXISTS (
+                             SELECT 1 FROM orders o
+                             WHERE o.table_id = id
+                               AND o.client_id = @clientId
+                               AND o.order_status NOT IN ('cancelled', 'settled')
+                           )
+                          THEN 0
+                          ELSE CASE WHEN raw_status = 'available' THEN 0 ELSE raw_amount END
+                     END AS REAL) AS amount,
+                     CASE WHEN raw_status != 'available'
+                           AND NOT EXISTS (
+                             SELECT 1 FROM orders o
+                             WHERE o.table_id = id
+                               AND o.client_id = @clientId
+                               AND o.order_status NOT IN ('cancelled', 'settled')
+                           )
+                          THEN NULL
+                          ELSE CASE WHEN raw_status = 'available' THEN NULL ELSE raw_timestamp END
+                     END AS order_timestamp,
+                     area_name
+              FROM raw_states
+              ORDER BY id",
             new { clientId }).AsList();
     }
 

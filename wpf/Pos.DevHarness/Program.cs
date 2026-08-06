@@ -173,8 +173,6 @@ if (args.Contains("--inspect"))
     return;
 }
 
-
-
 // Dev-only harness: exercise the full MVP order flow against a throwaway DB.
 DapperConfig.Init();
 var tmp = Path.Combine(Path.GetTempPath(), $"pos_dev_{Guid.NewGuid():N}", "pos.sqlite3");
