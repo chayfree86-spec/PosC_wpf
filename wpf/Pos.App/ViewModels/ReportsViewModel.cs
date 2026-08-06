@@ -225,7 +225,15 @@ public partial class ReportsViewModel : ObservableObject
     [RelayCommand] private void NextPage() { if (CurrentPage < TotalPages - 1) { CurrentPage++; RenderPage(); } }
     [RelayCommand] private void PrevPage() { if (CurrentPage > 0) { CurrentPage--; RenderPage(); } }
 
-    public IReadOnlyList<OrderItem> LoadItems(long orderId) => _repo.GetItems(orderId);
+    public IReadOnlyList<OrderItem> LoadItems(long orderId)
+    {
+        var row = System.Linq.Enumerable.FirstOrDefault(_all, r => r.Order.Id == orderId);
+        if (row?.Order.Items != null && row.Order.Items.Count > 0)
+        {
+            return row.Order.Items;
+        }
+        return _repo.GetItems(orderId);
+    }
 
     /// <summary>Re-reads the current range and staff selection from the database.</summary>
     public void Reload() => Load();
@@ -281,6 +289,27 @@ public partial class ReportsViewModel : ObservableObject
             o.BillNumber = GetJsonLong(el, "bill_number");
             o.TableNumber = GetJsonString(el, "table_number");
             o.CreatedByName = GetJsonString(el, "created_by_name");
+
+            if (el.TryGetProperty("items", out var itemsProp) && itemsProp.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var itemEl in itemsProp.EnumerateArray())
+                {
+                    var item = new OrderItem();
+                    item.Id = GetJsonLong(itemEl, "id") ?? 0;
+                    item.OrderId = GetJsonLong(itemEl, "order_id") ?? 0;
+                    item.ItemId = GetJsonLong(itemEl, "item_id");
+                    item.ItemName = GetJsonString(itemEl, "item_name");
+                    item.Price = GetJsonDouble(itemEl, "price");
+                    item.Quantity = GetJsonLong(itemEl, "quantity") ?? 0;
+                    item.Total = GetJsonDouble(itemEl, "total");
+                    item.DiscountAmount = GetJsonDouble(itemEl, "discount_amount");
+                    item.DiscountType = GetJsonString(itemEl, "discount_type");
+                    item.DiscountValue = GetJsonDouble(itemEl, "discount_value");
+                    item.DiscountLabel = GetJsonString(itemEl, "discount_label");
+                    o.Items.Add(item);
+                }
+            }
+
             return o;
         }
         catch
