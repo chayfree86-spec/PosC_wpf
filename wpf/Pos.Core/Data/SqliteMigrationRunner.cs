@@ -476,6 +476,71 @@ public sealed class SqliteMigrationRunner
                      WHERE entity_type IN ('order', 'table_order') 
                        AND entity_id IN (SELECT cast(id as text) FROM orders WHERE billed_at IS NOT NULL AND date(billed_at) < '2026-08-04');");
         });
+
+        Apply(conn, 21, "sqlite_pos_resync_today_orders", m =>
+        {
+            m.Exec(@"DELETE FROM sync_queue 
+                     WHERE entity_type IN ('order', 'table_order') 
+                       AND entity_id IN (SELECT cast(id as text) FROM orders WHERE billed_at IS NOT NULL AND date(billed_at) = '2026-08-05');");
+
+            m.Exec("UPDATE orders SET live_sync_status = 'pending' WHERE billed_at IS NOT NULL AND date(billed_at) = '2026-08-05';");
+
+            m.Exec(@"
+                INSERT INTO sync_queue (entity_type, entity_id, operation, payload_json, status, created_at, next_attempt_at)
+                SELECT 
+                    'order',
+                    cast(o.id as text),
+                    'insert',
+                    json_object(
+                        'id', o.id,
+                        'sqlite_uuid', o.sqlite_uuid,
+                        'client_id', o.client_id,
+                        'table_id', o.table_id,
+                        'order_status', o.order_status,
+                        'total_amount', o.total_amount,
+                        'discount_amount', o.discount_amount,
+                        'discount_type', o.discount_type,
+                        'discount_value', o.discount_value,
+                        'discount_label', o.discount_label,
+                        'customer_name', o.customer_name,
+                        'customer_mobile', o.customer_mobile,
+                        'bill_note', o.bill_note,
+                        'is_kot_only', o.is_kot_only,
+                        'report_visible', o.report_visible,
+                        'billed_at', o.billed_at,
+                        'bill_number', o.bill_number,
+                        'is_parcel_mode', o.is_parcel_mode,
+                        'created_at', o.created_at,
+                        'updated_at', o.updated_at,
+                        'items', (
+                            SELECT json_group_array(
+                                json_object(
+                                    'id', oi.id,
+                                    'order_id', oi.order_id,
+                                    'item_id', oi.item_id,
+                                    'client_item_id', oi.client_item_id,
+                                    'item_name', oi.item_name,
+                                    'price', oi.price,
+                                    'quantity', oi.quantity,
+                                    'is_parcel', oi.is_parcel,
+                                    'total', oi.total,
+                                    'discount_amount', oi.discount_amount,
+                                    'discount_type', oi.discount_type,
+                                    'discount_value', oi.discount_value,
+                                    'discount_label', oi.discount_label
+                                )
+                            )
+                            FROM order_items oi
+                            WHERE oi.order_id = o.id
+                        )
+                    ),
+                    'pending',
+                    datetime('now', '+330 minutes'),
+                    datetime('now', '+330 minutes')
+                FROM orders o
+                WHERE o.billed_at IS NOT NULL AND date(o.billed_at) = '2026-08-05';
+            ");
+        });
     }
 
     private static void Apply(SqliteConnection conn, int version, string name, Action<Ctx> work)
