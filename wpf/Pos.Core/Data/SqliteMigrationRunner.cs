@@ -493,7 +493,7 @@ public sealed class SqliteMigrationRunner
                     'insert',
                     json_object(
                         'id', o.id,
-                        'sqlite_uuid', o.sqlite_uuid,
+                        'sqlite_uuid', o.uuid,
                         'client_id', o.client_id,
                         'table_id', o.table_id,
                         'order_status', o.order_status,

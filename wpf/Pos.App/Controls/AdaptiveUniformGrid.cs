@@ -70,6 +70,18 @@ public sealed class AdaptiveUniformGrid : UniformGrid
             Rows = 0;
         }
 
-        return base.MeasureOverride(constraint);
+        var result = base.MeasureOverride(constraint);
+        if (count > 0 && Columns > 0 && !double.IsInfinity(constraint.Height) && constraint.Height > 0)
+        {
+            var calculatedRows = (int)Math.Ceiling((double)count / Columns);
+            var cellHeight = constraint.Height / calculatedRows;
+            
+            // Limit each card's height to a comfortable range (between MinRowHeight and 125px)
+            cellHeight = Math.Min(cellHeight, 125.0);
+            cellHeight = Math.Max(cellHeight, MinRowHeight);
+            
+            return new Size(result.Width, calculatedRows * cellHeight);
+        }
+        return result;
     }
 }

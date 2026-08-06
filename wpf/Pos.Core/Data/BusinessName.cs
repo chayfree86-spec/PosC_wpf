@@ -68,6 +68,10 @@ public static class BusinessName
         try
         {
             using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                return "";
+            }
             return doc.RootElement.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String
                 ? (n.GetString() ?? "").Trim()
                 : "";
