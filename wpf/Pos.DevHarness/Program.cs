@@ -59,44 +59,33 @@ if (args.Contains("--sync"))
 
 if (args.Contains("--inspect"))
 {
-    var paths = new[]
+    var file = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ChayChaupalPOS", "sqlite", "pos-wpf.sqlite3");
+    Console.WriteLine($"Inspecting file: {file}");
+    if (File.Exists(file))
     {
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ChayChaupalPOS", "sqlite"),
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "chay-chaupal-pos-electron", "sqlite")
-    };
-    
-    foreach (var sqliteDir in paths)
-    {
-        Console.WriteLine($"\nInspecting SQLite Directory: {sqliteDir}");
-        if (Directory.Exists(sqliteDir))
+        try
         {
-            var files = Directory.GetFiles(sqliteDir, "*.sqlite3");
-            foreach (var file in files)
+            var inspectDb = new DatabaseService(file);
+            using var conn = inspectDb.OpenConnection();
+            var total = conn.ExecuteScalar<int>("SELECT COUNT(*) FROM orders");
+            Console.WriteLine($"Total local orders in pos-wpf.sqlite3: {total}");
+            
+            var syncDist = conn.Query<dynamic>("SELECT live_sync_status, count(*) FROM orders GROUP BY live_sync_status");
+            foreach (var row in syncDist)
             {
-                Console.WriteLine($"---------------------------------------");
-                Console.WriteLine($"File: {file} ({new FileInfo(file).Length} bytes)");
-                try
-                {
-                    var inspectDb = new DatabaseService(file);
-                    using var conn = inspectDb.OpenConnection();
-                    
-                    var countTotal = conn.ExecuteScalar<long>("SELECT COUNT(*) FROM orders");
-                    Console.WriteLine($"  Total orders: {countTotal}");
-                    
-                    var count = conn.ExecuteScalar<long>("SELECT COUNT(*) FROM orders WHERE uuid = 'beba8fbd-dcf8-4095-9890-cded45b8cf65'");
-                    Console.WriteLine($"  Matches for UUID 'beba8fbd-dcf8-4095-9890-cded45b8cf65': {count}");
-                    
-                    if (count > 0)
-                    {
-                        var o = conn.QueryFirst<dynamic>("SELECT id, client_id, bill_number, billed_at, total_amount, order_status FROM orders WHERE uuid = 'beba8fbd-dcf8-4095-9890-cded45b8cf65'");
-                        Console.WriteLine($"    Found: ID: {o.id}, Client: {o.client_id}, Bill#: {o.bill_number}, BilledAt: {o.billed_at}, Total: {o.total_amount}, Status: {o.order_status}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"  Error reading database: {ex.Message}");
-                }
+                Console.WriteLine($"  Sync Status: {row.live_sync_status}, Count: {row["count(*)"]}");
             }
+            
+            var samplePending = conn.Query<dynamic>("SELECT id, client_id, bill_number, total_amount, order_status, billed_at, created_at, uuid FROM orders WHERE live_sync_status = 'pending' LIMIT 10");
+            Console.WriteLine("\nSample pending orders:");
+            foreach (var o in samplePending)
+            {
+                Console.WriteLine($"  ID: {o.id}, Client: {o.client_id}, Bill#: {o.bill_number}, Total: {o.total_amount}, Status: {o.order_status}, BilledAt: {o.billed_at}, CreatedAt: {o.created_at}, UUID: {o.uuid}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  Error reading database: {ex.Message}");
         }
     }
     return;

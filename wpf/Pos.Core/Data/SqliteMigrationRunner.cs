@@ -468,6 +468,14 @@ public sealed class SqliteMigrationRunner
         {
             m.AddColumnIfMissing("clients", "bill_prefix", "TEXT");
         });
+
+        Apply(conn, 20, "sqlite_pos_prevent_sync_storm_old_orders", m =>
+        {
+            m.Exec("UPDATE orders SET live_sync_status = 'synced' WHERE billed_at IS NOT NULL AND date(billed_at) < '2026-08-04';");
+            m.Exec(@"DELETE FROM sync_queue 
+                     WHERE entity_type IN ('order', 'table_order') 
+                       AND entity_id IN (SELECT cast(id as text) FROM orders WHERE billed_at IS NOT NULL AND date(billed_at) < '2026-08-04');");
+        });
     }
 
     private static void Apply(SqliteConnection conn, int version, string name, Action<Ctx> work)
