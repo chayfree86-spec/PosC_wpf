@@ -22,6 +22,7 @@ public partial class MainViewModel : ObservableObject
     /// <summary>The business this shift belongs to — used as the sidebar's fallback name when
     /// its profile has not reached this counter yet.</summary>
     private readonly ClientContext _client;
+    private readonly System.Windows.Threading.Dispatcher _dispatcher;
 
     /// <summary>Receipts go out through here, never on the UI thread — see PrintSpooler.</summary>
     private readonly Services.PrintSpooler _printer = new();
@@ -261,6 +262,7 @@ public partial class MainViewModel : ObservableObject
 
     public MainViewModel(MenuRepository menu, TableRepository tables, OrderRepository orders, QuickNotesRepository quickNotes, SyncCoordinator sync, LedgerViewModel ledger, SettingsViewModel settings, ReportsViewModel reports, NotesViewModel notes, QrOrderViewModel qr, ClientContext client)
     {
+        _dispatcher = System.Windows.Threading.Dispatcher.CurrentDispatcher;
         _menu = menu;
         _tables = tables;
         _orders = orders;
@@ -439,12 +441,11 @@ public partial class MainViewModel : ObservableObject
 
     /// <summary>Runs an action on the UI thread, whether the caller is already on it or on one of
     /// Velopack's background callbacks.</summary>
-    private static void OnUi(Action action)
+    private void OnUi(Action action)
     {
-        var dispatcher = System.Windows.Application.Current?.Dispatcher;
-        if (dispatcher != null && !dispatcher.CheckAccess())
+        if (_dispatcher != null && !_dispatcher.CheckAccess())
         {
-            _ = dispatcher.BeginInvoke(action);
+            _dispatcher.Invoke(action);
         }
         else
         {

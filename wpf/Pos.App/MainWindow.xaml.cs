@@ -1052,7 +1052,7 @@ public partial class MainWindow : Window
         RefocusSearchInput();
     }
 
-    private void Window_KeyDown(object sender, KeyEventArgs e)
+    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (DataContext is not MainViewModel vm) return;
 

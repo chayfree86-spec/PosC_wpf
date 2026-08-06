@@ -18,7 +18,7 @@
         TextElement.Foreground="{DynamicResource TextPrimary}"
         TextOptions.TextFormattingMode="Display"
         FontFamily="{StaticResource AppFont}"
-        Loaded="Window_Loaded" Activated="Window_Activated" KeyDown="Window_KeyDown" Closing="Window_Closing">
+        Loaded="Window_Loaded" Activated="Window_Activated" PreviewKeyDown="Window_PreviewKeyDown" Closing="Window_Closing">
 
     <!-- No hard-coded InputBindings: hotkeys are resolved from Settings → Shortcuts in
          Window_KeyDown so user remaps apply, and so F3/F4/F5 aren't handled twice. -->
@@ -967,6 +967,7 @@
                     <Grid Visibility="{Binding IsCartPanelVisible, Converter={StaticResource CountToVis}}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <!-- Cart Header with Clear All button -->
@@ -1068,7 +1069,7 @@
                         </Grid>
 
                         <!-- Inline Extra Form -->
-                        <Border Grid.Row="1" Background="{DynamicResource CardBg2}" BorderBrush="{DynamicResource Accent}" BorderThickness="1.5"
+                        <Border Grid.Row="2" Background="{DynamicResource CardBg2}" BorderBrush="{DynamicResource Accent}" BorderThickness="1.5"
                                 CornerRadius="12" Padding="14,10" Margin="0,0,0,12"
                                 Visibility="{Binding IsAddingExtra, Converter={StaticResource CountToVis}}">
                             <StackPanel>
@@ -1113,7 +1114,7 @@
                             </StackPanel>
                         </Border>
 
-                        <ListBox x:Name="CartListBox" Grid.Row="2" ItemsSource="{Binding DisplayCartItemsView}" Background="Transparent" BorderThickness="0" SelectionMode="Single" Padding="0" PreviewKeyDown="CartListBox_PreviewKeyDown">
+                        <ListBox x:Name="CartListBox" Grid.Row="1" ItemsSource="{Binding DisplayCartItemsView}" Background="Transparent" BorderThickness="0" SelectionMode="Single" Padding="0" PreviewKeyDown="CartListBox_PreviewKeyDown">
                             <ListBox.GroupStyle>
                                 <GroupStyle>
                                     <GroupStyle.HeaderTemplate>
