@@ -309,6 +309,8 @@ public partial class MainWindow : Window
                 line.QtyText = line.Qty > 0 ? line.Qty.ToString() : "1";
             }
         }
+        // Persist qty changes for saved table-order lines so switching tables doesn't revert.
+        if (DataContext is MainViewModel vm) vm.PersistCartIfNeeded();
         RefocusSearchInput();
     }
 
@@ -344,6 +346,12 @@ public partial class MainWindow : Window
     private void PriceInput_PreviewTextInput(object sender, TextCompositionEventArgs e)
     {
         e.Handled = !System.Text.RegularExpressions.Regex.IsMatch(e.Text, @"^[0-9.]+$");
+    }
+
+    private void PriceInput_LostFocus(object sender, RoutedEventArgs e)
+    {
+        // Persist price changes for saved table-order lines.
+        if (DataContext is MainViewModel vm) vm.PersistCartIfNeeded();
     }
 
     private void PriceInput_KeyDown(object sender, KeyEventArgs e)

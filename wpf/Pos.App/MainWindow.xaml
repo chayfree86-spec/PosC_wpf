@@ -1219,6 +1219,7 @@
                                                     <TextBlock Text="₹" Foreground="{DynamicResource TextMuted}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,2,0"/>
                                                     <TextBox x:Name="PriceInput" Style="{StaticResource PriceCellEditBox}"
                                                              GotFocus="PriceInput_GotFocus" KeyDown="PriceInput_KeyDown"
+                                                             LostFocus="PriceInput_LostFocus"
                                                              PreviewMouseLeftButtonDown="CellEditor_PreviewMouseLeftButtonDown"
                                                              PreviewTextInput="PriceInput_PreviewTextInput"
                                                              Text="{Binding PriceText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"

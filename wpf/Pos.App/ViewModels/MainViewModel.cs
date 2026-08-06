@@ -29,6 +29,11 @@ public partial class MainViewModel : ObservableObject
     private List<MenuItem> _allItems = new();
     private List<TableView> _allTables = new();
 
+    /// <summary>Item ID → total sold quantity across all settled bills.
+    /// Loaded once with the catalog and refreshed after each sale so search
+    /// suggestions rank best-sellers first.</summary>
+    private Dictionary<long, long> _popularityScores = new();
+
     public ObservableCollection<AreaTab> Areas { get; } = new();
     public ObservableCollection<TableView> Tables { get; } = new();     // filtered by area
     public ObservableCollection<Category> Categories { get; } = new();
@@ -528,6 +533,7 @@ public partial class MainViewModel : ObservableObject
     private void LoadCatalog()
     {
         _allItems = _menu.GetMenuItems().ToList();
+        _popularityScores = _orders.GetItemPopularityScores();
         Categories.Clear();
         CategoryTabs.Clear();
 
@@ -568,6 +574,9 @@ public partial class MainViewModel : ObservableObject
             PopularItems.Add(p);
         }
         OnPropertyChanged(nameof(HasPopularItems));
+
+        // Also refresh the search-ranking scores so the next search reflects the latest sales.
+        _popularityScores = _orders.GetItemPopularityScores();
     }
 
     /// <summary>True while <see cref="LoadTables"/> rebuilds the table list. The list box drops
@@ -627,11 +636,14 @@ public partial class MainViewModel : ObservableObject
         var q = SearchText?.Trim();
         if (!string.IsNullOrEmpty(q))
         {
+            // Exact code matches come first, then sort by popularity (most sold → first).
+            var pop = _popularityScores;
             var matches = src.Where(i => (i.Code ?? "").Equals(q, StringComparison.OrdinalIgnoreCase)
                                          || i.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
                                          || (i.Code ?? "").Contains(q, StringComparison.OrdinalIgnoreCase))
                              .OrderByDescending(i => (i.Code ?? "").Equals(q, StringComparison.OrdinalIgnoreCase))
-                             .ThenByDescending(i => (i.Code ?? "").StartsWith(q, StringComparison.OrdinalIgnoreCase));
+                             .ThenByDescending(i => (i.Code ?? "").StartsWith(q, StringComparison.OrdinalIgnoreCase))
+                             .ThenByDescending(i => pop.TryGetValue(i.Id, out var qty) ? qty : 0L);
             src = matches;
         }
         else if (SelectedCategoryTab?.Category != null)
@@ -927,13 +939,34 @@ public partial class MainViewModel : ObservableObject
         RaiseTotals();
     }
 
-    [RelayCommand] private void Increment(CartLine line) => line.Qty++;
+    [RelayCommand]
+    private void Increment(CartLine line)
+    {
+        line.Qty++;
+        RaiseTotals();
+        if (line.IsSaved && BillMode == "Table" && SelectedTable != null && HasExistingOrder)
+            PersistSavedOrder();
+    }
 
     [RelayCommand]
     private void Decrement(CartLine line)
     {
-        if (line.Qty > 1) { line.Qty--; }
-        else { Cart.Remove(line); }
+        if (line.Qty > 1)
+        {
+            line.Qty--;
+            RaiseTotals();
+            if (line.IsSaved && BillMode == "Table" && SelectedTable != null && HasExistingOrder)
+                PersistSavedOrder();
+        }
+        else
+        {
+            // Qty reached 0 — remove the line entirely (same as Remove command).
+            var persist = line.IsSaved && BillMode == "Table" && SelectedTable != null && HasExistingOrder;
+            Cart.Remove(line);
+            RaiseTotals();
+            if (persist)
+                PersistSavedOrder();
+        }
     }
 
     [RelayCommand]
@@ -1000,6 +1033,18 @@ public partial class MainViewModel : ObservableObject
         _orders.SaveTableOrder(payload);
         LoadTables();
         RaiseTotals();
+    }
+
+    /// <summary>Public entry-point for code-behind to persist the table order after an
+    /// in-place qty or price edit (the LostFocus handler can't reach the private method).</summary>
+    public void PersistCartIfNeeded()
+    {
+        RaiseTotals();
+        if (BillMode == "Table" && SelectedTable != null && HasExistingOrder
+            && Cart.Any(l => l.IsSaved))
+        {
+            PersistSavedOrder();
+        }
     }
 
     /// <summary>Cart lines to put on a KOT: only the unsaved (newly added) ones when the

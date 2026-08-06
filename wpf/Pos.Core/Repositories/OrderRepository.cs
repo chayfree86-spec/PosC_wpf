@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using System.Text.Json;
 using Dapper;
 using Microsoft.Data.Sqlite;
@@ -107,6 +107,33 @@ public sealed class OrderRepository
               ORDER BY Qty DESC, oi.item_name ASC
               LIMIT @limit",
             new { clientId, minQty, limit, categoryId }).AsList();
+    }
+
+    /// <summary>
+    /// Returns the total sold quantity for each menu item (item_id → total qty)
+    /// across all settled/completed, report-visible bills for this business.
+    /// Used to sort search suggestions so best-sellers appear first.
+    /// </summary>
+    public Dictionary<long, long> GetItemPopularityScores(long? clientId = null)
+    {
+        clientId ??= _client.ClientId;
+        using var conn = _db.OpenConnection();
+        var rows = conn.Query<(long ItemId, long Qty)>(
+            @"SELECT oi.item_id AS ItemId,
+                     SUM(MAX(oi.quantity, 1)) AS Qty
+              FROM order_items oi
+              JOIN orders o ON o.id = oi.order_id
+              WHERE o.client_id = @clientId
+                AND o.report_visible = 1
+                AND o.order_status IN ('settled', 'completed')
+                AND oi.item_id IS NOT NULL
+                AND oi.item_id > 0
+              GROUP BY oi.item_id",
+            new { clientId });
+        var dict = new Dictionary<long, long>();
+        foreach (var r in rows)
+            dict[r.ItemId] = r.Qty;
+        return dict;
     }
 
     /// <summary>
