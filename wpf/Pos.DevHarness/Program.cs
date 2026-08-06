@@ -59,33 +59,115 @@ if (args.Contains("--sync"))
 
 if (args.Contains("--inspect"))
 {
-    var file = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ChayChaupalPOS", "sqlite", "pos-wpf.sqlite3");
-    Console.WriteLine($"Inspecting file: {file}");
-    if (File.Exists(file))
+    var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ChayChaupalPOS", "sqlite");
+    Console.WriteLine($"Inspecting directory: {dir}");
+    if (Directory.Exists(dir))
     {
-        try
+        foreach (var file in Directory.GetFiles(dir, "*.sqlite3"))
         {
-            var inspectDb = new DatabaseService(file);
-            using var conn = inspectDb.OpenConnection();
-            var total = conn.ExecuteScalar<int>("SELECT COUNT(*) FROM orders");
-            Console.WriteLine($"Total local orders in pos-wpf.sqlite3: {total}");
-            
-            var syncDist = conn.Query<dynamic>("SELECT live_sync_status, count(*) FROM orders GROUP BY live_sync_status");
-            foreach (var row in syncDist)
+            Console.WriteLine($"\n========================================================");
+            Console.WriteLine($"DATABASE FILE: {Path.GetFileName(file)}");
+            Console.WriteLine($"========================================================");
+            try
             {
-                Console.WriteLine($"  Sync Status: {row.live_sync_status}, Count: {row["count(*)"]}");
+                var inspectDb = new DatabaseService(file);
+                using var conn = inspectDb.OpenConnection();
+                
+                // Print tables
+                var tableNames = conn.Query<string>("SELECT name FROM sqlite_master WHERE type='table'");
+                Console.WriteLine($"Tables: {string.Join(", ", tableNames)}");
+
+                if (tableNames.Contains("orders"))
+                {
+                    var total = conn.ExecuteScalar<int>("SELECT COUNT(*) FROM orders");
+                    Console.WriteLine($"Total orders: {total}");
+                    var syncDist = conn.Query<dynamic>("SELECT live_sync_status, COUNT(*) AS cnt FROM orders GROUP BY live_sync_status");
+                    foreach (var row in syncDist)
+                    {
+                        Console.WriteLine($"  Sync Status: {row.live_sync_status}, Count: {row.cnt}");
+                    }
+                    var samplePending = conn.Query<dynamic>("SELECT id, client_id, bill_number, total_amount, order_status, billed_at, created_at, uuid FROM orders WHERE live_sync_status = 'pending' LIMIT 3");
+                    if (samplePending.Any()) Console.WriteLine("Sample pending orders:");
+                    foreach (var o in samplePending)
+                    {
+                        Console.WriteLine($"  ID: {o.id}, Client: {o.client_id}, Bill#: {o.bill_number}, Total: {o.total_amount}, Status: {o.order_status}, BilledAt: {o.billed_at}, CreatedAt: {o.created_at}, UUID: {o.uuid}");
+                    }
+                }
+
+                if (tableNames.Contains("client_settings"))
+                {
+                    Console.WriteLine("\nClient Settings:");
+                    var settingsList = conn.Query<dynamic>("SELECT client_id, key, length(value_json) as val_len, value_json, updated_at FROM client_settings");
+                    foreach (var s in settingsList)
+                    {
+                        Console.WriteLine($"  Client: {s.client_id}, Key: {s.key}, Len: {s.val_len}, UpdatedAt: {s.updated_at}, Value: {s.value_json}");
+                    }
+                }
+
+                if (tableNames.Contains("app_settings"))
+                {
+                    Console.WriteLine("\nApp Settings:");
+                    var appSettingsList = conn.Query<dynamic>("SELECT key, length(value_json) as val_len, value_json, updated_at FROM app_settings");
+                    foreach (var s in appSettingsList)
+                    {
+                        Console.WriteLine($"  Key: {s.key}, Len: {s.val_len}, UpdatedAt: {s.updated_at}, Value: {s.value_json}");
+                    }
+                }
+
+                if (tableNames.Contains("clients"))
+                {
+                    Console.WriteLine("\nClients:");
+                    var clientsList = conn.Query<dynamic>("SELECT id, name, slug FROM clients");
+                    foreach (var c in clientsList)
+                    {
+                        Console.WriteLine($"  ID: {c.id}, Name: {c.name}, Slug: {c.slug}");
+                    }
+                }
+
+                if (tableNames.Contains("users"))
+                {
+                    Console.WriteLine("\nUsers:");
+                    var usersList = conn.Query<dynamic>("SELECT id, name, role, is_active, pin FROM users");
+                    foreach (var u in usersList)
+                    {
+                        Console.WriteLine($"  ID: {u.id}, Name: {u.name}, Role: {u.role}, Active: {u.is_active}, Pin: {u.pin}");
+                    }
+                }
+
+                if (tableNames.Contains("customers"))
+                {
+                    try
+                    {
+                        var totalCust = conn.ExecuteScalar<int>("SELECT COUNT(*) FROM customers");
+                        Console.WriteLine($"\nTotal customers: {totalCust}");
+                        var sampleCust = conn.Query<dynamic>("SELECT id, name, mobile, balance FROM customers LIMIT 5");
+                        foreach (var c in sampleCust)
+                        {
+                            Console.WriteLine($"  Customer ID: {c.id}, Name: {c.name}, Mobile: {c.mobile}, Balance: {c.balance}");
+                        }
+                    }
+                    catch
+                    {
+                        var totalCust = conn.ExecuteScalar<int>("SELECT COUNT(*) FROM customers");
+                        Console.WriteLine($"\nTotal customers (old schema): {totalCust}");
+                        var sampleCust = conn.Query<dynamic>("SELECT id, name, mobile FROM customers LIMIT 5");
+                        foreach (var c in sampleCust)
+                        {
+                            Console.WriteLine($"  Customer ID: {c.id}, Name: {c.name}, Mobile: {c.mobile}");
+                        }
+                    }
+                }
+
+                if (tableNames.Contains("ledger_entries"))
+                {
+                    var totalEntries = conn.ExecuteScalar<int>("SELECT COUNT(*) FROM ledger_entries");
+                    Console.WriteLine($"Total ledger entries: {totalEntries}");
+                }
             }
-            
-            var samplePending = conn.Query<dynamic>("SELECT id, client_id, bill_number, total_amount, order_status, billed_at, created_at, uuid FROM orders WHERE live_sync_status = 'pending' LIMIT 10");
-            Console.WriteLine("\nSample pending orders:");
-            foreach (var o in samplePending)
+            catch (Exception ex)
             {
-                Console.WriteLine($"  ID: {o.id}, Client: {o.client_id}, Bill#: {o.bill_number}, Total: {o.total_amount}, Status: {o.order_status}, BilledAt: {o.billed_at}, CreatedAt: {o.created_at}, UUID: {o.uuid}");
+                Console.WriteLine($"  Error reading database: {ex.Message}");
             }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"  Error reading database: {ex.Message}");
         }
     }
     return;

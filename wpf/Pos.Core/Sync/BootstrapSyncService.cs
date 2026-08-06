@@ -409,7 +409,13 @@ public sealed class BootstrapSyncService
                   ON CONFLICT(client_id, key) DO UPDATE SET
                     value_json = excluded.value_json,
                     updated_at = excluded.updated_at
-                  WHERE COALESCE(excluded.updated_at, '') > COALESCE(client_settings.updated_at, '')",
+                  WHERE NOT EXISTS (
+                      SELECT 1 FROM sync_queue 
+                      WHERE entity_type = 'setting' 
+                        AND entity_id = excluded.key
+                        AND status IN ('pending', 'failed')
+                        AND CAST(json_extract(payload_json, '$.client_id') AS INTEGER) = excluded.client_id
+                  ) OR COALESCE(excluded.updated_at, '') > COALESCE(client_settings.updated_at, '')",
                 new { clientId, key, value, updatedAt = Ist.Normalize(Str(r, "updated_at")) }, tx);
         }
     }

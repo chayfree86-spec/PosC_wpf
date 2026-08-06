@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Linq;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -328,6 +329,11 @@ public partial class ReportsViewModel : ObservableObject
         }
 
         bool loadedFromServer = false;
+        double displayTotalRevenue = 0.0;
+        int displayTotalBills = 0;
+        double displayTotalDiscounts = 0.0;
+        var categorySales = new List<CategoryItemSale>();
+
         try
         {
             var api = new PosApiClient(_sync.ApiUrl, clientSlug, clientId ?? 0, TimeSpan.FromSeconds(5));
@@ -340,19 +346,12 @@ public partial class ReportsViewModel : ObservableObject
                 // Parse KPIs / Summary
                 if (data.TryGetProperty("today", out var todayProp))
                 {
-                    var totalSales = todayProp.TryGetProperty("revenue", out var revProp) ? double.Parse(revProp.ToString()) : 0.0;
-                    var totalOrders = todayProp.TryGetProperty("count", out var cntProp) ? int.Parse(cntProp.ToString()) : 0;
-                    
-                    TotalRevenue = "₹" + totalSales.ToString("N0", CultureInfo.InvariantCulture);
-                    TotalBills = totalOrders.ToString();
-                    TotalDiscounts = "₹0";
+                    displayTotalRevenue = todayProp.TryGetProperty("revenue", out var revProp) ? double.Parse(revProp.ToString()) : 0.0;
+                    displayTotalBills = todayProp.TryGetProperty("count", out var cntProp) ? int.Parse(cntProp.ToString()) : 0;
                 }
                 else if (data.TryGetProperty("kpis", out var kpiProp))
                 {
-                    var totalSales = kpiProp.TryGetProperty("today_sale", out var revProp) ? double.Parse(revProp.ToString()) : 0.0;
-                    TotalRevenue = "₹" + totalSales.ToString("N0", CultureInfo.InvariantCulture);
-                    TotalBills = "0";
-                    TotalDiscounts = "₹0";
+                    displayTotalRevenue = kpiProp.TryGetProperty("today_sale", out var revProp) ? double.Parse(revProp.ToString()) : 0.0;
                 }
 
                 // Parse Range Orders / Settled Orders
@@ -367,7 +366,7 @@ public partial class ReportsViewModel : ObservableObject
                             _all.Add(new ReportRow(order, PrefixFor(order.ClientId)));
                         }
                     }
-                    TotalBills = _all.Count.ToString();
+                    displayTotalBills = _all.Count;
                 }
                 else if (data.TryGetProperty("recent_bills", out var recentBillsProp) && recentBillsProp.ValueKind == JsonValueKind.Array)
                 {
@@ -379,12 +378,10 @@ public partial class ReportsViewModel : ObservableObject
                             _all.Add(new ReportRow(order, PrefixFor(order.ClientId)));
                         }
                     }
-                    TotalBills = _all.Count.ToString();
+                    displayTotalBills = _all.Count;
                 }
 
-                // Category-wise tab: the server already rolls up every sold item with its category
-                // for the same range ("all_sold_items"), so the breakdown matches the log's totals.
-                PopulateCategorySales(ParseServerSoldItems(data));
+                categorySales.AddRange(ParseServerSoldItems(data));
                 loadedFromServer = true;
             }
         }
@@ -393,7 +390,68 @@ public partial class ReportsViewModel : ObservableObject
             System.Diagnostics.Debug.WriteLine($"[REPORT SYNC ERROR] Failed to fetch live reports: {ex.Message}");
         }
 
-        if (!loadedFromServer)
+        // We always fetch local database orders so we can merge unsynced ones
+        var localOrders = _repo.GetSettledOrders(StartDate, EndDate, clientId: clientId);
+        var localCategorySales = _repo.GetCategoryItemSales(StartDate, EndDate, clientId: clientId);
+
+        if (loadedFromServer)
+        {
+            // Find local orders that are NOT yet in the server's orders list.
+            // We match by Uuid/sqlite_uuid.
+            var unsyncedLocalOrders = localOrders
+                .Where(lo => !string.IsNullOrEmpty(lo.Uuid) && !_all.Any(r => r.Order != null && r.Order.Uuid == lo.Uuid))
+                .ToList();
+
+            if (unsyncedLocalOrders.Count > 0)
+            {
+                foreach (var lo in unsyncedLocalOrders)
+                {
+                    _all.Add(new ReportRow(lo, PrefixFor(lo.ClientId)));
+                    displayTotalRevenue += lo.TotalAmount;
+                    displayTotalBills++;
+                    displayTotalDiscounts += lo.DiscountAmount;
+                }
+
+                // Re-sort _all by billed_at DESC, then id DESC to match the list ordering
+                var sorted = _all.OrderByDescending(r => r.Order?.BilledAt ?? r.Order?.CreatedAt).ThenByDescending(r => r.Order?.Id ?? 0).ToList();
+                _all.Clear();
+                foreach (var r in sorted)
+                {
+                    _all.Add(r);
+                }
+
+                // Merge category-wise item sales for these unsynced orders
+                var unsyncedIds = unsyncedLocalOrders.Select(o => o.Id).ToList();
+                var unsyncedSales = _repo.GetCategoryItemSalesForOrders(unsyncedIds);
+
+                var mergedDict = new Dictionary<string, CategoryItemSale>();
+                foreach (var sale in categorySales)
+                {
+                    var key = $"{sale.CategoryName}|{sale.SubCategoryName}|{sale.ItemName}";
+                    mergedDict[key] = sale;
+                }
+                foreach (var sale in unsyncedSales)
+                {
+                    var key = $"{sale.CategoryName}|{sale.SubCategoryName}|{sale.ItemName}";
+                    if (mergedDict.TryGetValue(key, out var existing))
+                    {
+                        existing.Qty += sale.Qty;
+                        existing.Amount += sale.Amount;
+                    }
+                    else
+                    {
+                        mergedDict[key] = sale;
+                    }
+                }
+                categorySales = mergedDict.Values.ToList();
+            }
+
+            TotalRevenue = "₹" + displayTotalRevenue.ToString("N0", CultureInfo.InvariantCulture);
+            TotalBills = displayTotalBills.ToString();
+            TotalDiscounts = "₹" + displayTotalDiscounts.ToString("N0", CultureInfo.InvariantCulture);
+            PopulateCategorySales(categorySales);
+        }
+        else
         {
             var s = _repo.GetSummary(StartDate, EndDate, clientId: clientId);
             TotalRevenue = "₹" + s.TotalSales.ToString("N0", CultureInfo.InvariantCulture);
@@ -401,13 +459,12 @@ public partial class ReportsViewModel : ObservableObject
             TotalDiscounts = "₹" + s.TotalDiscounts.ToString("N0", CultureInfo.InvariantCulture);
 
             _all.Clear();
-            foreach (var o in _repo.GetSettledOrders(StartDate, EndDate, clientId: clientId))
+            foreach (var o in localOrders)
             {
                 _all.Add(new ReportRow(o, PrefixFor(o.ClientId)));
             }
 
-            // Offline / local: read the breakdown from the till's own stored line items.
-            PopulateCategorySales(_repo.GetCategoryItemSales(StartDate, EndDate, clientId: clientId));
+            PopulateCategorySales(localCategorySales);
         }
 
         ApplyFilter();

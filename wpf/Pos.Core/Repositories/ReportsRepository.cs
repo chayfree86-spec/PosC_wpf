@@ -119,6 +119,34 @@ public sealed class ReportsRepository
               ORDER BY CategoryName, Qty DESC, ItemName",
             new { clientId, startDate, endDate }).AsList();
     }
+#nullable disable
+    public IReadOnlyList<CategoryItemSale> GetCategoryItemSalesForOrders(System.Collections.Generic.IEnumerable<long> orderIds)
+    {
+        if (orderIds == null || !System.Linq.Enumerable.Any(orderIds))
+        {
+            return new System.Collections.Generic.List<CategoryItemSale>();
+        }
+        using var conn = _db.OpenConnection();
+        return conn.Query<CategoryItemSale>(
+            @"SELECT
+                  COALESCE(NULLIF(c.name, ''), 'Other')                       AS CategoryName,
+                  COALESCE(NULLIF(sc.name, ''), '')                           AS SubCategoryName,
+                  COALESCE(mi.category_id, 0)                                 AS CategoryId,
+                  COALESCE(NULLIF(oi.item_name, ''), mi.name, 'Item')         AS ItemName,
+                  SUM(CASE WHEN oi.quantity > 0 THEN oi.quantity ELSE 1 END)  AS Qty,
+                  SUM(CASE WHEN oi.total > 0 THEN oi.total
+                           ELSE oi.price * (CASE WHEN oi.quantity > 0 THEN oi.quantity ELSE 1 END) END) AS Amount
+              FROM order_items oi
+              JOIN orders o          ON o.id = oi.order_id
+              LEFT JOIN menu_items mi ON mi.id = oi.item_id
+              LEFT JOIN categories c  ON c.id = mi.category_id
+              LEFT JOIN categories sc ON sc.id = mi.sub_category_id
+              WHERE o.id IN @orderIds
+              GROUP BY CategoryId, CategoryName, SubCategoryName, COALESCE(oi.item_id, oi.item_name)",
+            new { orderIds }).AsList();
+    }
+#nullable restore
+
 
     /// <summary>
     /// The letters in front of every bill number on this page — abbreviated from the business

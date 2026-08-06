@@ -16,7 +16,7 @@
         WindowState="Maximized"
         Background="{DynamicResource WindowBg}"
         TextElement.Foreground="{DynamicResource TextPrimary}"
-        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextFormattingMode="Display"
         FontFamily="{StaticResource AppFont}"
         Loaded="Window_Loaded" Activated="Window_Activated" KeyDown="Window_KeyDown" Closing="Window_Closing">
 
@@ -770,7 +770,11 @@
                      resizes as ordinary layout. -->
                 <Border x:Name="SearchDropdown" Grid.Row="1" Grid.RowSpan="3" Panel.ZIndex="99"
                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-12,0,0"
-                        Visibility="{Binding IsSearchPopupOpen, Converter={StaticResource BoolToVis}}">
+                        Visibility="{Binding IsSearchPopupOpen, Converter={StaticResource BoolToVis}}"
+                        RenderOptions.ClearTypeHint="Enabled"
+                        UseLayoutRounding="True"
+                        TextOptions.TextFormattingMode="Display"
+                        TextOptions.TextRenderingMode="ClearType">
                     <Border Width="{Binding ActualWidth, ElementName=SearchInput}" MaxHeight="320"
                             Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Accent}" BorderThickness="1.5"
                             CornerRadius="12" Padding="4">
@@ -822,12 +826,12 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock x:Name="TxtName" Grid.Column="0" Text="{Binding Name}" Foreground="{DynamicResource TextPrimary}"
-                                                   FontSize="13.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                   FontSize="16.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         <Border x:Name="BrdCode" Grid.Column="1" Background="{DynamicResource AccentFaint}" CornerRadius="5" Padding="6,2" Margin="8,0" VerticalAlignment="Center">
-                                            <TextBlock x:Name="TxtCode" Text="{Binding Code}" Foreground="{DynamicResource Accent}" FontSize="11" FontWeight="Bold"/>
+                                            <TextBlock x:Name="TxtCode" Text="{Binding Code}" Foreground="{DynamicResource Accent}" FontSize="13" FontWeight="Bold"/>
                                         </Border>
                                         <TextBlock x:Name="TxtPrice" Grid.Column="2" Text="{Binding Price, StringFormat='₹{0:0.##}'}"
-                                                   Foreground="{DynamicResource TextPrimary}" FontSize="13.5" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                   Foreground="{DynamicResource TextPrimary}" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
                                     </Grid>
                                     <DataTemplate.Triggers>
                                         <DataTrigger Binding="{Binding Path=IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
@@ -1201,7 +1205,7 @@
                                         <!-- Item Name & Editable Unit Price -->
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                                <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold" FontSize="15.5" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                                 <Border Background="{DynamicResource AccentFaint}" CornerRadius="4" BorderBrush="{DynamicResource Accent}" BorderThickness="1" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center"
                                                         Visibility="{Binding IsParcel, Converter={StaticResource CountToVis}}">
                                                     <StackPanel Orientation="Horizontal">
@@ -1212,7 +1216,7 @@
                                             </StackPanel>
                                             <Border Background="Transparent" CornerRadius="4" BorderBrush="Transparent" BorderThickness="0" Padding="0" Margin="0,2,0,0" HorizontalAlignment="Left" Cursor="IBeam">
                                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <TextBlock Text="₹" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,2,0"/>
+                                                    <TextBlock Text="₹" Foreground="{DynamicResource TextMuted}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,2,0"/>
                                                     <TextBox x:Name="PriceInput" Style="{StaticResource PriceCellEditBox}"
                                                              GotFocus="PriceInput_GotFocus" KeyDown="PriceInput_KeyDown"
                                                              PreviewMouseLeftButtonDown="CellEditor_PreviewMouseLeftButtonDown"
@@ -1225,16 +1229,16 @@
 
                                         <!-- Steppers, Editable Quantity & Line Total -->
                                         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
-                                            <Button Style="{StaticResource Stepper}" Content="–" Width="24" Height="24" FontSize="12"
+                                            <Button Style="{StaticResource Stepper}" Content="–" Width="28" Height="28" FontSize="14"
                                                     Command="{Binding DataContext.DecrementCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
                                             <TextBox x:Name="QtyInput" Style="{StaticResource CellEditBox}"
                                                      KeyDown="QtyInput_KeyDown" GotFocus="QtyInput_GotFocus" LostFocus="QtyInput_LostFocus" PreviewMouseLeftButtonDown="CellEditor_PreviewMouseLeftButtonDown" PreviewTextInput="QtyInput_PreviewTextInput"
                                                      Text="{Binding QtyText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" MinWidth="48" MaxLength="3" TextAlignment="Center"
                                                      VerticalAlignment="Center"/>
-                                            <Button Style="{StaticResource Stepper}" Content="+" Width="24" Height="24" FontSize="12"
+                                            <Button Style="{StaticResource Stepper}" Content="+" Width="28" Height="28" FontSize="14"
                                                     Command="{Binding DataContext.IncrementCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
-                                            <TextBlock Text="{Binding LineTotal, StringFormat='₹{0:0.##}'}" MinWidth="60" TextAlignment="Right"
-                                                       Foreground="{DynamicResource TextPrimary}" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                            <TextBlock Text="{Binding LineTotal, StringFormat='₹{0:0.##}'}" MinWidth="65" TextAlignment="Right"
+                                                       Foreground="{DynamicResource TextPrimary}" FontWeight="Bold" FontSize="15.5" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                         </StackPanel>
                                     </Grid>
                                 </DataTemplate>

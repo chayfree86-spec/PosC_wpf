@@ -62,7 +62,9 @@ public sealed class LedgerSyncService
                 var serverId = Num(c, "id");
                 var name = Str(c, "name");
                 var mobile = Str(c, "mobile");
+                string? dbMobile = string.IsNullOrWhiteSpace(mobile) ? null : mobile;
                 var email = Str(c, "email");
+                string? dbEmail = string.IsNullOrWhiteSpace(email) ? null : email;
 
                 var localId = conn.ExecuteScalar<long?>(
                     "SELECT id FROM customers WHERE uuid = @uuid LIMIT 1", new { uuid }, tx);
@@ -70,15 +72,15 @@ public sealed class LedgerSyncService
                 if (localId is long existing)
                 {
                     conn.Execute(
-                        "UPDATE customers SET client_id = @clientId, name = @name, mobile = @mobile, email = @email WHERE id = @existing",
-                        new { clientId, name, mobile, email, existing }, tx);
+                        "UPDATE customers SET client_id = @clientId, name = @name, mobile = @dbMobile, email = @dbEmail WHERE id = @existing",
+                        new { clientId, name, dbMobile, dbEmail, existing }, tx);
                     idMap[serverId] = existing;
                 }
                 else
                 {
                     conn.Execute(
-                        "INSERT INTO customers (uuid, client_id, name, mobile, email) VALUES (@uuid, @clientId, @name, @mobile, @email)",
-                        new { uuid, clientId, name, mobile, email }, tx);
+                        "INSERT INTO customers (uuid, client_id, name, mobile, email) VALUES (@uuid, @clientId, @name, @dbMobile, @dbEmail)",
+                        new { uuid, clientId, name, dbMobile, dbEmail }, tx);
                     idMap[serverId] = conn.ExecuteScalar<long>("SELECT last_insert_rowid()", transaction: tx);
                 }
             }

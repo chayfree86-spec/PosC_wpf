@@ -150,15 +150,54 @@ public sealed class SyncCoordinator : IDisposable
             return;
         }
 
+        try
+        {
+            var clientResponse = await api.GetAsync("/auth/clients");
+            if (clientResponse.HasValue)
+            {
+                var rootEl = clientResponse.Value;
+                var dataEl = rootEl.TryGetProperty("data", out var d) ? d : rootEl;
+                if (dataEl.ValueKind == System.Text.Json.JsonValueKind.Array)
+                {
+                    using var conn = _db.OpenConnection();
+                    using var tx = conn.BeginTransaction();
+                    foreach (var c in dataEl.EnumerateArray())
+                    {
+                        var id = c.TryGetProperty("id", out var idProp) && idProp.TryGetInt64(out var idVal) ? idVal : 0;
+                        var name = c.TryGetProperty("name", out var nameProp) ? nameProp.GetString() : "";
+                        var slug = c.TryGetProperty("slug", out var slugProp) ? slugProp.GetString() : "";
+                        
+                        if (id > 0 && !string.IsNullOrWhiteSpace(name))
+                        {
+                            conn.Execute(
+                                @"INSERT INTO clients (id, slug, name, updated_at)
+                                  VALUES (@id, @slug, @name, datetime('now', '+330 minutes'))
+                                  ON CONFLICT(id) DO UPDATE SET
+                                    name = excluded.name,
+                                    slug = COALESCE(NULLIF(excluded.slug, ''), clients.slug),
+                                    updated_at = datetime('now', '+330 minutes')",
+                                new { id, slug, name }, tx);
+                        }
+                    }
+                    tx.Commit();
+                }
+            }
+        }
+        catch
+        {
+            // Best effort - if the clients endpoint fails, fall back to whatever is in SQLite
+        }
+
         long[] clientIds;
         using (var conn = _db.OpenConnection())
         {
             clientIds = conn.Query<long>("SELECT id FROM clients").ToArray();
         }
 
-        var boot = new BootstrapSyncService(_db, api);
         foreach (var id in clientIds)
         {
+            var clientApi = new PosApiClient(api.BaseUrl, "", id, TimeSpan.FromSeconds(5));
+            var boot = new BootstrapSyncService(_db, clientApi);
             await boot.PullAsync(id);
         }
     }
