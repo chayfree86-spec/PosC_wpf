@@ -501,14 +501,43 @@ class ReportController
             $rangeOrdersStmt->execute([$clientId, $dateStart, $dateEnd]);
             $rangeOrders = $rangeOrdersStmt->fetchAll();
             
-            foreach ($rangeOrders as &$order) {
-                $order['created_at'] = $this->toLocalTimestamp($order['created_at'] ?? null, $timezone, $databaseTimezone);
-                $order['updated_at'] = $this->toLocalTimestamp($order['updated_at'] ?? null, $timezone, $databaseTimezone);
-                $order['billed_at'] = $this->toLocalTimestamp($order['billed_at'] ?? null, $timezone, $databaseTimezone);
-                $order['bill_prefix'] = $billPrefix;
-                $order['formatted_bill_number'] = $this->formatBillNumber((int) ($order['bill_number'] ?? 0), $billPrefix);
+            if (!empty($rangeOrders)) {
+                $rangeOrderIds = array_column($rangeOrders, 'id');
+                $placeholders = implode(',', array_fill(0, count($rangeOrderIds), '?'));
+                $rangeItemsStmt = $db->prepare(
+                    "SELECT oi.*,
+                            o.billed_at AS order_billed_at,
+                            COALESCE(c.name, '') AS category,
+                            COALESCE(sc.name, '') AS sub_category
+                     FROM order_items oi
+                     JOIN orders o ON o.id = oi.order_id
+                     LEFT JOIN menu_items mi ON mi.id = oi.item_id
+                     LEFT JOIN categories c ON c.id = mi.category_id
+                     LEFT JOIN categories sc ON sc.id = mi.sub_category_id
+                     WHERE o.client_id = ?
+                       AND oi.order_id IN ($placeholders)
+                       AND {$billFilter}
+                     ORDER BY oi.order_id, oi.id"
+                );
+                $rangeItemsStmt->execute(array_merge([$clientId], $rangeOrderIds));
+                $rangeItems = $rangeItemsStmt->fetchAll();
+
+                $itemsByRangeOrder = [];
+                foreach ($rangeItems as $item) {
+                    $itemsByRangeOrder[(int)$item['order_id']][] = $item;
+                }
+
+                foreach ($rangeOrders as &$order) {
+                    $order['created_at'] = $this->toLocalTimestamp($order['created_at'] ?? null, $timezone, $databaseTimezone);
+                    $order['updated_at'] = $this->toLocalTimestamp($order['updated_at'] ?? null, $timezone, $databaseTimezone);
+                    $order['billed_at'] = $this->toLocalTimestamp($order['billed_at'] ?? null, $timezone, $databaseTimezone);
+                    $order['bill_prefix'] = $billPrefix;
+                    $order['formatted_bill_number'] = $this->formatBillNumber((int) ($order['bill_number'] ?? 0), $billPrefix);
+                    $order['items'] = $itemsByRangeOrder[(int)$order['id']] ?? [];
+                    $order['itemList'] = $this->receiptItems($order['items']);
+                }
+                unset($order);
             }
-            unset($order);
         }
 
         $timelineData = [];
