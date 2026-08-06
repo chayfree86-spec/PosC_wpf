@@ -371,10 +371,22 @@ public partial class MainWindow : Window
     private void PopupListBox_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
         if (DataContext is not MainViewModel vm) return;
-        if (vm.SelectedMenuItem != null)
+
+        // Find the clicked item container
+        var dep = (DependencyObject)e.OriginalSource;
+        while (dep != null && dep != PopupListBox)
         {
-            _lastAddedLine = vm.AddAndReturnLine(vm.SelectedMenuItem);
+            if (dep is ListBoxItem item)
+            {
+                if (item.Content is FoodItem menuItem)
+                {
+                    _lastAddedLine = vm.AddAndReturnLine(menuItem);
+                }
+                break;
+            }
+            dep = VisualTreeHelper.GetParent(dep);
         }
+
         RefocusSearchInput();
     }
 

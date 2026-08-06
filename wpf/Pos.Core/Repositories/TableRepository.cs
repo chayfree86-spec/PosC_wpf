@@ -46,7 +46,7 @@ public sealed class TableRepository
                      CASE WHEN raw_status != 'available'
                            AND NOT EXISTS (
                              SELECT 1 FROM orders o
-                             WHERE o.table_id = id
+                             WHERE o.table_id = raw_states.id
                                AND o.client_id = @clientId
                                AND o.order_status NOT IN ('cancelled', 'settled')
                            )
@@ -56,7 +56,7 @@ public sealed class TableRepository
                      CAST(CASE WHEN raw_status != 'available'
                            AND NOT EXISTS (
                              SELECT 1 FROM orders o
-                             WHERE o.table_id = id
+                             WHERE o.table_id = raw_states.id
                                AND o.client_id = @clientId
                                AND o.order_status NOT IN ('cancelled', 'settled')
                            )
@@ -66,7 +66,7 @@ public sealed class TableRepository
                      CASE WHEN raw_status != 'available'
                            AND NOT EXISTS (
                              SELECT 1 FROM orders o
-                             WHERE o.table_id = id
+                             WHERE o.table_id = raw_states.id
                                AND o.client_id = @clientId
                                AND o.order_status NOT IN ('cancelled', 'settled')
                            )
