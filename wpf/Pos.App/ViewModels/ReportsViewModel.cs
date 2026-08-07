@@ -396,10 +396,17 @@ public partial class ReportsViewModel : ObservableObject
 
         if (loadedFromServer)
         {
-            // Find local orders that are NOT yet in the server's orders list.
-            // We match by Uuid/sqlite_uuid.
+            Func<string?, DateTime> parseDate = dtStr => DateTime.TryParse(dtStr, out var d) ? d : DateTime.MinValue;
             var unsyncedLocalOrders = localOrders
-                .Where(lo => !string.IsNullOrEmpty(lo.Uuid) && !_all.Any(r => r.Order != null && r.Order.Uuid == lo.Uuid))
+                .Where(lo => !string.IsNullOrEmpty(lo.Uuid)
+                          && lo.ReportVisible != 0
+                          && lo.IsKotOnly != 1
+                          && !_all.Any(r => r.Order != null && (
+                              r.Order.Uuid == lo.Uuid ||
+                              (r.Order.TableId == lo.TableId &&
+                               Math.Abs((parseDate(r.Order.BilledAt) - parseDate(lo.BilledAt)).TotalMinutes) < 5 &&
+                               Math.Abs(r.Order.TotalAmount - lo.TotalAmount) < 0.01)
+                          )))
                 .ToList();
 
             if (unsyncedLocalOrders.Count > 0)

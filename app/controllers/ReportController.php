@@ -79,13 +79,23 @@ class ReportController
         $clientId = (int) $reportClient['id'];
 
         $clientLastOrderId = (int) ($_GET['last_order_id'] ?? 0);
+        $stateCheckStmt = $db->prepare(
+            "SELECT CONCAT(COALESCE(MAX(id), 0), '_', COALESCE(UNIX_TIMESTAMP(MAX(updated_at)), 0), '_', COUNT(*), '_', ROUND(COALESCE(SUM(total_amount), 0), 2))
+             FROM orders
+             WHERE client_id = ? AND report_visible = 1 AND is_kot_only = 0 AND order_status IN ('settled', 'completed')"
+        );
+        $stateCheckStmt->execute([$clientId]);
+        $currentStateHash = (string) $stateCheckStmt->fetchColumn();
+        $clientStateHash = (string) ($_GET['state_hash'] ?? '');
+
         $maxOrderIdStmt = $db->prepare("SELECT COALESCE(MAX(id), 0) FROM orders WHERE client_id = ?");
         $maxOrderIdStmt->execute([$clientId]);
         $maxOrderId = (int) $maxOrderIdStmt->fetchColumn();
 
-        if ($clientLastOrderId > 0 && $maxOrderId > 0 && $clientLastOrderId >= $maxOrderId) {
+        if ($clientStateHash !== '' && $clientStateHash === $currentStateHash) {
             success_response([
                 'has_changes' => false,
+                'state_hash' => $currentStateHash,
                 'last_order_id' => $maxOrderId
             ]);
             return;

@@ -541,6 +541,13 @@ public sealed class SqliteMigrationRunner
                 WHERE o.billed_at IS NOT NULL AND date(o.billed_at) = '2026-08-05';
             ");
         });
+
+        Apply(conn, 22, "sqlite_pos_cleanup_duplicate_local_orders", m =>
+        {
+            m.Exec(@"UPDATE orders SET report_visible = 0
+                     WHERE is_kot_only = 1
+                        OR (bill_number IS NULL AND order_status IN ('settled', 'completed'));");
+        });
     }
 
     private static void Apply(SqliteConnection conn, int version, string name, Action<Ctx> work)
