@@ -548,6 +548,12 @@ public sealed class SqliteMigrationRunner
                      WHERE is_kot_only = 1
                         OR (bill_number IS NULL AND order_status IN ('settled', 'completed'));");
         });
+
+        Apply(conn, 23, "sqlite_pos_cancel_unbilled_cleared_orders", m =>
+        {
+            m.Exec(@"UPDATE orders SET order_status = 'cancelled'
+                     WHERE bill_number IS NULL AND order_status = 'settled';");
+        });
     }
 
     private static void Apply(SqliteConnection conn, int version, string name, Action<Ctx> work)

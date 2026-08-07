@@ -66,6 +66,7 @@ class Order
             }
         }
 
+        self::ensureOrderStatusEnum();
         self::backfillReportMarkers();
         self::backfillBillNumbers();
         self::ensureReportIndexes();
@@ -73,6 +74,23 @@ class Order
         self::backfillCustomerIds();
         @file_put_contents($cacheFile, 'verified');
         self::$orderColumnsChecked = true;
+    }
+
+    private static function ensureOrderStatusEnum(): void
+    {
+        $db = Database::connection();
+        $statusType = $db->query(
+            "SELECT COLUMN_TYPE
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'orders'
+               AND COLUMN_NAME = 'order_status'
+             LIMIT 1"
+        )->fetchColumn();
+
+        if ($statusType && !str_contains((string)$statusType, "'cancelled'")) {
+            $db->exec("ALTER TABLE orders MODIFY COLUMN order_status ENUM('ordered', 'completed', 'settled', 'cancelled') DEFAULT 'ordered'");
+        }
     }
 
     private static function backfillReportMarkers(): void
@@ -678,16 +696,31 @@ class Order
             $billMarker = self::billMarker($isFinalBill, $data);
             $clientId = Client::currentId();
 
-            // Table clear (available + empty items): sirf table state reset, orders ko touch nahi karte
+            // Table clear (available + empty items): cancel any active running order, free table
             if ($tableStatus === 'available' && count($items) === 0) {
-                Table::updateState($tableId, $tableStatus, 0, null);
+                $findActive = $db->prepare(
+                    "SELECT id FROM orders
+                     WHERE table_id = ? AND client_id = ? AND order_status NOT IN ('cancelled', 'settled')
+                     ORDER BY id DESC LIMIT 1"
+                );
+                $findActive->execute([$tableId, $clientId]);
+                $activeOrder = $findActive->fetch();
 
+                if ($activeOrder) {
+                    $cancelStmt = $db->prepare(
+                        "UPDATE orders SET order_status = 'cancelled', sync_version = sync_version + 1 WHERE id = ?"
+                    );
+                    $cancelStmt->execute([(int) $activeOrder['id']]);
+                    self::logStatus((int) $activeOrder['id'], 'cancelled', isset($data['created_by']) ? (int) $data['created_by'] : null);
+                }
+
+                Table::updateState($tableId, $tableStatus, 0, null);
                 $db->commit();
 
                 return [
-                    'id' => null,
+                    'id' => $activeOrder ? (int) $activeOrder['id'] : null,
                     'table_id' => $tableId,
-                    'order_status' => null,
+                    'order_status' => 'cancelled',
                     'table_status' => $tableStatus,
                     'total_amount' => 0,
                     'cleared' => true,

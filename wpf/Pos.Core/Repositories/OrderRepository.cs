@@ -240,7 +240,7 @@ public sealed class OrderRepository
         var orderStatus = UiStatusToOrderStatus(tableStatus);
         var total = payload.TotalAmount ?? ItemsTotal(items);
 
-        // Clear path: available + no items → settle the running order, free table.
+        // Clear path: available + no items → cancel the running order, free table.
         if (tableStatus == "available" && items.Count == 0)
         {
             var existingClear = conn.QueryFirstOrDefault<long?>(
@@ -252,11 +252,11 @@ public sealed class OrderRepository
             if (existingClear.HasValue)
             {
                 conn.Execute(
-                    @"UPDATE orders SET order_status = 'settled', sync_version = sync_version + 1,
+                    @"UPDATE orders SET order_status = 'cancelled', sync_version = sync_version + 1,
                         updated_at = datetime('now', '+330 minutes'), live_sync_status = 'pending'
                       WHERE id = @id AND client_id = @clientId",
                     new { id = existingClear.Value, clientId }, tx);
-                LogStatus(conn, tx, existingClear.Value, "settled");
+                LogStatus(conn, tx, existingClear.Value, "cancelled");
             }
 
             UpdateTableState(conn, tx, tableId, clientId.Value, "available", 0, null);
