@@ -122,6 +122,7 @@ public sealed class BootstrapSyncService
                           COALESCE(@createdAt, datetime('now', '+330 minutes')),
                           COALESCE(@updatedAt, datetime('now', '+330 minutes')))
                   ON CONFLICT(id) DO UPDATE SET
+                    client_id = excluded.client_id,
                     name = excluded.name, sort_order = excluded.sort_order,
                     is_active = excluded.is_active,
                     updated_at = COALESCE(excluded.updated_at, datetime('now', '+330 minutes'))",
@@ -145,6 +146,7 @@ public sealed class BootstrapSyncService
                           COALESCE(@createdAt, datetime('now', '+330 minutes')),
                           COALESCE(@updatedAt, datetime('now', '+330 minutes')))
                   ON CONFLICT(id) DO UPDATE SET
+                    client_id = excluded.client_id,
                     uuid = excluded.uuid, name = excluded.name, image = excluded.image,
                     parent_id = excluded.parent_id, sort_order = excluded.sort_order,
                     is_active = excluded.is_active, sync_version = excluded.sync_version,
@@ -174,6 +176,7 @@ public sealed class BootstrapSyncService
                           COALESCE(@createdAt, datetime('now', '+330 minutes')),
                           COALESCE(@updatedAt, datetime('now', '+330 minutes')))
                   ON CONFLICT(id) DO UPDATE SET
+                    client_id = excluded.client_id,
                     uuid = excluded.uuid, category_id = excluded.category_id,
                     sub_category_id = excluded.sub_category_id, name = excluded.name, code = excluded.code,
                     price = excluded.price, description = excluded.description, image = excluded.image,
@@ -220,6 +223,7 @@ public sealed class BootstrapSyncService
                           COALESCE(@createdAt, datetime('now', '+330 minutes')),
                           COALESCE(@updatedAt, datetime('now', '+330 minutes')))
                   ON CONFLICT(id) DO UPDATE SET
+                    client_id = excluded.client_id,
                     uuid = excluded.uuid, area_id = excluded.area_id, table_number = excluded.table_number,
                     qr_code = excluded.qr_code, qr_token = excluded.qr_token,
                     is_active = excluded.is_active, sync_version = excluded.sync_version,
@@ -248,6 +252,7 @@ public sealed class BootstrapSyncService
                   VALUES (@id, @clientId, @name, @rate, @isActive,
                           COALESCE(@createdAt, datetime('now', '+330 minutes')))
                   ON CONFLICT(id) DO UPDATE SET
+                    client_id = excluded.client_id,
                     name = excluded.name, rate = excluded.rate, is_active = excluded.is_active",
                 new
                 {
@@ -280,6 +285,7 @@ public sealed class BootstrapSyncService
                   VALUES (@id, @uuid, @clientId, @name, @phone, @email, @role, @isActive, @pin,
                           COALESCE(@updatedAt, datetime('now', '+330 minutes')))
                   ON CONFLICT(id) DO UPDATE SET
+                    client_id = excluded.client_id,
                     uuid = excluded.uuid, name = excluded.name, phone = excluded.phone,
                     email = excluded.email, role = excluded.role, is_active = excluded.is_active,
                     -- Keep the PIN we already hold if this response didn't carry one, so a

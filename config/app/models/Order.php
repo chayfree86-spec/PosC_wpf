@@ -538,32 +538,17 @@ class Order
                 ];
             }
 
-            if ($tableStatus === 'available') {
-                $find = $db->prepare(
-                    "SELECT id
-                     FROM orders
-                     WHERE table_id = ?
-                       AND client_id = ?
-                       AND order_status != 'cancelled'
-                     ORDER BY id DESC
-                     LIMIT 1"
-                );
-                $find->execute([$tableId, $clientId]);
-            } else {
-                $find = $db->prepare(
-                    "SELECT o.id, o.bill_number
-                     FROM orders o
-                     LEFT JOIN table_client_states ts ON ts.table_id = o.table_id AND ts.client_id = ?
-                     WHERE o.table_id = ?
-                       AND o.client_id = ?
-                       AND o.order_status != 'cancelled'
-                       AND COALESCE(ts.table_status, 'available') != 'available'
-                     ORDER BY o.id DESC
-                     LIMIT 1"
-                );
-                $find->execute([$clientId, $tableId, $clientId]);
-            }
-            $existing = $find->fetch();
+            $find = $db->prepare(
+                "SELECT id, bill_number
+                 FROM orders
+                 WHERE table_id = ?
+                   AND client_id = ?
+                   AND order_status NOT IN ('cancelled', 'settled')
+                 ORDER BY id DESC
+                 LIMIT 1"
+            );
+            $find->execute([$tableId, $clientId]);
+            $existing = $find->fetch() ?: null;
             $billNumber = self::billNumberForFinalBill($clientId, $isFinalBill, $existing['bill_number'] ?? null);
 
             if ($existing) {
@@ -664,7 +649,7 @@ class Order
         self::ensureOrderColumns();
 
         $db = Database::connection();
-        $orders = $db->query(
+        $orders = $db->prepare(
             "SELECT o.*, rt.table_status,
                     COALESCE(c.name, o.customer_name) AS customer_name,
                     COALESCE(c.mobile, o.customer_mobile) AS customer_mobile
@@ -673,11 +658,9 @@ class Order
              JOIN (
                 SELECT o2.table_id, MAX(o2.id) AS id
                 FROM orders o2
-                LEFT JOIN table_client_states ts2 ON ts2.table_id = o2.table_id AND ts2.client_id = ?
                 WHERE o2.table_id IS NOT NULL
                   AND o2.client_id = ?
-                  AND o2.order_status != 'cancelled'
-                  AND COALESCE(ts2.table_status, 'available') != 'available'
+                  AND o2.order_status NOT IN ('cancelled', 'settled')
                 GROUP BY o2.table_id
              ) latest ON latest.id = o.id
              LEFT JOIN restaurant_tables rt ON rt.id = o.table_id"

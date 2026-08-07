@@ -821,6 +821,10 @@ public partial class MainViewModel : ObservableObject
         // Treating those as switches would stash the current unsaved items and then restore them
         // on top of the freshly reloaded saved order, doubling every line just KOT'd.
         var sameTable = oldValue != null && newValue != null && oldValue.Id == newValue.Id;
+        if (sameTable)
+        {
+            return;
+        }
         var userSwitch = !sameTable && !_reloadingTables;
 
         if (userSwitch)
@@ -847,6 +851,7 @@ public partial class MainViewModel : ObservableObject
                         IsParcel = it.IsParcel != 0, Qty = it.Quantity, IsSaved = true
                     });
                 }
+                MergeSavedLines();
                 HasExistingOrder = true;
             }
         }
@@ -1031,8 +1036,11 @@ public partial class MainViewModel : ObservableObject
                 Quantity = Math.Max(1, l.Qty), IsParcel = l.IsParcel
             });
         }
-        _orders.SaveTableOrder(payload);
-        LoadTables();
+        var res = _orders.SaveTableOrder(payload);
+        if (SelectedTable != null)
+        {
+            SelectedTable.Amount = res.TotalAmount;
+        }
         RaiseTotals();
     }
 
@@ -1062,6 +1070,8 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void PrintKot()
     {
+        System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "pos_app_debug.log"), 
+            $"[DEBUG {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}] PrintKot entered. Cart: {Cart.Count}, BillMode: {BillMode}, SelectedTable: {SelectedTable?.TableNumber}\r\n");
         if (Cart.Count == 0) return;
 
         // Built before saving, so "new items only" is evaluated pre-merge.
@@ -1072,21 +1082,35 @@ public partial class MainViewModel : ObservableObject
 
         if (BillMode == "Table" && SelectedTable != null)
         {
-            var res = _orders.SaveTableOrder(BuildPayload("ordered"));
+            try
+            {
+                var payload = BuildPayload("ordered");
+                System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "pos_app_debug.log"), 
+                    $"[DEBUG] PrintKot Payload built. Items count: {payload.Items.Count}, Total: {payload.TotalAmount}\r\n");
+                var res = _orders.SaveTableOrder(payload);
+                System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "pos_app_debug.log"), 
+                    $"[DEBUG] PrintKot SaveTableOrder returned. Success: {res.Success}, TotalAmount: {res.TotalAmount}\r\n");
 
-            // Paper starts the moment the order is safely in SQLite — reloading the tables and
-            // redrawing the cart below is the counter catching up, and the kitchen should not
-            // be waiting behind it.
-            _printer.Enqueue("KOT", cfg, ticket);
+                // Paper starts the moment the order is safely in SQLite — reloading the tables and
+                // redrawing the cart below is the counter catching up, and the kitchen should not
+                // be waiting behind it.
+                _printer.Enqueue("KOT", cfg, ticket);
 
-            // Refresh the grid's amounts/times, but suppress the cart rebuild — the cart already
-            // holds the full order in memory, and letting the reload tear it down is what left the
-            // tab header stale. ShowMergedOldOrder then does the clean New→Old switch.
-            _suppressCartReload = true;
-            try { LoadTables(); }
-            finally { _suppressCartReload = false; }
-            ShowMergedOldOrder();
-            StatusMessage($"KOT — Table {SelectedTable.TableNumber}, Total: ₹{res.TotalAmount:0.##}");
+                // Refresh the grid's amounts/times, but suppress the cart rebuild — the cart already
+                // holds the full order in memory, and letting the reload tear it down is what left the
+                // tab header stale. ShowMergedOldOrder then does the clean New→Old switch.
+                _suppressCartReload = true;
+                try { LoadTables(); }
+                finally { _suppressCartReload = false; }
+                ShowMergedOldOrder();
+                StatusMessage($"KOT — Table {SelectedTable.TableNumber}, Total: ₹{res.TotalAmount:0.##}");
+            }
+            catch (System.Exception ex)
+            {
+                System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "pos_app_debug.log"), 
+                    $"[DEBUG] Exception in PrintKot: {ex}\r\n");
+                throw;
+            }
         }
         else
         {
@@ -1125,18 +1149,36 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void SaveKot()
     {
+        System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "pos_app_debug.log"), 
+            $"[DEBUG {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}] SaveKot entered. Cart: {Cart.Count}, BillMode: {BillMode}, SelectedTable: {SelectedTable?.TableNumber}\r\n");
         if (Cart.Count == 0) return;
         if (BillMode == "Table" && SelectedTable != null)
         {
-            var res = _orders.SaveTableOrder(BuildPayload("ordered"));
-            // Refresh the grid's amounts/times, but suppress the cart rebuild — the cart already
-            // holds the full order in memory, and letting the reload tear it down is what left the
-            // tab header stale. ShowMergedOldOrder then does the clean New→Old switch.
-            _suppressCartReload = true;
-            try { LoadTables(); }
-            finally { _suppressCartReload = false; }
-            ShowMergedOldOrder();
-            StatusMessage($"KOT Saved — Table {SelectedTable.TableNumber}, Total: ₹{res.TotalAmount:0.##}");
+            try
+            {
+                var payload = BuildPayload("ordered");
+                System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "pos_app_debug.log"), 
+                    $"[DEBUG] Payload built. Items count: {payload.Items.Count}, Total: {payload.TotalAmount}\r\n");
+                foreach (var i in payload.Items)
+                {
+                    System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "pos_app_debug.log"), 
+                        $"[DEBUG] Payload Item: {i.ItemId}/{i.ItemName}, Qty: {i.Quantity}, Price: {i.Price}\r\n");
+                }
+                var res = _orders.SaveTableOrder(payload);
+                System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "pos_app_debug.log"), 
+                    $"[DEBUG] SaveTableOrder returned. Success: {res.Success}, TotalAmount: {res.TotalAmount}\r\n");
+                _suppressCartReload = true;
+                try { LoadTables(); }
+                finally { _suppressCartReload = false; }
+                ShowMergedOldOrder();
+                StatusMessage($"KOT Saved — Table {SelectedTable.TableNumber}, Total: ₹{res.TotalAmount:0.##}");
+            }
+            catch (System.Exception ex)
+            {
+                System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "pos_app_debug.log"), 
+                    $"[DEBUG] Exception in SaveKot: {ex}\r\n");
+                throw;
+            }
         }
     }
 
@@ -1574,12 +1616,23 @@ public partial class MainViewModel : ObservableObject
             DiscountLabel = HasDiscount ? DiscountLabel : null,
             IsParcelMode = IsParcelMode
         };
-        foreach (var l in Cart)
+        var grouped = Cart.GroupBy(l => new
         {
+            Key = l.ItemId.HasValue 
+                ? l.ItemId.Value.ToString() 
+                : (l.Name.ToLowerInvariant().Trim() + "|" + l.Price.ToString("0.00")),
+            l.IsParcel
+        });
+        foreach (var g in grouped)
+        {
+            var first = g.First();
             payload.Items.Add(new OrderItemInput
             {
-                ItemId = l.ItemId, ItemName = l.Name, Price = l.Price,
-                Quantity = Math.Max(1, l.Qty), IsParcel = l.IsParcel
+                ItemId = first.ItemId,
+                ItemName = first.Name,
+                Price = first.Price,
+                Quantity = Math.Max(1, g.Sum(l => l.Qty)),
+                IsParcel = g.Key.IsParcel
             });
         }
         return payload;
@@ -1614,7 +1667,13 @@ public partial class MainViewModel : ObservableObject
     private void MergeSavedLines()
     {
         var grouped = Cart.Where(l => l.IsSaved)
-                          .GroupBy(l => new { l.ItemId, l.IsParcel })
+                          .GroupBy(l => new
+                          {
+                              Key = l.ItemId.HasValue 
+                                  ? l.ItemId.Value.ToString() 
+                                  : (l.Name.ToLowerInvariant().Trim() + "|" + l.Price.ToString("0.00")),
+                              l.IsParcel
+                          })
                           .ToList();
 
         foreach (var group in grouped)

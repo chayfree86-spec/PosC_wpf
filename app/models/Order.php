@@ -328,6 +328,36 @@ class Order
         return in_array(strtolower(trim((string) $value)), ['1', 'true', 'yes', 'full', 'replace'], true);
     }
 
+    private static function looksLikeFullCart(array $existing, array $incoming): bool
+    {
+        if (empty($existing)) {
+            return true;
+        }
+        if (empty($incoming)) {
+            return false;
+        }
+
+        $incomingIndexed = [];
+        foreach ($incoming as $item) {
+            $key = self::orderItemKey($item);
+            $incomingIndexed[$key] = $item;
+        }
+
+        foreach ($existing as $item) {
+            $key = self::orderItemKey($item);
+            if (!isset($incomingIndexed[$key])) {
+                return false;
+            }
+            $existingQty = (int) ($item['quantity'] ?? $item['qty'] ?? 1);
+            $incomingQty = (int) ($incomingIndexed[$key]['quantity'] ?? $incomingIndexed[$key]['qty'] ?? 1);
+            if ($incomingQty < $existingQty) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private static function orderItemKey(array $item): string
     {
         $clientItemId = (string) ($item['client_item_id'] ?? $item['clientItemId'] ?? $item['id'] ?? '');
@@ -646,36 +676,16 @@ class Order
                 ];
             }
 
-            if ($tableStatus === 'available') {
-                // A settled order is done. Matching it again here — which used to happen
-                // whenever this settle push arrived without the order's own sqlite_uuid
-                // already on record (a crash or a dropped intermediate sync both do this) —
-                // meant a brand new bill on the same table got merged into the OLD closed
-                // one instead of becoming its own row, silently erasing the old bill's items.
-                $find = $db->prepare(
-                    "SELECT id, bill_number
-                     FROM orders
-                     WHERE table_id = ?
-                       AND client_id = ?
-                       AND order_status NOT IN ('cancelled', 'settled')
-                     ORDER BY id DESC
-                     LIMIT 1"
-                );
-                $find->execute([$tableId, $clientId]);
-            } else {
-                $find = $db->prepare(
-                    "SELECT o.id, o.bill_number
-                     FROM orders o
-                     LEFT JOIN table_client_states ts ON ts.table_id = o.table_id AND ts.client_id = ?
-                     WHERE o.table_id = ?
-                       AND o.client_id = ?
-                       AND o.order_status != 'cancelled'
-                       AND COALESCE(ts.table_status, 'available') != 'available'
-                     ORDER BY o.id DESC
-                     LIMIT 1"
-                );
-                $find->execute([$clientId, $tableId, $clientId]);
-            }
+            $find = $db->prepare(
+                "SELECT id, bill_number
+                 FROM orders
+                 WHERE table_id = ?
+                   AND client_id = ?
+                   AND order_status NOT IN ('cancelled', 'settled')
+                 ORDER BY id DESC
+                 LIMIT 1"
+            );
+            $find->execute([$tableId, $clientId]);
             $existing = $find->fetch() ?: null;
 
             // The till stamps every order with its SQLite uuid, so when it is sent we can
@@ -743,7 +753,7 @@ class Order
                     $existingItems = self::existingOrderItems($orderId);
                     $isMergeExplicit = self::truthy($data['merge_items'] ?? $data['mergeItems'] ?? false);
                     $replaceItems = !$isMergeExplicit && (self::truthy($data['replace_items'] ?? $data['replaceItems'] ?? $data['full_cart'] ?? $data['fullCart'] ?? false)
-                        || count($items) >= count($existingItems));
+                        || self::looksLikeFullCart($existingItems, $items));
                     if (!$replaceItems && count($existingItems) > 0) {
                         $items = self::mergeOrderItems($existingItems, $items);
                         $total = array_reduce($items, fn ($sum, $item) => $sum + ((float) ($item['price'] ?? 0) * (int) ($item['quantity'] ?? $item['qty'] ?? 1)), 0);
@@ -830,11 +840,9 @@ class Order
              JOIN (
                 SELECT o2.table_id, MAX(o2.id) AS id
                 FROM orders o2
-                LEFT JOIN table_client_states ts2 ON ts2.table_id = o2.table_id AND ts2.client_id = ?
                 WHERE o2.table_id IS NOT NULL
                   AND o2.client_id = ?
-                  AND o2.order_status != 'cancelled'
-                  AND COALESCE(ts2.table_status, 'available') != 'available'
+                  AND o2.order_status NOT IN ('cancelled', 'settled')
                   -- FINAL BILL FILTER: settled/billed orders NEVER come back to table
                   AND (o2.report_visible = 0 OR o2.report_visible IS NULL)
                 GROUP BY o2.table_id

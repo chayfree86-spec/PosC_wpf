@@ -302,15 +302,23 @@ public partial class MainWindow : Window
 
     private void QtyInput_LostFocus(object sender, RoutedEventArgs e)
     {
-        if (sender is TextBox tb && tb.DataContext is CartLine line)
+        if (sender is TextBox tb)
         {
-            if (string.IsNullOrWhiteSpace(line.QtyText) || line.Qty <= 0)
+            if (!tb.IsLoaded) return;
+
+            if (tb.DataContext is CartLine line)
             {
-                line.QtyText = line.Qty > 0 ? line.Qty.ToString() : "1";
+                if (string.IsNullOrWhiteSpace(line.QtyText) || line.Qty <= 0)
+                {
+                    line.QtyText = line.Qty > 0 ? line.Qty.ToString() : "1";
+                }
             }
+            // Defer persistence to background priority so it never mutates collections synchronously inside an active WPF layout/event pass.
+            tb.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, new Action(() =>
+            {
+                if (DataContext is MainViewModel vm) vm.PersistCartIfNeeded();
+            }));
         }
-        // Persist qty changes for saved table-order lines so switching tables doesn't revert.
-        if (DataContext is MainViewModel vm) vm.PersistCartIfNeeded();
         RefocusSearchInput();
     }
 
@@ -350,8 +358,22 @@ public partial class MainWindow : Window
 
     private void PriceInput_LostFocus(object sender, RoutedEventArgs e)
     {
-        // Persist price changes for saved table-order lines.
-        if (DataContext is MainViewModel vm) vm.PersistCartIfNeeded();
+        if (sender is TextBox tb)
+        {
+            if (!tb.IsLoaded) return;
+
+            if (tb.DataContext is CartLine line)
+            {
+                if (string.IsNullOrWhiteSpace(line.PriceText) || line.Price < 0)
+                {
+                    line.PriceText = line.Price >= 0 ? line.Price.ToString("0.##") : "0";
+                }
+            }
+            tb.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, new Action(() =>
+            {
+                if (DataContext is MainViewModel vm) vm.PersistCartIfNeeded();
+            }));
+        }
     }
 
     private void PriceInput_KeyDown(object sender, KeyEventArgs e)
@@ -1016,6 +1038,8 @@ public partial class MainWindow : Window
 
     private void SaveKot_Click(object sender, RoutedEventArgs e)
     {
+        System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "pos_app_debug.log"), 
+            $"[DEBUG {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}] SaveKot_Click fired. DataContext type: {DataContext?.GetType()?.FullName}\r\n");
         if (DataContext is MainViewModel vm)
         {
             vm.SaveKot();
@@ -1078,6 +1102,8 @@ public partial class MainWindow : Window
         }
         else if (sc.ShortcutMatches("save_kot", e.Key, Keyboard.Modifiers))
         {
+            System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "pos_app_debug.log"), 
+                $"[DEBUG {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}] save_kot shortcut F2 matched.\r\n");
             e.Handled = true;
             vm.SaveKot();
         }

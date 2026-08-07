@@ -591,6 +591,7 @@ public sealed class OrderRepository
             ["bill_note"] = TextOrNull(payload.BillNote),
             ["is_parcel_mode"] = payload.IsParcelMode ? 1 : 0,
             ["billed_at"] = TextOrNull(NormalizeBilledAtToIst(payload.BilledAt)) ?? IstNow(),
+            ["replace_items"] = true,
             ["items"] = items.Select(i => new Dictionary<string, object?>
             {
                 ["item_id"] = i.ItemId,
