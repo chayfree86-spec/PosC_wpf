@@ -20,7 +20,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <!-- Keep in step with Pos.Core AppInfo.Version (the value the footer and update check use). -->
-    <Version>3.1.1</Version>
+    <Version>3.1.2</Version>
     <!-- Custom entry point so Velopack's hook runs before anything else (see Program.cs). -->
     <StartupObject>Pos.App.Program</StartupObject>
     <!-- Application Icon (Light theme as default. Change to app_icon_dark.ico for Dark theme) -->

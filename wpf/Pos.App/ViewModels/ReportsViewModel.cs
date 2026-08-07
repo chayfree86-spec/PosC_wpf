@@ -356,7 +356,19 @@ public partial class ReportsViewModel : ObservableObject
 
                 // Parse Range Orders / Settled Orders
                 _all.Clear();
-                if (data.TryGetProperty("range_orders", out var rangeOrdersProp) && rangeOrdersProp.ValueKind == JsonValueKind.Array)
+                if (data.TryGetProperty("all_orders", out var allOrdersProp) && allOrdersProp.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var oEl in allOrdersProp.EnumerateArray())
+                    {
+                        var order = ParseOrder(oEl);
+                        if (order != null)
+                        {
+                            _all.Add(new ReportRow(order, PrefixFor(order.ClientId)));
+                        }
+                    }
+                    displayTotalBills = _all.Count;
+                }
+                else if (data.TryGetProperty("range_orders", out var rangeOrdersProp) && rangeOrdersProp.ValueKind == JsonValueKind.Array)
                 {
                     foreach (var oEl in rangeOrdersProp.EnumerateArray())
                     {

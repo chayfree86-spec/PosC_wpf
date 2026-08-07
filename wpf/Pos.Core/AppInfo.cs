@@ -12,7 +12,7 @@ namespace Pos.Core;
 public static class AppInfo
 {
     /// <summary>The running build's version. Plain "major.minor.patch".</summary>
-    public const string Version = "3.1.1";
+    public const string Version = "3.1.2";
 
     /// <summary>What the footer shows.</summary>
     public static string DisplayVersion => "v" + Version;
