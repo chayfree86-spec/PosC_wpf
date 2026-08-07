@@ -281,11 +281,13 @@ public sealed class OrderRepository
         var hasExisting = existing != null;
 
         var isFinalBill = (tableStatus is "available" or "complete" or "completed") && items.Count > 0;
-        long? billNumber = isFinalBill
+        var needsBillNumber = isFinalBill || payload.AssignBillNumber || existing?.BillNumber != null;
+        long? billNumber = needsBillNumber
             ? ResolveUniqueBillNumber(conn, tx, clientId.Value,
                 existing?.BillNumber ?? payload.BillNumber ?? NextBillNumberInternal(conn, tx, clientId.Value).BillNumber,
                 hasExisting ? existing!.Id : null)
             : null;
+        var isBilledOrFinal = isFinalBill || needsBillNumber;
 
         long orderId;
         if (hasExisting)
@@ -296,8 +298,8 @@ public sealed class OrderRepository
                   SET order_status = @orderStatus, total_amount = @total, discount_amount = @discountAmount,
                       discount_type = @discountType, discount_value = @discountValue, discount_label = @discountLabel,
                       customer_name = @customerName, customer_mobile = @customerMobile, bill_note = @billNote,
-                      is_kot_only = @isKotOnly, report_visible = @reportVisible, billed_at = @billedAt,
-                      bill_number = COALESCE(@billNumber, bill_number), is_parcel_mode = @isParcelMode,
+                      is_kot_only = @isKotOnly, report_visible = @reportVisible, billed_at = COALESCE(billed_at, @billedAt),
+                      bill_number = COALESCE(bill_number, @billNumber), is_parcel_mode = @isParcelMode,
                       sync_version = sync_version + 1, updated_at = datetime('now', '+330 minutes'),
                       live_sync_status = @liveSyncStatus
                   WHERE id = @orderId AND client_id = @clientId",
@@ -308,12 +310,12 @@ public sealed class OrderRepository
                     discountValue = payload.DiscountValue, discountLabel = TextOrNull(payload.DiscountLabel),
                     customerName = TextOrNull(payload.CustomerName), customerMobile = TextOrNull(payload.CustomerMobile),
                     billNote = TextOrNull(payload.BillNote),
-                    isKotOnly = isFinalBill ? 0 : 1,
-                    reportVisible = isFinalBill ? 1 : 0,
-                    billedAt = isFinalBill ? (TextOrNull(NormalizeBilledAtToIst(payload.BilledAt)) ?? IstNow()) : null,
+                    isKotOnly = isBilledOrFinal ? 0 : 1,
+                    reportVisible = isBilledOrFinal ? 1 : 0,
+                    billedAt = isBilledOrFinal ? (TextOrNull(NormalizeBilledAtToIst(payload.BilledAt)) ?? IstNow()) : null,
                     billNumber,
                     isParcelMode = payload.IsParcelMode ? 1 : 0,
-                    liveSyncStatus = isFinalBill ? "pending" : "not_applicable",
+                    liveSyncStatus = isBilledOrFinal ? "pending" : "not_applicable",
                     orderId, clientId
                 }, tx);
         }
@@ -337,11 +339,11 @@ public sealed class OrderRepository
                     discountValue = payload.DiscountValue, discountLabel = TextOrNull(payload.DiscountLabel),
                     customerName = TextOrNull(payload.CustomerName), customerMobile = TextOrNull(payload.CustomerMobile),
                     billNote = TextOrNull(payload.BillNote),
-                    isKotOnly = isFinalBill ? 0 : 1,
-                    reportVisible = isFinalBill ? 1 : 0,
-                    billedAt = isFinalBill ? (TextOrNull(NormalizeBilledAtToIst(payload.BilledAt)) ?? IstNow()) : null,
+                    isKotOnly = isBilledOrFinal ? 0 : 1,
+                    reportVisible = isBilledOrFinal ? 1 : 0,
+                    billedAt = isBilledOrFinal ? (TextOrNull(NormalizeBilledAtToIst(payload.BilledAt)) ?? IstNow()) : null,
                     billNumber,
-                    liveSyncStatus = isFinalBill ? "pending" : "not_applicable",
+                    liveSyncStatus = isBilledOrFinal ? "pending" : "not_applicable",
                     isParcelMode = payload.IsParcelMode ? 1 : 0
                 }, tx);
             orderId = conn.ExecuteScalar<long>("SELECT last_insert_rowid()", transaction: tx);

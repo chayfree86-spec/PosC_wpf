@@ -462,10 +462,8 @@ class Order
             }
         }
 
-        // Only include reports visible orders for date filtering
-        if ($startDate || $endDate) {
-            $sql .= ' AND o.report_visible = 1 AND o.is_kot_only = 0 AND o.billed_at IS NOT NULL';
-        }
+        // Only include reports visible settled/completed bills in order log
+        $sql .= ' AND o.report_visible = 1 AND o.is_kot_only = 0 AND o.billed_at IS NOT NULL';
 
         $sql .= ' ORDER BY o.billed_at DESC, o.id DESC LIMIT 500';
 
@@ -562,6 +560,17 @@ class Order
         return max(1, (int) $stmt->fetchColumn() + 1);
     }
 
+    private static function maxServerBillNumber(int $clientId): int
+    {
+        $stmt = Database::connection()->prepare(
+            'SELECT COALESCE(MAX(bill_number), 0)
+             FROM orders
+             WHERE client_id = ? AND bill_number IS NOT NULL'
+        );
+        $stmt->execute([$clientId]);
+        return (int) $stmt->fetchColumn();
+    }
+
     private static function billNumberForFinalBill(int $clientId, bool $isFinalBill, mixed $existingBillNumber = null): ?int
     {
         if (!$isFinalBill) {
@@ -569,7 +578,16 @@ class Order
         }
 
         $existing = (int) ($existingBillNumber ?? 0);
-        return $existing > 0 ? $existing : self::nextBillNumberValue($clientId);
+        $maxServer = self::maxServerBillNumber($clientId);
+
+        if ($existing > 0) {
+            if ($maxServer > 1000 && $existing < ($maxServer - 100)) {
+                return self::nextBillNumberValue($clientId);
+            }
+            return $existing;
+        }
+
+        return self::nextBillNumberValue($clientId);
     }
 
     public static function create(array $data): int
@@ -705,11 +723,16 @@ class Order
             $existingBillNumber = (int) ($existing['bill_number'] ?? 0);
             if ($existingBillNumber <= 0 && !empty($data['bill_number'])) {
                 $candidate = (int) $data['bill_number'];
-                $taken = $db->prepare('SELECT id FROM orders WHERE client_id = ? AND bill_number = ? LIMIT 1');
-                $taken->execute([$clientId, $candidate]);
-                $clash = $taken->fetch();
-                if (!$clash || (int) $clash['id'] === (int) ($existing['id'] ?? 0)) {
-                    $existingBillNumber = $candidate;
+                $maxServer = self::maxServerBillNumber($clientId);
+                $isStray = ($maxServer > 1000 && $candidate < ($maxServer - 100));
+
+                if (!$isStray) {
+                    $taken = $db->prepare('SELECT id FROM orders WHERE client_id = ? AND bill_number = ? LIMIT 1');
+                    $taken->execute([$clientId, $candidate]);
+                    $clash = $taken->fetch();
+                    if (!$clash || (int) $clash['id'] === (int) ($existing['id'] ?? 0)) {
+                        $existingBillNumber = $candidate;
+                    }
                 }
             }
 
@@ -1151,9 +1174,11 @@ class Order
 
                     // Bill number selection and conflict resolution
                     $billNumber = !empty($data['bill_number']) ? (int) $data['bill_number'] : 0;
-                    
-                    if ($billNumber <= 0 || isset($existingBillsSet[$billNumber])) {
-                        $maxBillNumber = max($maxBillNumber, 1) + 1;
+                    $maxServer = self::maxServerBillNumber($clientId);
+                    $isStray = ($maxServer > 1000 && $billNumber > 0 && $billNumber < ($maxServer - 100));
+
+                    if ($billNumber <= 0 || $isStray || isset($existingBillsSet[$billNumber])) {
+                        $maxBillNumber = max($maxBillNumber, $maxServer) + 1;
                         $billNumber = $maxBillNumber;
                         $existingBillsSet[$billNumber] = true;
                     } else {

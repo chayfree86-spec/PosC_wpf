@@ -41,6 +41,7 @@ public sealed class TableOrderPayload
     public bool MergeItems { get; set; }
     public long? OrderTimestamp { get; set; }
     public string? BilledAt { get; set; }
+    public bool AssignBillNumber { get; set; }
     public List<OrderItemInput> Items { get; set; } = new();
 }
 

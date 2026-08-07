@@ -1196,7 +1196,9 @@ public partial class MainViewModel : ObservableObject
 
         if (BillMode == "Table" && SelectedTable != null)
         {
-            var res = _orders.SaveTableOrder(BuildPayload("completed"));
+            var payload = BuildPayload("ordered");
+            payload.AssignBillNumber = true;
+            var res = _orders.SaveTableOrder(payload);
             var bill = builder.BuildBill(lines, res.FormattedBillNumber, SelectedTable.TableNumber,
                                          discount, total, DateTime.Now);
 
