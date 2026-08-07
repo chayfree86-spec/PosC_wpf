@@ -701,10 +701,13 @@
                                 <Ellipse Width="7" Height="7" Margin="0,0,6,0" VerticalAlignment="Center">
                                     <Ellipse.Style>
                                         <Style TargetType="Ellipse">
-                                            <Setter Property="Fill" Value="{DynamicResource Green}"/>
+                                            <Setter Property="Fill" Value="#22C55E"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding UpdateAvailable}" Value="True">
-                                                    <Setter Property="Fill" Value="#FFF59E0B"/>
+                                                    <Setter Property="Fill" Value="#F59E0B"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding UpdateFailed}" Value="True">
+                                                    <Setter Property="Fill" Value="#EF4444"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -713,10 +716,13 @@
                                 <TextBlock Text="{Binding UpdateText}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
+                                            <Setter Property="Foreground" Value="#22C55E"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding UpdateAvailable}" Value="True">
-                                                    <Setter Property="Foreground" Value="#FFF59E0B"/>
+                                                    <Setter Property="Foreground" Value="#F59E0B"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding UpdateFailed}" Value="True">
+                                                    <Setter Property="Foreground" Value="#EF4444"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -727,30 +733,46 @@
 
                         <Border Width="1" Height="14" Background="{DynamicResource BorderSoft}" Margin="12,0" VerticalAlignment="Center"/>
 
-                        <!-- Sync ki haalat: hara = sab bheja ja chuka, peela = katar me hai,
-                             laal = server se baat nahi ho rahi. Click karne par turant koshish. -->
+                        <!-- Sync status: Green = ok, Amber = pending, Red = offline -->
                         <Button Command="{Binding SyncNowCommand}" Style="{StaticResource LinkBtn}"
                                 ToolTip="{Binding SyncTooltip}" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
                                 <Ellipse Width="7" Height="7" Margin="0,0,6,0" VerticalAlignment="Center">
                                     <Ellipse.Style>
                                         <Style TargetType="Ellipse">
-                                            <Setter Property="Fill" Value="{DynamicResource TextFaint}"/>
+                                            <Setter Property="Fill" Value="#9CA3AF"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding SyncState}" Value="ok">
-                                                    <Setter Property="Fill" Value="{DynamicResource AccentText}"/>
+                                                    <Setter Property="Fill" Value="#22C55E"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding SyncState}" Value="pending">
-                                                    <Setter Property="Fill" Value="#FFF59E0B"/>
+                                                    <Setter Property="Fill" Value="#F59E0B"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding SyncState}" Value="offline">
-                                                    <Setter Property="Fill" Value="{DynamicResource ErrorRed}"/>
+                                                    <Setter Property="Fill" Value="#EF4444"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
                                     </Ellipse.Style>
                                 </Ellipse>
-                                <TextBlock Text="{Binding SyncText}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding SyncText}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#9CA3AF"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SyncState}" Value="ok">
+                                                    <Setter Property="Foreground" Value="#22C55E"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding SyncState}" Value="pending">
+                                                    <Setter Property="Foreground" Value="#F59E0B"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding SyncState}" Value="offline">
+                                                    <Setter Property="Foreground" Value="#EF4444"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </StackPanel>
                         </Button>
                     </StackPanel>

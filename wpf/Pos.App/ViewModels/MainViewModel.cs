@@ -341,6 +341,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _appVersion = AppInfo.DisplayVersion;
     [ObservableProperty] private string _updateText = "APP UP TO DATE";
     [ObservableProperty] private bool _updateAvailable;
+    [ObservableProperty] private bool _updateFailed;
     [ObservableProperty] private bool _isUpdating;
     [ObservableProperty] private double _updateProgress;
     [ObservableProperty] private string? _updateTooltip;
@@ -376,6 +377,7 @@ public partial class MainViewModel : ObservableObject
     private void ApplyUpdateInfo(Velopack.UpdateInfo? info)
     {
         _pendingUpdate = info;
+        UpdateFailed = false;
         if (info != null)
         {
             var v = info.TargetFullRelease.Version.ToString();
@@ -416,15 +418,30 @@ public partial class MainViewModel : ObservableObject
         }
 
         IsUpdating = true;
+        UpdateFailed = false;
         UpdateText = "DOWNLOADING… 0%";
         try
         {
             await _updateManager.DownloadUpdatesAsync(_pendingUpdate, percent =>
-                OnUi(() =>
+            {
+                var app = System.Windows.Application.Current;
+                if (app != null)
                 {
-                    UpdateProgress = percent / 100.0;
-                    UpdateText = $"DOWNLOADING… {percent}%";
-                }));
+                    app.Dispatcher.Invoke(() =>
+                    {
+                        UpdateProgress = percent / 100.0;
+                        UpdateText = $"DOWNLOADING… {percent}%";
+                    }, System.Windows.Threading.DispatcherPriority.Render);
+                }
+                else
+                {
+                    OnUi(() =>
+                    {
+                        UpdateProgress = percent / 100.0;
+                        UpdateText = $"DOWNLOADING… {percent}%";
+                    });
+                }
+            });
 
             UpdateText = "INSTALLING…";
             // Swaps in the new version and relaunches; the process ends here.
@@ -433,7 +450,9 @@ public partial class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             IsUpdating = false;
-            UpdateText = $"UPDATE — v{v}";
+            UpdateFailed = true;
+            UpdateText = "UPDATE FAILED";
+            UpdateTooltip = "Update fail ho gaya: " + ex.Message + ". Click to retry.";
             System.Windows.MessageBox.Show("Update fail ho gaya: " + ex.Message, "App Update",
                 System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
         }
